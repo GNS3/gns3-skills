@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "BGP Issues Injection"
+description: "BGP protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - bgp
+  - ebgp
+  - ibgp
+
+issues:
+  bgp_peer_mismatch:
+    name: "BGP Peer Configuration Error"
+    description: "Configure BGP with wrong peer IP, AS number mismatch, or wrong password"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP peer session not established"
+      - "BGP stuck in ACTIVE or IDLE state"
+      - "No routes received from peer"
+      - "AS number mismatch errors"
+    troubleshooting_hints:
+      - "Check BGP summary with 'show ip bgp summary'"
+      - "Verify peer IP address is correct"
+      - "Ensure remote AS number matches neighbor's actual AS"
+      - "Check TCP connectivity to peer (port 179)"
+      - "Look for 'bad peer AS' or 'connection refused' errors"
+      - "Verify BGP passwords match if authentication used"
+    applicability: "All BGP configurations, both iBGP and eBGP"
+
+  bgp_next_hop_unreachable:
+    name: "BGP Next Hop Unreachable"
+    description: "BGP routes with next-hop addresses that are not reachable via IGP or static routes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP routes in table but not installed in RIB"
+      - "Routes show as 'not best path' or 'invalid'"
+      - "Packet forwarding fails despite routes present"
+    troubleshooting_hints:
+      - "Check BGP table for 'next hop not reachable' status"
+      - "Verify IGP has route to BGP next hop"
+      - "Consider using 'next-hop-self' on route reflector"
+      - "Check next-hop processing in BGP updates"
+      - "Ensure IGP redistribution or next-hop-self configured"
+    applicability: "iBGP and route reflector configurations"
+
+  bgp_route_reflector:
+    name: "BGP Route Reflector Misconfiguration"
+    description: "Configure route reflector with incorrect client or cluster-id settings causing routing issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ibgp
+    symptoms:
+      - "iBGP routes not reflected to other route reflector clients"
+      - "Routing information missing within iBGP cluster"
+      - "Route looping within iBGP due to incorrect cluster-id"
+      - "Suboptimal routing within AS"
+    troubleshooting_hints:
+      - "Check route reflector status with 'show ip bgp neighbor <ip>'"
+      - "Verify neighbor is configured as route-reflector-client"
+      - "Check cluster-id if multiple route reflectors in same cluster"
+      - "Route reflector does not modify next-hop by default"
+      - "Use 'next-hop-self' if needed for route reflector"
+      - "Ensure iBGP full mesh is not required with route reflection"
+      - "Redundant route reflectors should share same cluster-id"
+    applicability: "iBGP with route reflector clusters"
+
+  bgp_update_source:
+    name: "BGP Update Source Misconfiguration"
+    description: "Configure BGP session with wrong update-source interface causing TCP connection failures"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP TCP connection fails to establish"
+      - "BGP stuck in ACTIVE or IDLE state"
+      - "Neighbor IP not reachable from wrong source interface"
+      - "Session flaps when interface goes down"
+    troubleshooting_hints:
+      - "Check BGP neighbor update-source with 'show run | section bgp'"
+      - "Verify source interface IP matches neighbor's expected peer IP"
+      - "Use 'ping <neighbor-ip> source <intf>' to test connectivity"
+      - "iBGP typically uses loopback interface as update-source"
+      - "Ensure source interface is always up (use loopback)"
+      - "Check routing to neighbor from the configured source"
+    applicability: "iBGP with loopback peering and eBGP multi-hop"
+
+  bgp_ttl_security:
+    name: "BGP TTL Security Check Mismatch"
+    description: "Configure BGP TTL security check on one side but not the other"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "eBGP peer session fails to establish"
+      - "BGP stuck in IDLE state"
+      - "TCP connection issues between peers"
+      - "Session works when directly connected but not over multiple hops"
+    troubleshooting_hints:
+      - "Check BGP neighbor TTL security with 'show ip bgp neighbor'"
+      - "Verify 'ebgp-multihop' is configured if peers are not directly connected"
+      - "TTL security expects incoming TTL of 255 by default"
+      - "'ttl-security hops <count>' sets minimum expected TTL"
+      - "TTL security and ebgp-multihop are mutually exclusive"
+      - "Default eBGP TTL is 1 (directly connected only)"
+    applicability: "eBGP across multiple hops or security-conscious deployments"

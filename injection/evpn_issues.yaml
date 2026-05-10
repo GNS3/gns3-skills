@@ -1,0 +1,125 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "EVPN Issues Injection"
+description: "EVPN control plane related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - evpn
+  - vxlan
+  - bgp
+
+issues:
+  evpn_l2vni_not_created:
+    name: "EVPN L2VNI Not Created on Leaf"
+    description: "L2VNI not configured or created on a leaf switch causing EVPN service not available"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "EVPN service not operational on specific VNI"
+      - "No MAC addresses learned via EVPN for the VNI"
+      - "Show vxlan vni missing the expected VNI"
+      - "End hosts cannot communicate across the fabric"
+    troubleshooting_hints:
+      - "Check VNI with 'show vxlan vni' or 'show nve vni'"
+      - "Verify 'vni <id> l2' configuration under evpn"
+      - "Ensure VLAN-to-VNI mapping is correctly configured"
+      - "Check 'show bgp l2vpn evpn' for VNI-based routes"
+      - "VNI range: 1-16777215 (24-bit)"
+      - "Verify NVE interface is properly configured for the VNI"
+    applicability: "EVPN VXLAN leaf switches"
+
+  evpn_ebgp_peer_not_up:
+    name: "EVPN eBGP Peer Not Established"
+    description: "EVPN BGP peer session not established between leaf and spine"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "EVPN BGP session down between leaf and spine"
+      - "No EVPN routes exchanged"
+      - "BGP state stuck in IDLE or ACTIVE"
+      - "Underlay reachability issue to BGP peer"
+    troubleshooting_hints:
+      - "Check BGP EVPN summary with 'show bgp l2vpn evpn summary'"
+      - "Verify peer IP address and AS number are correct"
+      - "Check 'show bgp l2vpn evpn neighbors <ip>' for state"
+      - "Ensure underlay routing reaches the peer IP"
+      - "Verify 'address-family l2vpn evpn' is activated for the peer"
+      - "Check 'send-community extended' is configured"
+    applicability: "EVPN VXLAN leaf-spine fabrics"
+
+  evpn_vlan_vni_mapping:
+    name: "EVPN VLAN-to-VNI Mapping Mismatch"
+    description: "Configure different VLAN-to-VNI mapping on leaf switches for the same tenant"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "VLAN not mapped to correct VNI across leaves"
+      - "Tenant L2 connectivity broken"
+      - "VLAN on one leaf maps to different VNI than another leaf"
+      - "MAC addresses learned but traffic not forwarded"
+    troubleshooting_hints:
+      - "Check VLAN-VNI mapping with 'show vlan mapping' or 'show vxlan vni'"
+      - "Verify VNI mapping is consistent across all leaves"
+      - "L2VNI must be the same for the same broadcast domain"
+      - "Check 'show l2route evpn mac' for MAC-to-VNI consistency"
+      - "Verify 'evpn vni <id> l2' configuration matches on all leaves"
+      - "L3VNI must be consistent for the same VRF across leaves"
+    applicability: "EVPN VXLAN multi-leaf deployments"
+
+  evpn_anycast_gateway_missing:
+    name: "EVPN Anycast Gateway IP Not Configured"
+    description: "Missing anycast gateway IP on IRB/SVI causing hosts unable to reach default gateway"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "Hosts cannot reach gateway IP for inter-subnet routing"
+      - "Different gateway MAC on different leaves"
+      - "Anycast gateway not responding to ARP requests"
+      - "First-hop redundancy not working"
+    troubleshooting_hints:
+      - "Check anycast gateway with 'show irb' or 'show vlan irb'"
+      - "Verify 'anycast-gateway-mac <mac>' under IRB configuration"
+      - "All leaves must use the same anycast MAC address"
+      - "Use 'ip virtual-router address' for VARP support"
+      - "Check 'show l2route evpn mac ip' for gateway MAC distribution"
+      - "Anycast gateway enables active-active forwarding"
+    applicability: "EVPN VXLAN with inter-subnet routing"
+
+  evpn_type2_route_missing:
+    name: "EVPN Type 2 Route Missing"
+    description: "MAC/IP advertisement routes not being sent or received in EVPN"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "MAC addresses not learned via EVPN"
+      - "Hosts reachable locally but not across fabric"
+      - "Missing MAC mobility bindings"
+      - "Show l2route evpn mac missing expected entries"
+    troubleshooting_hints:
+      - "Check EVPN MAC routes with 'show bgp l2vpn evpn route-type 2'"
+      - "Verify 'rewrite-evpn-rt-asn' is configured if needed"
+      - "Check 'show l2route evpn mac' for local MAC advertisements"
+      - "Type 2 routes carry MAC/IP and VLAN binding information"
+      - "Verify EVPN route targets are properly configured"
+      - "Check 'show bgp l2vpn evpn' for route distribution"
+    applicability: "EVPN BGP route distribution and MAC learning"

@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VXLAN Issues Injection"
+description: "VXLAN encapsulation and tunnel related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - vxlan
+  - evpn
+
+issues:
+  vxlan_vni_mismatch:
+    name: "VXLAN VNI Mismatch"
+    description: "Configure different VNI values on VTEPs for the same L2 segment"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vxlan
+      - evpn
+    symptoms:
+      - "VXLAN segment not connected across VTEPs"
+      - "VNI mismatch between EVPN route target and VXLAN segments"
+      - "L2 connectivity broken across the fabric"
+      - "Hosts in the same L2 segment cannot communicate"
+    troubleshooting_hints:
+      - "Check VNI mapping with 'show vxlan vni' or 'show nve vni'"
+      - "VNI must match across all VTEPs in the same L2 segment"
+      - "VNI range: 1-16777215 (24-bit)"
+      - "VNI to EVPN route-target mapping must be consistent"
+      - "Check L2VNI vs L3VNI configuration"
+      - "Verify 'show bgp l2vpn evpn' for VNI-based route import"
+    applicability: "VXLAN networks, data center fabrics"
+
+  vxlan_vtep_reachability:
+    name: "VTEP Reachability Failure"
+    description: "Configure incorrect VTEP (VXLAN Tunnel Endpoint) IP or routing preventing tunnel establishment"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vxlan
+      - evpn
+    symptoms:
+      - "VXLAN tunnel not coming up"
+      - "Underlay routing missing between VTEPs"
+      - "VXLAN packet encapsulation not happening"
+      - "VTEP unreachable from remote VTEP"
+    troubleshooting_hints:
+      - "Check VTEP IP with 'show nve interface' or 'show vxlan interface'"
+      - "Verify underlay routing (OSPF/ISIS) between VTEP IPs"
+      - "VTEP IP must be reachable via underlay (not overlay)"
+      - "Use ping to verify underlay connectivity"
+      - "Check loopback interface used as VTEP source is advertised in underlay"
+      - "Verify MTU across underlay path (must be > 1550 for VXLAN overhead)"
+    applicability: "VXLAN networks, any VTEP-to-VTEP deployment"
+
+  vxlan_udp_port:
+    name: "VXLAN UDP Destination Port Misconfiguration"
+    description: "Configure non-standard UDP destination port for VXLAN, or firewall blocking standard UDP 4789"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vxlan
+    symptoms:
+      - "VXLAN encapsulation/decapsulation not working"
+      - "VXLAN packets dropped by firewall or ACL"
+      - "VXLAN traffic not forwarded between VTEPs"
+      - "Non-standard port requires platform support"
+    troubleshooting_hints:
+      - "Standard VXLAN UDP port is 4789 (IANA assigned)"
+      - "Check 'show vxlan' or 'show nve' for UDP port configuration"
+      - "Verify firewall/ACL permits UDP 4789"
+      - "Non-standard port requires matching configuration on all VTEPs"
+      - "Use 'udp port <port>' under VXLAN/NVE configuration"
+      - "Check for MTU issues (VXLAN adds 50 bytes overhead)"
+    applicability: "VXLAN across firewall boundaries or non-standard deployments"
+
+  vxlan_mtu_mismatch:
+    name: "VXLAN MTU Mismatch"
+    description: "Configure incorrect MTU causing VXLAN packet fragmentation or drops"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vxlan
+    symptoms:
+      - "Large packets dropped across VXLAN"
+      - "VXLAN fragmentation causing performance issues"
+      - "TCP PMTU discovery failures"
+      - "Application-specific issues with large packets"
+    troubleshooting_hints:
+      - "VXLAN adds 50 bytes overhead (14B eth + 20B IP + 8B UDP + 8B VXLAN)"
+      - "Physical MTU must be at least 1550 bytes for 1500 byte payload"
+      - "Check 'show interface' for MTU on all links in underlay"
+      - "Use 'ip mtu 9216' for jumbo frames (allows 9166 byte payload)"
+      - "Verify 'show vxlan' for MTU configuration"
+      - "Check for ICMP fragmentation needed messages"
+    applicability: "VXLAN deployments, especially with jumbo frames"

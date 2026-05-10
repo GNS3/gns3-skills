@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "NAT/PAT Issues Injection"
+description: "Network Address Translation (NAT, PAT) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - nat
+  - pat
+
+issues:
+  nat_inside_outside_misconfig:
+    name: "NAT Inside/Outside Interface Misconfiguration"
+    description: "Configure NAT interfaces with wrong inside/outside designation"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - nat
+      - pat
+    symptoms:
+      - "NAT translation not occurring"
+      - "Traffic not translated despite correct ACL"
+      - "Packets translated on wrong interface"
+      - "One-way connectivity (outside hosts can't reach inside)"
+    troubleshooting_hints:
+      - "Check NAT interfaces with 'show ip nat statistics'"
+      - "Verify 'ip nat inside' on internal-facing interfaces"
+      - "Verify 'ip nat outside' on external-facing interfaces"
+      - "Inside/outside must be correctly assigned per traffic flow"
+      - "Traffic must enter inside interface and exit outside interface for source NAT"
+      - "Destination NAT reverses the direction requirement"
+    applicability: "All NAT configurations"
+
+  nat_acl_missing:
+    name: "NAT ACL Missing or Incorrect"
+    description: "Configure NAT with missing or incorrect ACL not matching the traffic to be translated"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - nat
+      - pat
+    symptoms:
+      - "Expected traffic not translated"
+      - "Too many or too few translations created"
+      - "Internal addresses not matching any NAT rule"
+      - "Some subnets translated while others are not"
+    troubleshooting_hints:
+      - "Check NAT translations with 'show ip nat translations'"
+      - "Verify ACL used by NAT with 'show access-lists'"
+      - "Check 'ip nat inside source list <acl> <pool|interface>'"
+      - "ACL must permit the source addresses to be translated"
+      - "Use 'show ip nat statistics' for hits/misses"
+      - "NAT ACLs typically permit RFC1918 private addresses"
+    applicability: "Dynamic NAT and PAT configurations"
+
+  nat_pool_exhaustion:
+    name: "NAT Pool Address Exhaustion"
+    description: "Configure too-small NAT pool that runs out of addresses for translations"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - nat
+    symptoms:
+      - "Translation failures when pool exhausted"
+      - "New connections failing to establish"
+      - "Existing connections working but new ones dropped"
+      - "NAT pool exhausted messages in logs"
+    troubleshooting_hints:
+      - "Check NAT pool usage with 'show ip nat statistics'"
+      - "Pool exhausted = all addresses currently in use"
+      - "Use 'ip nat pool <name> <start> <end> netmask <mask>'"
+      - "Increase pool size or use PAT (overload) for more translations"
+      - "PAT maps many inside addresses to one outside address"
+      - "Check timeout of existing translations for quick recovery"
+    applicability: "Dynamic NAT with limited public IP pool"
+
+  nat_pat_port_exhaustion:
+    name: "NAT PAT Port Exhaustion"
+    description: "Configure PAT with too few ports available, exhausting the port range"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - nat
+      - pat
+    symptoms:
+      - "PAT translations failing to create"
+      - "Ports exhausted despite only one outside IP"
+      - "New TCP/UDP connections failing intermittently"
+      - "Many concurrent connections from internal hosts"
+    troubleshooting_hints:
+      - "Check PAT statistics with 'show ip nat statistics'"
+      - "PAT uses unique source ports (0-65535) per outside IP"
+      - "Default PAT port range varies by platform"
+      - "Configure multiple outside IPs for more port capacity"
+      - "Use 'ip nat pool <name> <start> <end> netmask <mask>' with overload"
+      - "Check 'show ip nat translations verbose' for port allocation"
+    applicability: "PAT with high connection concurrency"
+
+  nat_static_wrong:
+    name: "Wrong Static NAT Mapping"
+    description: "Configure static NAT with wrong inside/outside IP mapping"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - nat
+    symptoms:
+      - "Incorrect internal host reached from outside"
+      - "Static NAT mapping to wrong destination"
+      - "Port forwarding to wrong internal server"
+      - "Multiple static NAT entries conflicting"
+    troubleshooting_hints:
+      - "Check static NAT with 'show ip nat translations'"
+      - "Verify 'ip nat inside source static <inside> <outside>'"
+      - "Check for overlapping static NAT entries"
+      - "Ensure inside global IP is not used elsewhere"
+      - "Use 'show running-config | include ip nat inside source static'"
+      - "Static NAT creates one-to-one permanent mapping"
+    applicability: "Static NAT for server publishing"

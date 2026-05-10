@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Interface Issues Injection"
+description: "Common interface-related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - all
+
+issues:
+  interface_shutdown:
+    name: "Interface Shutdown"
+    description: "Administratively shutdown a network interface to simulate link failure"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - all
+    symptoms:
+      - "Link status shows down/down"
+      - "Cannot ping devices across the link"
+      - "Interface status shows 'administratively down'"
+      - "Neighbor adjacencies lost"
+    troubleshooting_hints:
+      - "Check interface status with 'show ip interface brief' (Cisco) or 'display ip interface brief' (Huawei/H3C)"
+      - "Look for 'administratively down' in interface status"
+      - "Use 'show interface <interface>' to see detailed status"
+      - "Check physical layer indicators if available"
+    applicability: "All network devices with configurable interfaces"
+
+  ip_address_mismatch:
+    name: "IP Address Configuration Error"
+    description: "Configure incorrect IP address, subnet mask, or duplicate IP on an interface"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Partial connectivity (some hosts reachable, others not)"
+      - "ARP failures or duplicate IP warnings"
+      - "Routing protocol neighborship failures"
+      - "Subnet mismatch errors"
+    troubleshooting_hints:
+      - "Verify IP configuration with 'show running-config' or 'display current-configuration'"
+      - "Check subnet mask matches network design"
+      - "Look for duplicate IP address error messages on console"
+      - "Use 'show ip arp' to detect IP conflicts"
+      - "Ping interface addresses to check for duplicates"
+    applicability: "Layer 3 interfaces (routers, Layer 3 switches)"
+
+  duplex_mismatch:
+    name: "Speed/Duplex Mismatch"
+    description: "Configure mismatched speed or duplex settings on Ethernet interfaces"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ethernet
+    symptoms:
+      - "Extremely slow performance"
+      - "High collision count (on half-duplex side)"
+      - "High CRC/error count (on full-duplex side)"
+      - "Intermittent connectivity"
+    troubleshooting_hints:
+      - "Check interface statistics with 'show interface' counters"
+      - "Look for CRC, frame, or collision errors"
+      - "Verify speed and duplex settings match on both ends"
+      - "Check for 'late collisions' which indicate duplex mismatch"
+      - "Auto-negotiation issues may cause this"
+    applicability: "Ethernet interfaces, especially when connecting to switches or older equipment"
+
+  mtu_mismatch:
+    name: "MTU Mismatch"
+    description: "Configure mismatched MTU values on two ends of a link, causing packet fragmentation issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - all
+    symptoms:
+      - "Small packets work, large packets fail"
+      - "Intermittent connectivity issues"
+      - "Specific applications fail (e.g., file transfer, VPN)"
+      - "TCP retransmissions and slow performance"
+    troubleshooting_hints:
+      - "Check MTU with 'show interface <interface>' (Cisco) or 'display interface {interface}' (Huawei)"
+      - "Compare MTU values on both ends of the link"
+      - "Test with 'ping' using different packet sizes"
+      - "Check for 'Fragmentation needed' ICMP messages"
+      - "Verify path MTU discovery is working"
+    applicability: "All interface types, especially critical for trunk links and WAN connections"

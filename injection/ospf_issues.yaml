@@ -1,0 +1,102 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "OSPF Issues Injection"
+description: "OSPF protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ospf
+  - ospfv2
+  - ospfv3
+
+issues:
+  ospf_area_mismatch:
+    name: "OSPF Area Mismatch"
+    description: "Configure interfaces in different OSPF areas than their neighbors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails"
+      - "Routes not exchanged between areas"
+      - "OSPF stuck in INIT or DOWN state"
+      - "Area border router issues"
+    troubleshooting_hints:
+      - "Check OSPF neighbor status with 'show ip ospf neighbor'"
+      - "Verify OSPF area configuration on interfaces"
+      - "Check OSPF database with 'show ip ospf database'"
+      - "Look for 'mismatched area' error messages"
+      - "Ensure all interfaces in a segment are in same area (unless using virtual links)"
+    applicability: "OSPF routers, multi-area OSPF designs"
+
+  ospf_authentication_mismatch:
+    name: "OSPF Authentication Mismatch"
+    description: "Configure OSPF authentication on one side but not the other, or use different keys or auth types"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails"
+      - "Authentication mismatch errors in logs"
+      - "OSPF stuck in DOWN or ATTEMPT state"
+    troubleshooting_hints:
+      - "Check OSPF interface configuration for authentication"
+      - "Verify authentication type (null, clear text, MD5, SHA)"
+      - "Check key strings match exactly"
+      - "Look for 'authentication failure' messages"
+      - "Ensure key IDs match for MD5/SHA authentication"
+      - "For OSPFv3, verify IPsec authentication settings"
+    applicability: "OSPF routers with authentication configured"
+
+  ospf_hello_dead_mismatch:
+    name: "OSPF Hello/Dead Timer Mismatch"
+    description: "Configure mismatched OSPF hello or dead interval timers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails to form"
+      - "Neighbors stuck in INIT state"
+      - "Adjacency flaps intermittently"
+    troubleshooting_hints:
+      - "Check OSPF interface timers with 'show ip ospf interface detail'"
+      - "Hello and dead timers must match on both sides"
+      - "Default hello is 10s, dead is 40s on broadcast"
+      - "Default hello is 30s, dead is 120s on point-to-point"
+      - "Dead interval should be 4x hello interval"
+    applicability: "All OSPF configurations"
+
+  ospf_passive_interface:
+    name: "OSPF Passive Interface Blocking Neighbors"
+    description: "Configure passive-interface on an interface where OSPF neighbor needs to form"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency doesn't form on specific interface"
+      - "No OSPF hellos sent on the interface"
+      - "Routes missing only on one segment"
+      - "Other interfaces form adjacencies normally"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for passive status"
+      - "Verify interface is not listed as passive"
+      - "Check OSPF configuration for 'passive-interface default'"
+      - "Use 'no passive-interface <intf>' to allow adjacency"
+      - "Check 'show run | section router ospf' for passive statements"
+    applicability: "OSPF routers with selective passive interface configuration"

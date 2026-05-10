@@ -1,0 +1,113 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VPCS Virtual PC Simulator"
+description: "GNS3 VPCS lightweight virtual PC simulator for testing network connectivity and basic IP configuration"
+device_type: "gns3_vpcs_telnet"
+category: "device"
+
+# Configuration Commands (no config mode needed)
+config_commands:
+  ip_config:
+    syntax: "ip <address>/<mask> <gateway>"
+    example: "ip 10.10.0.12/24 10.10.0.254"
+    description: "Configure PC IP address and default gateway"
+    parameters:
+      address: "IP address, e.g., 10.10.0.12"
+      mask: "Subnet mask in CIDR notation, e.g., 24 means 255.255.255.0"
+      gateway: "Default gateway, e.g., 10.10.0.254"
+
+  ip_dhcp:
+    syntax: "ip dhcp"
+    description: "Obtain IP configuration from DHCP server"
+
+  save:
+    syntax: "save"
+    description: "Save current configuration to NVRAM (persists after reboot)"
+
+  reset:
+    syntax: "reset"
+    description: "Reset VPCS configuration (clears all settings)"
+
+# Display/Diagnostic Commands
+display_commands:
+  show_ip:
+    syntax: "show ip"
+    description: "Show current IP configuration (IP address, subnet mask, gateway)"
+
+  ping:
+    syntax: "ping <destination>"
+    example: "ping 10.10.0.254"
+    description: "Test connectivity to destination (sends 4 ICMP echo requests)"
+
+  ping_count:
+    syntax: "ping <destination> <count>"
+    example: "ping 10.10.0.254 10"
+    description: "Send specified number of ICMP packets"
+
+  arp:
+    syntax: "arp"
+    description: "Display ARP cache table"
+
+  version:
+    syntax: "version"
+    description: "Show VPCS version information"
+
+  show:
+    syntax: "show"
+    description: "Display current running configuration"
+
+  pc_info:
+    syntax: "pcinfo"
+    description: "Display PC hardware information"
+
+  route:
+    syntax: "route"
+    description: "Display routing table (static routes)"
+
+# Important Notes
+notes:
+  - "WARNING: VPCS is NOT a network device (router/switch), it is a lightweight PC simulator!"
+  - "WARNING: Do NOT use router/switch config commands on VPCS (e.g., configure terminal, interface)"
+  - "VPCS has no config mode, commands are entered directly"
+  - "VPCS does not require username/password authentication, direct console access"
+  - "Prompt format: PC1>, PC2>, VPCS>"
+  - "Default sends 4 ICMP packets, use ping <ip> <count> to specify number"
+  - "Must execute save to persist configuration, otherwise lost after reboot"
+
+# Troubleshooting Guide
+troubleshooting:
+  ping_failed:
+    - "Use show ip to verify IP configuration is correct"
+    - "Verify target gateway is reachable (ping gateway IP)"
+    - "Ensure source and target are in same subnet or gateway is correct"
+    - "Check if link is UP (verify GNS3 topology connections)"
+
+  configuration_lost:
+    - "VPCS configuration is lost after reboot"
+    - "Must execute save command after any configuration change"
+    - "Use show command to verify current configuration"
+
+  cannot_connect_to_console:
+    - "Check if node is started in GNS3"
+    - "Verify console port mapping is correct"
+    - "Confirm telnet connection parameters are correct (IP:port)"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  show_ip: "show ip"
+  display_ip: "show ip"
+  config_ip: "ip <address>/<mask> <gateway>"
+  set_ip: "ip <address>/<mask> <gateway>"
+  test_connectivity: "ping <destination>"
+  ping_test: "ping <destination>"
+  save_config: "save"
+  save: "save"
+  reset: "reset"
+  show_route: "route"
+  show_arp: "arp"
+  show_version: "version"

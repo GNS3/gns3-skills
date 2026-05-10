@@ -1,0 +1,103 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "MPLS/LDP/VPN Issues Injection"
+description: "MPLS, LDP and MPLS L3VPN related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - mpls
+  - ldp
+  - mpls_vpn
+
+issues:
+  ldp_neighbor_mismatch:
+    name: "LDP Neighbor Session Failure"
+    description: "Configure LDP with mismatched transport address, authentication, or label space"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - mpls
+      - ldp
+    symptoms:
+      - "LDP session fails to establish between MPLS routers"
+      - "No label bindings exchanged"
+      - "MPLS forwarding fails"
+      - "LDP stuck in INIT state"
+    troubleshooting_hints:
+      - "Check LDP neighbor with 'show mpls ldp neighbor'"
+      - "Verify LDP transport address matches routing"
+      - "Check LDP authentication with 'show mpls ldp neighbor detail'"
+      - "Ensure LDP router-id is reachable via IGP"
+      - "Check for 'mpls ldp password' mismatch"
+      - "Verify label space compatibility (per-platform vs per-interface)"
+    applicability: "MPLS networks with LDP"
+
+  mpls_forwarding:
+    name: "MPLS Label Forwarding Failure"
+    description: "Configure incorrect label forwarding causing MPLS traffic to be dropped or forwarded incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls
+      - ldp
+    symptoms:
+      - "MPLS ping/test failure"
+      - "Traffic dropped at LSR"
+      - "Label switched path broken"
+      - "TTL expired in transit"
+    troubleshooting_hints:
+      - "Check MPLS forwarding table with 'show mpls forwarding-table'"
+      - "Use 'ping mpls ipv4 <prefix>' to test LSP"
+      - "Check 'show mpls lsp' for LSP status"
+      - "Verify label operations (swap/push/pop) at each hop"
+      - "Check for missing labels in LFIB"
+      - "Use 'traceroute mpls' to trace LSP path"
+    applicability: "All MPLS networks"
+
+  mpls_explicit_null:
+    name: "MPLS Explicit Null Misconfiguration"
+    description: "Configure MPLS with wrong explicit null setting causing PHP to fail"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - mpls
+    symptoms:
+      - "Penultimate hop popping fails"
+      - "Extra lookup required at egress router"
+      - "MPLS performance degradation"
+      - "PHP not working as expected"
+    troubleshooting_hints:
+      - "Check 'mpls ip propagate-forwarded' or BGP label configuration"
+      - "Explicit null (label 0) signals PHP capability"
+      - "Verify 'bgp send-label' includes explicit-null"
+      - "Use 'show mpls forwarding-table' to check for implicit-null"
+      - "Egress LSR must pop implicit null label"
+      - "MPLS PHP reduces lookup on egress LSR"
+    applicability: "MPLS networks with Penultimate Hop Popping"
+
+  mpls_vpn_route_target:
+    name: "MPLS VPN Route Target Mismatch"
+    description: "Configure mismatched route targets (import/export) between PE routers"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls
+      - mpls_vpn
+      - bgp
+    symptoms:
+      - "VPN routes not exchanged between PE routers"
+      - "VRF route leaking not working"
+      - "MPLS L3VPN partial connectivity"
+      - "Route distinguisher not imported"
+    troubleshooting_hints:
+      - "Check VRF route targets with 'show bgp vpnv4 rd <rd>'"
+      - "Verify route-target import/export communities match"
+      - "Route target format: <asn>:<vpn-id> (type 0) or <ipv4>:<vpn-id> (type 1)"
+      - "Import requires matching export from remote PE"
+      - "Check 'show ip route vrf <vrf>' for VPN routes"
+      - "Verify 'address-family vpnv4/vpnv6' is activated"
+    applicability: "MPLS L3VPN PE router configurations"

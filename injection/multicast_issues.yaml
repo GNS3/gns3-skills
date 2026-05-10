@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Multicast/Anycast Issues Injection"
+description: "PIM, IGMP, MSDP multicast routing and anycast related network faults"
+category: "injection"
+protocols:
+  - pim
+  - igmp
+  - msdp
+  - multicast
+
+issues:
+  pim_mode_mismatch:
+    name: "PIM Mode Mismatch (Sparse vs Dense)"
+    description: "Configure different PIM modes on connected interfaces"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "PIM neighbors not forming"
+      - "Multicast traffic not forwarded"
+      - "PIM DR election issues"
+      - "PIM mode mismatch between routers"
+    troubleshooting_hints:
+      - "Check PIM mode with 'show ip pim interface'"
+      - "Modes: dense (flood + prune), sparse (RP-based join), sparse-dense"
+      - "Sparse mode requires RP (static, auto-RP, BSR)"
+      - "Dense mode floods then prunes (inefficient for most WAN)"
+      - "Use 'ip pim sparse-mode' on all multicast interfaces"
+      - "Check 'show ip pim neighbor' for adjacency"
+    applicability: "All multicast deployments"
+
+  pim_rp:
+    name: "PIM RP (Rendezvous Point) Misconfiguration"
+    description: "Configure wrong RP address or no RP for multicast groups"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Sparse mode groups not receiving multicast"
+      - "RP not reachable from multicast routers"
+      - "PIM register process failing"
+      - "Multicast receivers cannot join groups via RP"
+    troubleshooting_hints:
+      - "Check RP with 'show ip pim rp mapping'"
+      - "Use 'ip pim rp-address <ip> [group-list <acl>]' for static RP"
+      - "Auto-RP: 'ip pim send-rp-announce' and 'ip pim send-rp-discovery'"
+      - "BSR: 'ip pim bsr-candidate' and 'ip pim rp-candidate'"
+      - "Verify RP reachable: 'ping <rp-ip>'"
+      - "Check 'show ip pim rp-hash <group>' for RP selection"
+    applicability: "PIM sparse mode multicast deployments"
+
+  pim_dr:
+    name: "PIM DR Election Misconfiguration"
+    description: "Set wrong PIM DR priority causing incorrect DR election on multi-access networks"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Wrong router elected as PIM DR on broadcast segment"
+      - "Only DR sends registers to RP (source traffic)"
+      - "Multicast source traffic not forwarded"
+      - "DR forwarder not as designed"
+    troubleshooting_hints:
+      - "Check PIM DR with 'show ip pim interface'"
+      - "DR is elected by highest priority, then highest IP"
+      - "Use 'ip pim dr-priority <0-4294967295>' on interface"
+      - "Higher priority wins DR election"
+      - "DR is responsible for sending PIM registers to RP"
+      - "DR has special role for IGMPv1/v2 on shared segment"
+    applicability: "Multi-access networks with PIM"
+
+  igmp_snooping:
+    name: "IGMP Snooping Misconfiguration"
+    description: "Configure IGMP snooping incorrectly causing multicast traffic to be flooded or dropped"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - igmp
+      - multicast
+    symptoms:
+      - "Multicast traffic flooded to all ports"
+      - "Multicast traffic dropped to receivers"
+      - "IGMP snooping database incorrect"
+      - "High CPU due to unknown multicast"
+    troubleshooting_hints:
+      - "Check IGMP snooping with 'show ip igmp snooping'"
+      - "Verify 'ip igmp snooping' is enabled on VLAN"
+      - "Check 'show ip igmp snooping groups' for group membership"
+      - "Snooping only works with IGMPv2/v3"
+      - "Use 'ip igmp snooping querier' to enable switch as querier"
+      - "Check for 'ip igmp snooping vlan <vlan>' configuration"
+    applicability: "Layer 2 switches with multicast receivers"

@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Access Control Issues Injection"
+description: "Access control lists (ACL) and security-related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ipv4
+  - ipv6
+  - tcp
+  - udp
+  - acl
+
+issues:
+  blocking_acl:
+    name: "Blocking ACL"
+    description: "Apply an ACL that blocks legitimate traffic"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+      - tcp
+      - udp
+    symptoms:
+      - "Specific services unreachable"
+      - "Traffic blocked unexpectedly"
+      - "Partial network outage"
+      - "Application connectivity failures"
+    troubleshooting_hints:
+      - "Check applied ACLs with 'show access-lists' (Cisco) or 'display acl all' (Huawei)"
+      - "Verify ACL is applied in correct direction (in/out)"
+      - "Check ACL order and hit counts"
+      - "Test with 'permit ip any any' to verify ACL is the issue"
+      - "Review ACL rules for implicit denies"
+    applicability: "Routers, switches, firewalls with ACLs configured"
+
+  implicit_deny:
+    name: "Implicit Deny Not Considered"
+    description: "ACL without explicit permit at the end, traffic blocked by implicit deny"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic not matching any ACL entry is dropped"
+      - "Unexplained connectivity issues"
+      - "Works for some traffic, fails for others"
+    troubleshooting_hints:
+      - "Remember every ACL has implicit deny at the end"
+      - "Check if 'permit ip any any' is missing"
+      - "Review ACL hit counts to see what's matching"
+      - "Verify last line of ACL"
+    applicability: "All ACL configurations"
+
+  acl_wrong_direction:
+    name: "ACL Applied in Wrong Direction"
+    description: "Apply ACL in wrong direction (inbound vs outbound)"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic blocked in one direction only"
+      - "Asymmetric connectivity"
+      - "Works one way but not the other"
+    troubleshooting_hints:
+      - "Check ACL direction with 'show ip interface'"
+      - "Inbound ACL: applied to traffic entering interface"
+      - "Outbound ACL: applied to traffic leaving interface"
+      - "Verify direction matches intent"
+    applicability: "ACLs applied to interfaces"
+
+  acl_overlap_conflict:
+    name: "ACL Overlap or Conflict"
+    description: "Multiple ACLs with overlapping or conflicting rules"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic blocked unexpectedly"
+      - "Unintended traffic permitted"
+      - "ACL rule precedence issues"
+      - "Security policy not enforced as expected"
+    troubleshooting_hints:
+      - "Check all ACLs applied to the interface"
+      - "ACLs are processed in order, first match wins"
+      - "More specific rules should come before general rules"
+      - "Check for 'remark' comments explaining ACL purpose"
+      - "Use 'show access-lists <acl-name>' to see rule order"
+      - "Test each ACL separately to identify conflicts"
+    applicability: "Multiple ACLs on same interface or across the traffic path"
+
+  zone_based_firewall:
+    name: "Zone-Based Firewall Policy Missing"
+    description: "Configure zone-based firewall but forget to allow traffic between zones"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv4
+      - ipv6
+      - firewall
+    symptoms:
+      - "Traffic dropped between zones"
+      - "Inter-zone communication blocked"
+      - "Zone-pair policy not configured"
+      - "Traffic allowed locally but dropped at zone boundary"
+    troubleshooting_hints:
+      - "Check zones with 'show zone' or 'show zone-pair security'"
+      - "Verify zone-pair policies exist for traffic direction"
+      - "Ensure zones are assigned to interfaces"
+      - "Check 'inspect' or 'pass' action in zone-pair policy"
+      - "Review policy match statistics"
+      - "Default inter-zone policy is deny (deny-all)"
+    applicability: "Zone-based firewall configurations"

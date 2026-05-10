@@ -1,0 +1,120 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VRRP/HSRP Issues Injection"
+description: "First Hop Redundancy Protocol (VRRP, HSRP) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - vrrp
+  - hsrp
+  - glbp
+
+issues:
+  vrrp_priority:
+    name: "VRRP Priority Misconfiguration"
+    description: "Set lower priority on the intended master router or higher priority on the standby router"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - vrrp
+    symptoms:
+      - "Wrong router elected as VRRP master"
+      - "Backup router becomes master despite configuration"
+      - "Suboptimal first-hop routing"
+      - "Traffic exiting through non-preferred gateway"
+    troubleshooting_hints:
+      - "Check VRRP status with 'show vrrp' or 'show vrrp brief'"
+      - "Priority default is 100, higher priority wins election"
+      - "Master is elected based on highest priority, then highest IP"
+      - "Use 'vrrp <group> priority <1-255>' to set priority"
+      - "Priority 255 means the real IP owner (always wins)"
+      - "Check preempt configuration affects failback behavior"
+    applicability: "VRRP groups with multiple routers"
+
+  vrrp_timers:
+    name: "VRRP Timer Mismatch"
+    description: "Set non-standard VRRP advertisement interval causing master dead timer issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vrrp
+    symptoms:
+      - "VRRP master election flapping"
+      - "Backup declaring master dead prematurely"
+      - "Frequent VRRP state changes"
+      - "Gateway temporarily unavailable"
+    troubleshooting_hints:
+      - "Check VRRP timers with 'show vrrp'"
+      - "Default advertisement interval is 1 second"
+      - "Master down interval = 3 x advertisement (in seconds)"
+      - "Use 'vrrp <group> timers advertise <seconds>'"
+      - "Sub-second timers possible with 'msec' option"
+      - "Master and backup use same timer (master advertises it)"
+    applicability: "VRRP groups requiring fast failover"
+
+  hsrp_priority:
+    name: "HSRP Priority Misconfiguration"
+    description: "Set lower HSRP priority on intended active router or higher priority on standby"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+    symptoms:
+      - "Wrong router elected as HSRP active"
+      - "Standby router becomes active unexpectedly"
+      - "HSRP state flapping between routers"
+      - "Default gateway not reachable on some hosts"
+    troubleshooting_hints:
+      - "Check HSRP state with 'show standby brief'"
+      - "HSRP priority default is 100, higher priority wins"
+      - "Active is elected based on highest priority, then highest IP"
+      - "Use 'standby <group> priority <0-255>' to set priority"
+      - "Priority 255 means the real IP owner (always active if configured)"
+      - "Check 'preempt' configuration for failback behavior"
+    applicability: "HSRP groups with multiple routers"
+
+  hsrp_timers:
+    name: "HSRP Hello/Hold Timer Mismatch"
+    description: "Configure mismatched HSRP hello and hold timers causing failover issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+    symptoms:
+      - "HSRP state flapping"
+      - "Standby declaring active down prematurely"
+      - "Failover not happening when expected"
+      - "Hold timer expires too quickly"
+    troubleshooting_hints:
+      - "Check HSRP timers with 'show standby'"
+      - "Default hello is 3 seconds, hold is 10 seconds"
+      - "Hold time should be at least 3 x hello time"
+      - "Use 'standby <group> timers <hello> <hold>'"
+      - "Mismatched timers cause failover problems"
+      - "HSRP version 2 supports millisecond timers"
+    applicability: "HSRP groups requiring fast failover"
+
+  hsrp_authentication:
+    name: "HSRP Authentication Mismatch"
+    description: "Configure HSRP with mismatched authentication keys or types"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+    symptoms:
+      - "HSRP peers not forming group"
+      - "HSRP state stuck in INIT or LISTEN"
+      - "Authentication mismatch errors"
+      - "Active/standby not communicating"
+    troubleshooting_hints:
+      - "Check HSRP authentication with 'show standby'"
+      - "Verify 'standby <group> authentication <string>' matches on both peers"
+      - "HSRP supports MD5 authentication or plain text"
+      - "Authentication keys must match exactly"
+      - "Check for 'HSRP: group X authentication mismatch' in logs"
+      - "HSRP version 2 uses MD5, version 1 uses plain text"
+    applicability: "HSRP with authentication configured"

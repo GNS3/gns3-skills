@@ -20,8 +20,8 @@ select and inject realistic network faults to help users practice troubleshootin
 ## Step 1: Information Gathering
 
 1. **Get Topology Information**
-   - Use `injection_skills` tool to list available fault types
    - Understand network structure, device types, and connections
+   - Identify which protocols/services are configured (OSPF, BGP, VLAN, STP, MPLS, etc.)
 
 2. **Get Device Configurations**
    - Use `execute_multiple_device_commands` to retrieve current configurations:
@@ -30,6 +30,7 @@ select and inject realistic network faults to help users practice troubleshootin
      - H3C: `display current-configuration`
      - Ruijie: `show running-config`
    - Analyze current configuration state
+   - Note which protocols are actually running (not just configured)
 
 ## Step 2: Select Fault Type (TOKEN-EFFICIENT)
 
@@ -42,8 +43,9 @@ Consider:
 
 **Use `injection_skills` tool to query injection faults (lowest token cost first):**
 
-1. List available skills (1 tool call):
-   {"action": "list", "category": "injection"}
+1. List relevant skills filtered by topology context (1 tool call):
+   {"action": "list", "context": ["ospf", "vlan"]}
+   → Only returns skills matching these protocols from your topology
 
 2. Get issue index by skill - names only, ~300 tokens:
    {"device_type": "injection_ospf", "detail": "index"}

@@ -41,11 +41,12 @@ Consider:
 - Fault realism and troubleshootability
 - Difficulty level (user-specified or default medium)
 
-**Use `injection_skills` tool to query injection faults (lowest token cost first):**
+**Use `injection_skills` tool to query injection faults:**
 
-1. List relevant skills filtered by topology context (1 tool call):
+1. **REQUIRED**: List skills matching your topology protocols (1 tool call):
    {"action": "list", "context": ["ospf", "vlan"]}
-   → Only returns skills matching these protocols from your topology
+   → CRITICAL: You MUST analyze the topology first, then pass the protocols you found.
+     The tool will reject calls without context. This ensures only relevant faults are returned.
 
 2. Get issue index by skill - names only, ~300 tokens:
    {"device_type": "injection_ospf", "detail": "index"}

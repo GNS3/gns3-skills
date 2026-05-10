@@ -6,6 +6,5 @@
 #
 
 Based on the following conversation records,
-analyze the language composition and generate a concise, summary title.
-Match the language of the conversation.
+generate a concise summary title.
 Only return the title, do not include any additional explanations or punctuation:

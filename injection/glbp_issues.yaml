@@ -1,0 +1,160 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "GLBP Issues Injection"
+description: "GLBP first-hop redundancy protocol related network faults"
+category: "injection"
+protocols:
+  - glbp
+
+issues:
+  glbp_priority:
+    name: "GLBP Priority / AVG Election Manipulation"
+    description: "Set wrong GLBP priority causing suboptimal AVG (Active Virtual Gateway) election"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - glbp
+    symptoms:
+      - "Wrong router elected as GLBP AVG"
+      - "Suboptimal gateway redundancy"
+      - "AVG not the preferred router"
+      - "GLBP load balancing not as designed"
+    troubleshooting_hints:
+      - "Check GLBP status with 'show glbp' or 'show glbp brief'"
+      - "Priority default is 100, higher priority wins AVG election"
+      - "Use 'glbp <group> priority <1-255>' to set priority"
+      - "AVG assigns AVF (Active Virtual Forwarder) roles"
+      - "Preempt enabled by default for AVG"
+      - "Check 'show glbp <group>' for AVG and AVF states"
+    applicability: "GLBP deployments"
+
+  glbp_avf:
+    name: "GLBP AVF (Active Virtual Forwarder) Preempt Disabled"
+    description: "AVF preempt disabled causing AVF role not reclaimed after recovery"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "AVF roles not redistributed after router recovery"
+      - "One router handling more traffic than expected"
+      - "Weight-based AVF election not working as expected"
+      - "AVF role stuck on backup router"
+    troubleshooting_hints:
+      - "Check AVF preempt with 'show glbp <group>'"
+      - "AVF preempt controls whether a router reclaims AVF role"
+      - "Use 'glbp <group> preempt' to re-enable AVF preempt"
+      - "AVG assigns up to 4 AVFs per GLBP group"
+      - "Each AVF owns a unique virtual MAC"
+      - "Preempt delay: 'glbp <group> preempt delay <seconds>'"
+    applicability: "GLBP with AVF role management"
+
+  glbp_weight:
+    name: "GLBP Weight Tracking Misconfiguration"
+    description: "Configure GLBP weight tracking with wrong decrement value causing premature AVF change"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "AVF role changes when tracking object goes down"
+      - "Router becomes a 'secondary' AVF after weight drops below threshold"
+      - "Weight decrement too large causing unnecessary AVF switch"
+      - "Gateway failover not sensitive enough to upstream loss"
+    troubleshooting_hints:
+      - "Check GLBP weight with 'show glbp'"
+      - "Weight tracks interface or object state"
+      - "Use 'glbp <group> weighting maximum <max> [lower <low>]'"
+      - "When weight drops below lower threshold, router loses AVF role"
+      - "Use 'glbp <group> weighting track <obj> [decrement <value>]'"
+      - "Total weight decrement should consider multiple tracked objects"
+    applicability: "GLBP with upstream link tracking"
+
+  glbp_timers:
+    name: "GLBP Timer Mismatch"
+    description: "Configure GLBP timers that are too fast or too slow causing instability or slow failover"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "GLBP groups flapping (hello timer too fast)"
+      - "Failover too slow (hello timer too slow)"
+      - "AVG election delayed"
+      - "GLBP state transitions unexpected"
+    troubleshooting_hints:
+      - "Check GLBP timers with 'show glbp'"
+      - "Default hello is 3s, hold is 10s (like HSRP)"
+      - "Use 'glbp <group> timers <hello> <hold>' to configure"
+      - "Hold timer should be 3x hello timer (minimum)"
+      - "Sub-second timers for fast convergence"
+      - "All routers should have consistent timer settings"
+    applicability: "GLBP convergence tuning"
+
+  glbp_vip:
+    name: "GLBP Virtual IP Address Mismatch"
+    description: "Configure different virtual IP addresses in the same GLBP group"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - glbp
+    symptoms:
+      - "GLBP group not operating correctly"
+      - "Hosts configured with wrong default gateway"
+      - "AVG not responding to ARP for expected VIP"
+      - "Virtual IP conflict between routers"
+    troubleshooting_hints:
+      - "Check GLBP VIP with 'show glbp'"
+      - "Use 'glbp <group> ip <virtual-ip>' to configure"
+      - "VIP must match on all routers in the GLBP group"
+      - "GLBP group number must match across routers"
+      - "AVG responds to ARP requests for VIP with different AVF MACs"
+      - "Up to 4 virtual MACs per GLBP group for load balancing"
+    applicability: "All GLBP deployments"
+
+  glbp_load_balancing:
+    name: "GLBP Load Balancing Method Misconfiguration"
+    description: "Configure GLBP load balancing method that doesn't match traffic patterns"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "Uneven traffic distribution across gateways"
+      - "Host IP or MAC based balancing not distributing equally"
+      - "Round-robin not cycling through AVFs correctly"
+      - "Host-dependent balancing sending all traffic to one AVF"
+    troubleshooting_hints:
+      - "Check GLBP load balance with 'show glbp'"
+      - "Methods: round-robin, weighted, host-dependent"
+      - "Round-robin: AVG cycles through AVFs for each ARP request"
+      - "Weighted: based on AVF weighting value"
+      - "Host-dependent: same host always gets same AVF"
+      - "Use 'glbp <group> load-balancing <method>' to set"
+    applicability: "GLBP traffic distribution tuning"
+
+  glbp_auth:
+    name: "GLBP Authentication Mismatch"
+    description: "Configure GLBP authentication on one side but not the other, or use different keys"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - glbp
+    symptoms:
+      - "GLBP neighbors not forming adjacency"
+      - "Authentication failures in logs"
+      - "GLBP group isolated (routers not seeing each other)"
+      - "Multiple AVGs elected (split brain)"
+    troubleshooting_hints:
+      - "Check GLBP auth with 'show glbp'"
+      - "Use 'glbp <group> authentication <text|md5> <key>'"
+      - "Authentication must match on all routers in the group"
+      - "Text auth is insecure, MD5 recommended"
+      - "Key string is case-sensitive"
+      - "GLBP MD5 auth field: 'authentication md5 key-string <key>'"
+    applicability: "GLBP with authentication"

@@ -1,0 +1,173 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VPLS/VPWS/L2VPN Issues Injection"
+description: "VPLS, VPWS (AToM, Martini) and L2VPN related network faults"
+category: "injection"
+protocols:
+  - vpls
+  - vpws
+  - l2vpn
+  - mpls
+
+issues:
+  vpls_vc_mismatch:
+    name: "VPLS Virtual Circuit ID Mismatch"
+    description: "Configure different VC IDs on two sides of a VPLS/VPWS pseudowire"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpls
+      - l2vpn
+      - mpls
+    symptoms:
+      - "VPLS pseudowire not established"
+      - "VC state shows down"
+      - "L2VPN cross-connect not operational"
+      - "CE-to-CE connectivity broken"
+    troubleshooting_hints:
+      - "Check VPLS with 'show l2vpn vc' or 'show mpls l2transport vc'"
+      - "VC ID must match on both PE routers"
+      - "Use 'xconnect <peer> <vc-id> encapsulation mpls' for VPWS"
+      - "For VPLS: 'member vfi <name>' and 'vpn id <vc-id>'"
+      - "Check 'show l2vpn pseudowire' for VC state"
+      - "VC status: up = operational, down = not functional"
+    applicability: "VPLS and VPWS deployments"
+
+  vpls_mtu_mismatch:
+    name: "VPLS/VPWS MTU Mismatch"
+    description: "Configure different MTU values on VPLS pseudowire endpoints"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vpls
+      - l2vpn
+      - mpls
+    symptoms:
+      - "VC status shows up but with MTU mismatch"
+      - "Large frames dropped across pseudowire"
+      - "Layer 2 MTU parameters not matching"
+      - "VC stays down due to MTU negotiation failure"
+    troubleshooting_hints:
+      - "Check VC MTU with 'show l2vpn vc detail'"
+      - "MTU must match on both PE endpoints for the VC"
+      - "L2VPN MTU differs from interface MTU (includes L2 header)"
+      - "Use 'mtu <size>' under the xconnect or pseudowire config"
+      - "Check interface MTU across the MPLS core path"
+      - "Some platforms use 'l2vpn mtu <size>' globally"
+    applicability: "VPLS/VPWS with consistent MTU requirements"
+
+  vpls_encapsulation:
+    name: "VPLS Encapsulation Type Mismatch"
+    description: "Configure different encapsulation types (Ethernet vs VLAN) on VPLS endpoints"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpls
+      - l2vpn
+    symptoms:
+      - "VPLS pseudowire not operational"
+      - "VC down due to encapsulation mismatch"
+      - "L2VPN encapsulation type conflict"
+      - "CE traffic not forwarded through VPLS"
+    troubleshooting_hints:
+      - "Check encapsulation with 'show l2vpn vc detail'"
+      - "Encapsulation types: Ethernet (tagged/untagged), VLAN"
+      - "Must match on both PE routers"
+      - "Use 'encapsulation <type>' under xconnect"
+      - "VPLS must use consistent encapsulation across all PEs"
+      - "VLAN encapsulation strips/pushes VLAN tags"
+    applicability: "VPLS with different encapsulations"
+
+  vpls_full_mesh:
+    name: "VPLS Full-Mesh Pseudowire Missing"
+    description: "VPLS requires full mesh of pseudowires between all PEs but some are missing"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpls
+      - l2vpn
+    symptoms:
+      - "VPLS forwarding incomplete (some remote PEs unreachable)"
+      - "MAC addresses not learned across all VPLS endpoints"
+      - "Split-horizon preventing flooding to specific PE"
+      - "Traffic blackholed between certain PEs"
+    troubleshooting_hints:
+      - "VPLS requires full mesh of pseudowires (split-horizon)"
+      - "Check VPLS members with 'show vfi <name>'"
+      - "Use 'member <ip> <vc-id>' for each remote PE"
+      - "H-VPLS simplifies mesh with hierarchical design"
+      - "Check 'show l2vpn vc' for all peer status"
+      - "Split-horizon prevents forwarding between PWs on same VFI"
+    applicability: "VPLS full-mesh and H-VPLS designs"
+
+  vpls_mac_flush:
+    name: "VPLS MAC Flush / Withdrawal Issue"
+    description: "VPLS MAC flush not working when link fails causing stale MAC entries"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vpls
+      - l2vpn
+    symptoms:
+      - "Stale MAC entries after link failure in VPLS network"
+      - "Traffic blackholed after convergence"
+      - "MAC not relearned on backup path"
+      - "Forwarding failure after link recovery"
+    troubleshooting_hints:
+      - "VPLS MAC withdrawal is signaled via LDP"
+      - "Check 'show l2vpn vc' for MAC withdrawal stats"
+      - "MAC flush triggered by VC status change (up→down)"
+      - "Standby/primary pseudowire: 'redundancy' for backup"
+      - "MAC flush delay: 'mac-address-table notify'"
+      - "Ingest replication of MAC flush from VPLS signaling"
+    applicability: "VPLS with link redundancy"
+
+  vpls_pe_router_id:
+    name: "VPLS PE Router-ID Reachability Issue"
+    description: "PE router ID not reachable via MPLS core preventing VPLS pseudowire setup"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - vpls
+      - l2vpn
+      - mpls
+    symptoms:
+      - "VPLS pseudowire not coming up"
+      - "PE router not reachable via MPLS LSP"
+      - "LDP session down between PEs"
+      - "Targeted LDP session cannot be established"
+    troubleshooting_hints:
+      - "VPLS uses targeted LDP sessions between PEs"
+      - "Check targeted LDP with 'show mpls ldp neighbor'"
+      - "PE router-id must be reachable from remote PE"
+      - "IGP must have route to the peer PE router-id"
+      - "Use 'mpls ldp router-id <interface>' for LDP source"
+      - "Check 'ping mpls ipv4 <peer-rid>/32' for LSP reachability"
+    applicability: "VPLS/VPWS in MPLS networks"
+
+  vpws_interworking:
+    name: "VPWS L2VPN Interworking Mode Mismatch"
+    description: "Configure VPWS interworking mode (Ethernet to VLAN) incorrectly"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - vpws
+      - l2vpn
+    symptoms:
+      - "VPWS cross-connect not forwarding traffic correctly"
+      - "Interworking mode mismatch between endpoints"
+      - "L2 frames encapsulated with wrong header format"
+      - "CE-facing encapsulation misalignment"
+    troubleshooting_hints:
+      - "VPWS interworking: Ethernet (raw) vs VLAN (tagged)"
+      - "Ethernet interworking: same L2 header format on both ends"
+      - "VLAN interworking: VLAN tag preserved or manipulated"
+      - "Use 'interworking ethernet' or 'interworking vlan' under xconnect"
+      - "Check with 'show l2vpn xconnect detail' for interworking mode"
+      - "Mis-match causes traffic to be dropped at the egress PE"
+    applicability: "VPWS with mixed L2 encapsulations"

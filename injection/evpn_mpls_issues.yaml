@@ -1,0 +1,150 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "EVPN MPLS Issues Injection"
+description: "EVPN over MPLS control/data plane related network faults"
+category: "injection"
+protocols:
+  - evpn
+  - mpls
+  - ldp
+  - pim
+
+issues:
+  evpn_mpls_label:
+    name: "EVPN MPLS Label Allocation Failure"
+    description: "EVPN MPLS service label not allocated for an EVI (EVPN Instance)"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "EVPN MPLS label missing for the EVI"
+      - "MPLS forwarding table has no entry for EVPN prefix"
+      - "EVPN route received but no label for forwarding"
+      - "L2VPN service broken (label missing)"
+    troubleshooting_hints:
+      - "Check EVPN label with 'show bgp l2vpn evpn <prefix>' for label field"
+      - "Verify 'evpn mpls label <id>' or auto-derived label"
+      - "On egress PE: label allocated per EVI or per MAC"
+      - "Check 'show mpls forwarding-table' for label entries"
+      - "Per-EVI label: all traffic for the EVI uses same label"
+      - "Per-MAC label: unique label per MAC address (aliasing)"
+    applicability: "EVPN MPLS networks"
+
+  evpn_mpls_tunnel:
+    name: "EVPN MPLS LSP Tunnel Failure"
+    description: "MPLS LSP (Label Switched Path) not available for EVPN forwarding between PEs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - mpls
+      - ldp
+    symptoms:
+      - "EVPN MPLS traffic not forwarded between PEs"
+      - "LSP ping fails between PE endpoints"
+      - "BGP EVPN routes exchanged but MPLS path broken"
+      - "Underlay reachability fine but labeled path fails"
+    troubleshooting_hints:
+      - "Check MPLS LSP with 'ping mpls ipv4 <peer-router-id>'"
+      - "Verify LDP sessions between PEs (direct or targeted)"
+      - "For SR-MPLS: check prefix-SID for the PE loopback"
+      - "Check 'show mpls forwarding-table' for transport label"
+      - "EVPN service label is inner, transport label is outer"
+      - "Use 'traceroute mpls ipv4 <peer>' to trace LSP path"
+    applicability: "EVPN MPLS with MPLS transport"
+
+  evpn_mpls_encapsulation:
+    name: "EVPN MPLS Encapsulation Type Mismatch"
+    description: "Configure EVPN MPLS with wrong encapsulation type (VLAN vs Ethernet)"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "EVPN MPLS forwarding not working between PEs"
+      - "Encapsulation type mismatch between peers"
+      - "VLAN tag handling inconsistent across the network"
+      - "L2 frame corruption at egress PE"
+    troubleshooting_hints:
+      - "EVPN encapsulation: VLAN (802.1Q preserved) or Ethernet (dot1q stripped)"
+      - "Encapsulation type must match on all PEs in the same EVI"
+      - "Check with 'show evpn evi <id>' for encapsulation type"
+      - "VLAN-based: one EVI per VLAN (VLAN tag transmitted)"
+      - "VLAN-bundle: multiple VLANs mapped to same EVI (tags stripped)"
+      - "VLAN-aware: single EVI, per-VLAN service with VLAN ID"
+    applicability: "EVPN MPLS with different encapsulation modes"
+
+  evpn_mpls_multicast:
+    name: "EVPN MPLS Multicast / P2MP LSP Issues"
+    description: "EVPN MPLS multicast traffic not flowing due to missing P2MP LSP"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+      - pim
+    symptoms:
+      - "BUM traffic not forwarded across EVPN MPLS network"
+      - "P2MP LSP not established for EVPN multicast"
+      - "Ingress replication working but mLDP/P2MP not"
+      - "Multicast receiver not receiving VPLS/EVPN BUM traffic"
+    troubleshooting_hints:
+      - "EVPN MPLS BUM: ingress replication or P2MP LSP (mLDP/RSVP-TE)"
+      - "Check 'show l2vpn evpn multicast' for BUM forwarding mode"
+      - "Ingress replication: traffic replicated per PE (simpler)"
+      - "P2MP LSP: more efficient for multicast distribution"
+      - "Check mLDP: 'show mpls mldp database' for P2MP tree"
+      - "Verify PIM is enabled on underlay interfaces for multicast"
+    applicability: "EVPN MPLS with BUM traffic requirements"
+
+  evpn_mpls_evi:
+    name: "EVPN MPLS EVI (EVPN Instance) Misconfiguration"
+    description: "Configure EVI with wrong parameters (RD, RT) on different PEs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "EVPN MPLS service not operational"
+      - "EVI parameters not consistent across PEs"
+      - "Route import/export failure for the EVI"
+      - "L2VPN service configuration incomplete"
+    troubleshooting_hints:
+      - "Check EVI with 'show evpn evi <id>'"
+      - "EVI configuration: 'evpn evi <id> rd <rd> route-target <rt>'"
+      - "RD must be unique per EVI per PE"
+      - "RT must match across PEs for the same EVI (import/export)"
+      - "Check 'show bgp l2vpn evpn evi <id>' for EVI routes"
+      - "Control-word: 'mpls control-word' for L2 header preservation"
+    applicability: "EVPN MPLS service configuration"
+
+  evpn_mpls_mac_learning:
+    name: "EVPN MPLS MAC Distribution / Learning Failure"
+    description: "MAC addresses not distributed via EVPN MPLS between PEs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "Remote MAC addresses not learned via EVPN MPLS"
+      - "Type 2 routes present in BGP but MAC not installed"
+      - "CE-facing interfaces not learning remote MACs"
+      - "Flooding unknown unicast across the MPLS core"
+    troubleshooting_hints:
+      - "Check local MAC learning: 'show l2vpn evpn mac evi <id>'"
+      - "Check remote MAC: 'show l2vpn evpn mac evi <id>' (remote entries)"
+      - "Verify Type 2 routes in BGP: 'show bgp l2vpn evpn route-type 2'"
+      - "MAC mobility: sequence numbers track MAC moves"
+      - "Disable MAC advertisement: 'no evpn advertise mac'"
+      - "IRB: routed interfaces need 'evpn arp advertise' for IP routes"
+    applicability: "EVPN MPLS MAC learning across PEs"

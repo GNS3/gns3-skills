@@ -1,0 +1,218 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IPv6 Routing Issues Injection"
+description: "IPv6 routing protocols (OSPFv3, RIPng, EIGRPv6) and IPv6 transition related faults"
+category: "injection"
+protocols:
+  - ipv6
+  - ospfv3
+  - ripng
+  - eigrp
+  - tunnel
+  - 6to4
+  - isatap
+  - nat64
+
+issues:
+  ipv6_enabled:
+    name: "IPv6 Not Enabled on Interface"
+    description: "IPv6 not configured on interface where IPv6 routing is expected"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ipv6
+    symptoms:
+      - "IPv6 routing protocol not forming adjacency"
+      - "No IPv6 connectivity through the interface"
+      - "IPv6 link-local address not generated"
+      - "IPv6 routing protocol requires IPv6 on interface"
+    troubleshooting_hints:
+      - "Check IPv6 with 'show ipv6 interface brief'"
+      - "Enable IPv6 on interface: 'ipv6 enable' (link-local only)"
+      - "Or assign global unicast: 'ipv6 address <prefix>/<len>'"
+      - "IPv6 must be enabled for any routing protocol to work"
+      - "Link-local address is automatically generated when IPv6 enabled"
+      - "EUI-64 or manual global address configuration"
+    applicability: "All IPv6 deployments"
+
+  ipv6_unicast_routing:
+    name: "IPv6 Unicast Routing Not Enabled"
+    description: "Global IPv6 unicast routing not enabled on the router"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ipv6
+    symptoms:
+      - "IPv6 routing protocols not starting"
+      - "Router does not forward IPv6 packets"
+      - "'ipv6 unicast-routing' not configured"
+      - "IPv6 forwarding disabled"
+    troubleshooting_hints:
+      - "Use 'ipv6 unicast-routing' globally to enable IPv6 routing"
+      - "Without this, router acts as IPv6 host, not router"
+      - "Check with 'show ipv6 route' - may be empty without routing"
+      - "Also needed for IPv6 routing protocols (OSPFv3, EIGRPv6, RIPng)"
+      - "Required for IPv6 packet forwarding between interfaces"
+      - "Platforms may have this enabled by default"
+    applicability: "All IPv6 routing deployments"
+
+  ospfv3_router_id:
+    name: "OSPFv3 Router-ID Not Configured"
+    description: "OSPFv3 requires router-id but not configured on IPv6-only router"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospfv3
+      - ipv6
+    symptoms:
+      - "OSPFv3 process fails to start"
+      - "OSPFv3 can't determine router-id"
+      - "No IPv4 address to derive router-id"
+      - "OSPFv3 neighbors not forming"
+    troubleshooting_hints:
+      - "OSPFv3 requires a router-id (32-bit, IPv4 format)"
+      - "Use 'router-id <A.B.C.D>' under ospfv3 process"
+      - "IPv6-only routers must have explicit router-id"
+      - "Router-id is an IPv4 format even in OSPFv3"
+      - "Check 'show ipv6 ospf' for router-id status"
+      - "Duplicate router-ids prevent adjacency formation"
+    applicability: "IPv6-only OSPFv3 deployments"
+
+  ospfv3_area:
+    name: "OSPFv3 Area / Instance ID Mismatch"
+    description: "Configure different OSPFv3 areas or instance IDs on neighboring interfaces"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospfv3
+      - ipv6
+    symptoms:
+      - "OSPFv3 neighbor adjacency not forming"
+      - "Instance ID mismatch prevents OSPFv3 peering"
+      - "Area ID mismatch on neighbor interfaces"
+      - "OSPFv3 stuck in INIT state"
+    troubleshooting_hints:
+      - "Check OSPFv3 instance with 'show ipv6 ospf interface'"
+      - "Instance IDs must match on both sides (default 0)"
+      - "Multiple OSPFv3 instances can run on same link"
+      - "Use 'ipv6 ospf <process> area <area> [instance <id>]'"
+      - "Area must match on both sides of the link"
+      - "Different instances isolate OSPFv3 per process"
+    applicability: "OSPFv3 with multiple instances or areas"
+
+  ospfv3_authentication:
+    name: "OSPFv3 Authentication/IPsec Misconfiguration"
+    description: "Configure wrong OSPFv3 authentication (IPsec AH/ESP) parameters"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospfv3
+      - ipv6
+    symptoms:
+      - "OSPFv3 adjacency fails due to authentication"
+      - "IPsec SA not established for OSPFv3"
+      - "Authentication errors in OSPFv3 logs"
+      - "OSPFv3 packets rejected"
+    troubleshooting_hints:
+      - "OSPFv3 uses IPsec for authentication (not MD5 like OSPFv2)"
+      - "Use 'ipv6 ospf authentication ipsec spi <hex>'"
+      - "AH provides authentication, ESP provides auth + encryption"
+      - "SPI and key must match on both sides"
+      - "Check IPsec SA: 'show ipv6 ospf interface'"
+      - "Use 'crypto isakmp key' for manual IPsec configuration"
+    applicability: "OSPFv3 with authentication requirements"
+
+  ripng_enabled:
+    name: "RIPng Not Enabled on Interface"
+    description: "RIPng configured globally but not enabled on the interface"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ripng
+      - ipv6
+    symptoms:
+      - "RIPng not advertising IPv6 routes"
+      - "No RIPng updates sent on interface"
+      - "RIPng prefix list empty"
+      - "IPv6 routes not propagated via RIPng"
+    troubleshooting_hints:
+      - "Check RIPng with 'show ipv6 rip'"
+      - "Enable on interface: 'ipv6 rip <process> enable'"
+      - "RIPng uses multicast FF02::9"
+      - "RIPng split-horizon applies by default"
+      - "RIPng administrative distance is 120"
+      - "Use 'show ipv6 rip database' for RIPng routes"
+    applicability: "RIPng IPv6 routing deployments"
+
+  eigrpv6_not_shutdown:
+    name: "EIGRPv6 Named Mode Not Activated"
+    description: "EIGRPv6 configured but not 'no shutdown' (named mode requirement)"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "EIGRP for IPv6 not forming adjacency"
+      - "EIGRPv6 process administratively down"
+      - "Named mode EIGRP requires 'no shutdown'"
+      - "EIGRPv6 routes not exchanged"
+    troubleshooting_hints:
+      - "Named EIGRP: 'address-family ipv6' under 'router eigrp <name>'"
+      - "EIGRP named mode requires 'no shutdown' in address-family"
+      - "Check with 'show ip eigrp neighbors' for IPv6 AF"
+      - "EIGRPv6 uses FF02::A for multicast hellos"
+      - "Router-id required in EIGRPv6 (IPv4 format)"
+      - "Use 'show eigrp address-family ipv6' for status"
+    applicability: "EIGRP IPv6 deployments"
+
+  ipv6_tunnel:
+    name: "IPv6 Tunnel (6to4 / ISATAP / GRE) Misconfiguration"
+    description: "Configure IPv6 transition tunnel with incorrect endpoint or mode"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ipv6
+      - tunnel
+      - 6to4
+      - isatap
+    symptoms:
+      - "IPv6 tunnel not coming up"
+      - "Tunnel endpoint unreachable"
+      - "6to4 relay not working"
+      - "IPv6 over IPv4 tunnel failure"
+    troubleshooting_hints:
+      - "Check tunnel with 'show ipv6 tunnel' or 'show interface tunnel'"
+      - "6to4: uses 2002::/16 prefix derived from IPv4 address"
+      - "ISATAP: uses link-local ISATAP addresses for intra-site"
+      - "GRE tunnel: 'tunnel mode gre ipv6' for IPv6 over GRE"
+      - "Verify tunnel source and destination reachability"
+      - "MTU issues common with IPv6 tunnels (reduced MTU)"
+    applicability: "IPv6 transition / coexistence deployments"
+
+  ipv6_nat64:
+    name: "NAT64 / DNS64 Misconfiguration"
+    description: "Configure NAT64 with incorrect prefix or translation rules"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ipv6
+      - nat64
+    symptoms:
+      - "IPv6-only hosts cannot reach IPv4-only destinations"
+      - "NAT64 prefix not matching DNS64 synthesized AAAA records"
+      - "Translation not working for specific protocols"
+      - "NAT64 stateful vs stateless confusion"
+    troubleshooting_hints:
+      - "NAT64 prefix: 64:ff9b::/96 (well-known) or custom /32,/40,/48,/56,/64"
+      - "Stateful NAT64: maintains sessions, uses shared IPv4 pool"
+      - "Stateless NAT64: 1:1 mapping (bi-directional)"
+      - "DNS64 synthesizes AAAA from A records using NAT64 prefix"
+      - "Check 'show nat64 translations' for translation entries"
+      - "Verify DNS64 prefix matches NAT64 prefix"
+    applicability: "IPv6-only to IPv4 communication"

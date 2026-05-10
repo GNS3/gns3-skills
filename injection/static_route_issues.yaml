@@ -1,0 +1,149 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Static Route Issues Injection"
+description: "Static route related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - static
+  - ipv4
+  - ipv6
+
+issues:
+  static_route_wrong_next_hop:
+    name: "Incorrect Static Route Next Hop"
+    description: "Add static route with wrong next hop IP address"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic forwarded to wrong destination"
+      - "Black hole routing"
+      - "Connectivity failure to specific networks"
+      - "Traceroute shows unexpected path"
+    troubleshooting_hints:
+      - "Check routing table with 'show ip route' (Cisco) or 'display ip routing-table' (Huawei)"
+      - "Verify next hop is reachable with ping"
+      - "Use 'traceroute' to see path traffic takes"
+      - "Check for hidden static routes with 'show run | include ip route'"
+      - "Compare routing tables across multiple routers"
+    applicability: "All routers using static routing"
+
+  static_route_wrong_network:
+    name: "Incorrect Static Route Destination Network"
+    description: "Add static route with wrong destination network or subnet mask"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Specific subnets unreachable"
+      - "Too broad or too specific route covering wrong destinations"
+      - "Traffic to valid destinations sent to wrong next hop"
+    troubleshooting_hints:
+      - "Check routing table for the expected prefix"
+      - "Verify destination network and mask in static route"
+      - "Use 'show run | include ip route' to review all static routes"
+      - "Longest prefix match determines which route is used"
+      - "Check for overlapping static routes"
+    applicability: "All routers using static routing"
+
+  floating_static_wrong_ad:
+    name: "Floating Static Route Wrong Administrative Distance"
+    description: "Set administrative distance too high or too low on floating static route"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Backup route active when primary is available"
+      - "Floating static route not taking over when primary fails"
+      - "Route from dynamic protocol not preferred over static"
+    troubleshooting_hints:
+      - "Check administrative distance with 'show ip route <prefix>'"
+      - "Default static route AD is 1 (Cisco), lower than any dynamic protocol"
+      - "Floating static should have AD higher than the dynamic protocol"
+      - "OSPF AD=110, EIGRP AD=90/170, RIP AD=120, iBGP AD=200"
+      - "Use 'ip route <prefix> <mask> <next-hop> <AD>' to set distance"
+      - "Verify primary route AD is lower than floating static AD"
+    applicability: "Redundant network designs with floating static routes"
+
+  static_route_null0:
+    name: "Static Route to Null0 (Black Hole)"
+    description: "Add static route pointing to null0 interface causing traffic to be dropped"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic to specific destinations silently dropped"
+      - "No route to host for valid IPs in the range"
+      - "Ping fails but no ICMP unreachable sent"
+      - "Discard route causing connectivity loss"
+    troubleshooting_hints:
+      - "Check routing table for Null0 routes with 'show ip route'"
+      - "Null0 is a virtual interface that discards packets"
+      - "Used for route summarization to prevent loops"
+      - "Verify if Null0 route is too broad (covers valid hosts)"
+      - "Check for 'ip route <prefix> <mask> Null0' statements"
+      - "Remove or narrow the Null0 route if incorrectly configured"
+    applicability: "Route summarization and DDoS mitigation configurations"
+
+  static_route_recursive:
+    name: "Static Route Recursive Lookup Failure"
+    description: "Static route with next hop that requires recursive lookup to a network that is not reachable"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Static route not installed in routing table"
+      - "'Gateway of last resort is not set'"
+      - "Route is configured but does not appear in RIB"
+      - "Connectivity to destination network fails"
+    troubleshooting_hints:
+      - "Check if static route appears in 'show ip route'"
+      - "Verify next hop is reachable via another route"
+      - "Cisco requires next hop to be reachable for route to be installed"
+      - "Use exit interface instead of next hop for directly connected networks"
+      - "Check for routing loop in recursive lookup"
+      - "Use 'show ip route <next-hop>' to verify next-hop reachability"
+    applicability: "Static routes with indirect next hops"
+
+  static_default_route_missing:
+    name: "Missing Default Route (Gateway of Last Resort)"
+    description: "Remove or misconfigure the default route causing no internet/upstream connectivity"
+    severity: "critical"
+    difficulty: "beginner"
+    protocols:
+      - static
+      - ipv4
+      - ipv6
+    symptoms:
+      - "'Gateway of last resort is not set'"
+      - "No internet/upstream connectivity"
+      - "Traffic to external networks dropped"
+      - "Only local subnets reachable"
+    troubleshooting_hints:
+      - "Check 'show ip route' for default route (0.0.0.0/0)"
+      - "Verify 'ip route 0.0.0.0 0.0.0.0 <next-hop>' configuration"
+      - "For IPv6, check 'ipv6 route ::/0 <next-hop>'"
+      - "Ensure next hop is reachable"
+      - "Check the router needs to reach the next hop directly"
+      - "Verify the upstream device is configured correctly"
+    applicability: "Edge routers and network egress points"

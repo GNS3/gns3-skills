@@ -1,0 +1,169 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "vPC/VSS/Stackwise Issues Injection"
+description: "Virtual Port Channel, Virtual Switching System and stacking related faults"
+category: "injection"
+protocols:
+  - vpc
+  - vss
+  - stackwise
+  - port-channel
+  - stacking
+
+issues:
+  vpc_peer_link:
+    name: "vPC Peer-Link Misconfiguration"
+    description: "Configure vPC peer-link with wrong parameters causing vPC domain isolation"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vpc
+      - port-channel
+    symptoms:
+      - "vPC peer-link not coming up"
+      - "vPC peers isolated (no keepalive)"
+      - "vPC orphaned ports behavior issue"
+      - "Secondary vPC peer suspends member ports"
+    troubleshooting_hints:
+      - "Check vPC status with 'show vpc'"
+      - "Peer-link: 'vpc peer-link <port-channel-id>'"
+      - "Must be 10GE or higher, dedicated link between peers"
+      - "Peer-link failure: secondary switch suspends vPC member ports"
+      - "Check 'show vpc consistency-parameters' for type-1 mismatches"
+      - "Enable 'peer-gateway' for optimal forwarding"
+    applicability: "vPC-enabled NX-OS data center switches"
+
+  vpc_keepalive:
+    name: "vPC Keepalive Link Failure"
+    description: "vPC keepalive link between peer switches down causing false primary detection"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - vpc
+    symptoms:
+      - "Both vPC peers assume primary role"
+      - "vPC member links incorrectly suspended"
+      - "Dual-active scenario (split-brain)"
+      - "Data-plane forwarding disruption"
+    troubleshooting_hints:
+      - "Check vPC keepalive with 'show vpc peer-keepalive'"
+      - "Keepalive uses mgmt0 or separate SVI"
+      - "Keepalive link: separate from peer-link, layer 3 reachable"
+      - "Use 'vpc keepalive destination <peer-mgmt-ip>'"
+      - "Keepalive heartbeat interval: 1s default"
+      - "Hold timeout: 3s (3 missed keepalives = peer down)"
+    applicability: "vPC data center deployments"
+
+  vpc_consistency:
+    name: "vPC Type-1 Configuration Consistency Mismatch"
+    description: "Configure inconsistent Type-1 parameters on vPC peers causing member ports suspended"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpc
+      - port-channel
+    symptoms:
+      - "vPC member ports suspended on secondary peer"
+      - "Type-1 parameter mismatch warning"
+      - "vPC not forming across all member links"
+      - "Inconsistent VLAN or STP config across peers"
+    troubleshooting_hints:
+      - "Check with 'show vpc consistency-parameters global'"
+      - "Type-1: must match (MTU, VLAN, STP, port-channel)"
+      - "Type-2: recommended to match (no suspension if mismatched)"
+      - "Common Type-1 mismatches: STP mode, MST region name"
+      - "Suspend on mismatch: secondary suspends its vPC members"
+      - "Fix: align all Type-1 parameters between peers"
+    applicability: "vPC deployments with consistency checks"
+
+  vpc_orphan:
+    name: "vPC Orphan Port Misconfiguration"
+    description: "Device connected to only one vPC peer causing orphan port issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vpc
+    symptoms:
+      - "Designated node (non-vPC connected) facing unpredictable behavior"
+      - "Traffic loss when the connected vPC peer fails"
+      - "Active/standby device not failing over properly"
+      - "Orphan port not receiving BPDUs correctly"
+    troubleshooting_hints:
+      - "Orphan port: device connected to single vPC peer only"
+      - "Use 'lacp rate fast' on orphan ports for faster detection"
+      - "Check 'show vpc orphan-port' for orphan port list"
+      - "Critical: orphan ports lose connectivity if the peer they connect to fails"
+      - "Consider dual-homing for critical devices (servers, firewalls)"
+      - "Monitor orphan port state during vPC peer failures"
+    applicability: "vPC with single-homed devices"
+
+  vss_switch_id:
+    name: "VSS Switch ID / Switch Number Conflict"
+    description: "Configure same switch ID on both VSS members causing split-brain"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - vss
+      - stackwise
+    symptoms:
+      - "VSS not forming between member switches"
+      - "Both switches claim same switch number"
+      - "VSL (Virtual Switch Link) not established"
+      - "Virtual switch domain membership failure"
+    troubleshooting_hints:
+      - "Check VSS with 'show switch virtual' or 'show switch'"
+      - "Each member needs a unique switch number (e.g., switch 1, switch 2)"
+      - "Use 'switch <id> switch <virtual-id>' for VSS configuration"
+      - "Dual-active detection required for VSS"
+      - "VSL must be configured between members"
+      - "Active/standby roles determined by switch priority"
+    applicability: "Cisco Catalyst VSS deployments"
+
+  vsl_issues:
+    name: "VSS VSL (Virtual Switch Link) Failure"
+    description: "VSL link down causing VSS to split into two standalone switches"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - vss
+      - stackwise
+    symptoms:
+      - "VSS split into two standalone switches"
+      - "Both switches become active (dual-active)"
+      - "Dual-active detection triggering interface shutdown"
+      - "Layer 2 loop or duplicate IP addresses"
+    troubleshooting_hints:
+      - "Check VSL with 'show switch virtual link'"
+      - "VSL uses multiple member links for redundancy"
+      - "VSL failure recovery is automatic (when re-established)"
+      - "Enable dual-active detection: 'dual-active detection pagp'"
+      - "Enhanced PAgP dual-active detection uses downstream switches"
+      - "VSL could use data ports or dedicated stacking ports"
+    applicability: "Cisco Catalyst VSS deployments"
+
+  switch_stack:
+    name: "Switch Stack (StackWise) Member Misconfiguration"
+    description: "StackWise member priority or provisioning causes incorrect master election"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - stackwise
+      - stacking
+    symptoms:
+      - "Wrong switch elected as stack master"
+      - "Stack member provisioned with wrong switch number"
+      - "Stack member not joining the stack"
+      - "Configuration mismatch preventing stack formation"
+    troubleshooting_hints:
+      - "Check stack with 'show switch detail' or 'show stack'"
+      - "Master election: priority > MAC address (higher priority wins)"
+      - "Use 'switch <id> priority <15>' to set member priority (higher = better)"
+      - "Stack member provisioning: 'switch <id> provision <type>'"
+      - "Stack cable must form a ring topology"
+      - "Stack members: up to 9 (3850) or 8 (3750/9300)"
+    applicability: "Cisco Catalyst switch stacking (StackWise / FlexStack)"

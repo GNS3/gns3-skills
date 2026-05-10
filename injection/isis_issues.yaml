@@ -1,0 +1,160 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IS-IS Issues Injection"
+description: "IS-IS routing protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - isis
+
+issues:
+  isis_area_mismatch:
+    name: "IS-IS Area Address Mismatch"
+    description: "Configure different IS-IS area addresses on neighboring routers"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "IS-IS adjacency fails to form"
+      - "Level 1 adjacency cannot form across different areas"
+      - "Level 2 adjacency works but Level 1 does not"
+      - "Routes not exchanged between areas"
+    troubleshooting_hints:
+      - "Check IS-IS adjacency with 'show isis neighbors'"
+      - "Verify NET (Network Entity Title) addresses"
+      - "Level 1 adjacencies require matching area ID"
+      - "Level 2 adjacencies work across different areas"
+      - "NET format: XX.XXXX.XXXX.XXXX.XX (area.system-id.sel)"
+      - "Use 'show clns is-neighbors' for CLNS neighbor info"
+    applicability: "IS-IS multi-area designs"
+
+  isis_level_mismatch:
+    name: "IS-IS Circuit Level Mismatch"
+    description: "Configure different IS-IS circuit types (Level 1 vs Level 2) on connected interfaces"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "IS-IS adjacency not forming on expected level"
+      - "Level 1-only router cannot form L2 adjacency"
+      - "L1/L2 router only forms L1 adjacency with L1 neighbor"
+      - "Routes missing due to level mismatch"
+    troubleshooting_hints:
+      - "Check IS-IS level with 'show isis interface'"
+      - "Use 'isis circuit-type level-1' or 'level-2' or 'level-1-2'"
+      - "Level-1-2 is the default on most platforms"
+      - "Level 1 routers only know about their area"
+      - "Level 2 routers know about inter-area topology"
+      - "Level 2 backbone must be contiguous"
+    applicability: "IS-IS with multiple levels"
+
+  isis_network_type:
+    name: "IS-IS Network Type Mismatch"
+    description: "Configure wrong IS-IS network type (broadcast vs point-to-point)"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "IS-IS adjacency issues on point-to-point links"
+      - "DIS election occurring on P2P link"
+      - "LSP flooding inefficiency"
+      - "IS-IS hello packet size mismatch"
+    troubleshooting_hints:
+      - "Check IS-IS network type with 'show isis interface'"
+      - "Use 'isis network point-to-point' on P2P links"
+      - "Broadcast requires DIS election, P2P does not"
+      - "P2P adjacency uses three-way handshake"
+      - "P2P avoids DIS election overhead"
+      - "Broadcast type uses 10s hello, P2P uses 3.3s hello (default)"
+    applicability: "IS-IS on point-to-point serial or Ethernet links"
+
+  isis_dis_election:
+    name: "IS-IS DIS Election Manipulation"
+    description: "Set wrong IS-IS priority to influence DIS election on broadcast links"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "Unexpected router elected as DIS"
+      - "Suboptimal LSP flooding topology"
+      - "DIS election not as designed"
+      - "LSP database synchronization delays"
+    troubleshooting_hints:
+      - "Check DIS with 'show isis database' or 'show isis interface'"
+      - "Higher DIS priority wins (default 64)"
+      - "Priority 0 can still become DIS (unlike OSPF DR)"
+      - "DIS generates pseudonode LSPs"
+      - "DIS election is preemptive (unlike OSPF)"
+      - "Use 'isis priority <0-127>' to influence election"
+    applicability: "IS-IS on broadcast multi-access networks"
+
+  isis_hello_timer:
+    name: "IS-IS Hello Timer Mismatch"
+    description: "Configure non-standard IS-IS hello timers causing slow convergence or adjacency flapping"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "Slow IS-IS convergence after link failure"
+      - "IS-IS adjacency flapping"
+      - "Hello timer mismatch on different circuits"
+      - "Hold time mismatches causing adjacency teardown"
+    troubleshooting_hints:
+      - "Check IS-IS timers with 'show isis interface detail'"
+      - "Hello timer default: L1=10s broadcast, 3.3s P2P"
+      - "Use 'isis hello-interval <seconds>' per interface"
+      - "Hold multiplier default is 3 (3x hello interval)"
+      - "BFD integration recommended for sub-second convergence"
+      - "Use 'isis hello-multiplier <value>' to adjust hold time"
+    applicability: "IS-IS deployments needing convergence tuning"
+
+  isis_authentication:
+    name: "IS-IS Authentication Mismatch"
+    description: "Configure IS-IS authentication on one side but not the other, or use different keys"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "IS-IS adjacency fails when authentication enabled"
+      - "Authentication errors in IS-IS logs"
+      - "LSPs/SNPs rejected due to auth failure"
+      - "Neighbor state stuck in INIT"
+    troubleshooting_hints:
+      - "IS-IS authenticates: HELLO, LSP, SNP (CSNP, PSNP) PDUs"
+      - "Use 'isis authentication mode text|md5' per circuit"
+      - "Use 'area-password' or 'domain-password' for area/domain"
+      - "Auth key-chain: 'isis authentication key-chain <name>'"
+      - "Verify key IDs and key strings match across neighbors"
+      - "Enable 'isis authentication send-only' for gradual migration"
+    applicability: "IS-IS deployments requiring PDU authentication"
+
+  isis_metric:
+    name: "IS-IS Metric Manipulation"
+    description: "Set incorrect IS-IS metric (narrow vs wide) causing suboptimal routing"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - isis
+    symptoms:
+      - "Suboptimal IS-IS path selection"
+      - "Narrow-style metric wrapping (max 63)"
+      - "Inconsistent metric style between areas"
+      - "Routes with unexpected metrics"
+    troubleshooting_hints:
+      - "Check metric style with 'show isis database'"
+      - "Narrow metric: 1-63 default, max path 1023"
+      - "Wide metric: 1-16777215, supports TE"
+      - "Use 'metric-style wide' under router isis"
+      - "All routers in the domain must use consistent metric style"
+      - "Transition: 'metric-style transition' during migration"
+    applicability: "IS-IS networks, especially large-scale designs"

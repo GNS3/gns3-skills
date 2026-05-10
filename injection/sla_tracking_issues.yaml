@@ -1,0 +1,169 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IP SLA/Object Tracking Issues Injection"
+description: "IP SLA probes and object tracking related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ip-sla
+  - tracking
+
+issues:
+  sla_probe_wrong:
+    name: "IP SLA Probe Target Misconfiguration"
+    description: "Configure IP SLA probe with wrong target IP address or wrong type"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "IP SLA probe failing or timing out"
+      - "Tracking object shows 'down' incorrectly"
+      - "SLA probe target unreachable"
+      - "Probe type not suitable for the monitored path"
+    troubleshooting_hints:
+      - "Check SLA probe with 'show ip sla statistics <id>'"
+      - "Verify target IP address is correct and reachable"
+      - "Probe types: icmp-echo, tcp-connect, udp-jitter, http, etc."
+      - "Use 'ip sla <id>' and appropriate type command"
+      - "Test manually: 'ping <target>' from the router"
+      - "Check 'show ip sla configuration <id>' for settings"
+    applicability: "IP SLA based failover and tracking"
+
+  sla_frequency:
+    name: "IP SLA Probe Frequency Misconfiguration"
+    description: "Configure IP SLA probe frequency too slow or too fast"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "Failover detection too slow"
+      - "SLA probes consuming too much CPU"
+      - "Tracking state change delayed"
+      - "Probe frequency not meeting convergence requirements"
+    troubleshooting_hints:
+      - "Check probe frequency with 'show ip sla configuration <id>'"
+      - "Default frequency is 60 seconds"
+      - "Use 'frequency <seconds>' under ip sla schedule"
+      - "Faster probes = faster convergence but more CPU"
+      - "Combined with track timeout for overall detection time"
+      - "Sub-second frequency requires good CPU resources"
+    applicability: "IP SLA with specific convergence requirements"
+
+  sla_threshold:
+    name: "IP SLA Threshold / Timeout Misconfiguration"
+    description: "Configure IP SLA threshold or timeout too low causing false positives"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "False SLA probe failures during normal operation"
+      - "Premature failover due to threshold violation"
+      - "Probe marked failed despite successful connectivity"
+      - "Threshold too sensitive for network jitter"
+    troubleshooting_hints:
+      - "Check threshold with 'show ip sla configuration <id>'"
+      - "Use 'threshold <milliseconds>' for reaction thresholds"
+      - "Use 'timeout <milliseconds>' for probe timeout"
+      - "Timeout should be longer than expected RTT"
+      - "Reaction configuration triggers tracking state change"
+      - "Adjust based on baseline network latency"
+    applicability: "IP SLA with strict failover requirements"
+
+  track_object_wrong:
+    name: "Track Object Referencing Wrong SLA"
+    description: "Configure track object referencing the wrong IP SLA operation ID"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - tracking
+      - ip-sla
+    symptoms:
+      - "Track object tracking wrong path"
+      - "Track object showing incorrect state"
+      - "Failover not triggering when it should"
+      - "Wrong SLA probe being tracked"
+    troubleshooting_hints:
+      - "Check track object with 'show track <id>'"
+      - "Verify 'track <id> ip sla <sla-id>' references correct SLA"
+      - "Use 'show track summary' for all track objects"
+      - "Check SLA state with 'show ip sla statistics <sla-id>'"
+      - "Track object state reflects the SLA probe state"
+      - "Multiple track objects can use same SLA probe"
+    applicability: "All object tracking configurations"
+
+  track_list_logic:
+    name: "Track List Boolean Logic Error"
+    description: "Configure track list with incorrect boolean logic (AND/OR)"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - tracking
+    symptoms:
+      - "Track list state not reflecting expected logic"
+      - "AND list up when one object is down"
+      - "OR list down when all objects are up"
+      - "Failover conditions not met correctly"
+    troubleshooting_hints:
+      - "Check track list with 'show track <id>'"
+      - "Use 'track <id> list boolean and|or'"
+      - "AND: all objects must be up for track list to be up"
+      - "OR: any object up = track list up"
+      - "Use 'track <id> list threshold percentage' for percentage-based"
+      - "Check each member object state individually"
+    applicability: "Multi-condition tracking for static routes / HSRP / VRRP"
+
+  sla_not_scheduled:
+    name: "IP SLA Probe Not Scheduled"
+    description: "Configure IP SLA probe but forget to schedule it"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "IP SLA not sending probes"
+      - "Track object stuck in down state"
+      - "No SLA statistics available"
+      - "Failover not working as expected"
+    troubleshooting_hints:
+      - "Check SLA schedule with 'show ip sla configuration <id>'"
+      - "Schedule: 'ip sla schedule <id> life {forever|<secs>} start-time now'"
+      - "Life forever ensures continuous probing"
+      - "Start-time now: starts immediately"
+      - "Use 'start-time <hh:mm:ss>' for delayed start"
+      - "Restart schedule after configuration changes"
+    applicability: "All IP SLA deployments"
+
+  track_application:
+    name: "Track Application (Static Route / HSRP) Not Configured"
+    description: "Configure track object but not applied to static route, HSRP, or VRRP"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - tracking
+      - static
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Track object state changes but no action taken"
+      - "Static route not removed when track goes down"
+      - "HSRP priority not decremented on failure"
+      - "Failover not occurring despite correct tracking"
+    troubleshooting_hints:
+      - "For static routes: 'ip route <prefix> <mask> <nh> track <id>'"
+      - "For HSRP: 'standby <group> track <id> [decrement <value>]'"
+      - "For VRRP: 'vrrp <group> track <id> [decrement <value>]'"
+      - "Check 'show track <id>' to verify application"
+      - "Track object must be referenced by a client to have effect"
+      - "Verify track state and client action match expectations"
+    applicability: "Static route failover, HSRP/VRRP interface tracking"

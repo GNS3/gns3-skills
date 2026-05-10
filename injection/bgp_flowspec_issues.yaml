@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "BGP FlowSpec/RTBH Issues Injection"
+description: "BGP FlowSpec, RTBH and DDoS mitigation related network faults"
+category: "injection"
+protocols:
+  - bgp
+  - flowspec
+  - rtbh
+
+issues:
+  flowspec_af:
+    name: "BGP FlowSpec Address-Family Not Activated"
+    description: "FlowSpec address-family not activated under BGP causing FlowSpec routes not exchanged"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec routes not exchanged between peers"
+      - "FlowSpec action not applied to traffic"
+      - "BGP session up but no FlowSpec NLRIs exchanged"
+      - "Flowspec show commands return no data"
+    troubleshooting_hints:
+      - "Check BGP FlowSpec with 'show bgp ipv4 flowspec summary'"
+      - "Activate: 'address-family ipv4 flowspec' under BGP"
+      - "Also needs 'neighbor <ip> activate' under the AF"
+      - "Send-community extended must be enabled (for extended community actions)"
+      - "Check 'show bgp ipv4 flowspec' for received rules"
+      - "IPv6: 'address-family ipv6 flowspec'"
+    applicability: "BGP FlowSpec DDoS mitigation deployments"
+
+  flowspec_action:
+    name: "BGP FlowSpec Action Community Misconfiguration"
+    description: "Configure FlowSpec action extended community (drop/rate-limit/redirect) incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec rule received but action not applied"
+      - "Wrong action applied to traffic (drop vs rate-limit)"
+      - "Rate-limit bandwidth value incorrect"
+      - "Redirect action pointing to wrong VRF"
+    troubleshooting_hints:
+      - "FlowSpec actions via extended community"
+      - "Action: 'traffic-rate:0:0' = drop, 'traffic-rate:0:<rate>' = rate-limit in Bps"
+      - "Redirect: 'redirect-vrf:<vrf-id>' or 'redirect-nexthop:<ip>'"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for action details"
+      - "Traffic-rate of 0 drops all matching traffic (blackhole)"
+      - "Use 'show flowspec' or 'show platform hardware flowspec' for hardware programming"
+    applicability: "BGP FlowSpec rule deployment"
+
+  flowspec_match:
+    name: "BGP FlowSpec Match Rule Too Broad or Too Narrow"
+    description: "Configure FlowSpec match criteria that is too broad (affects legitimate traffic) or too narrow"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "Legitimate traffic dropped by too-broad FlowSpec rule"
+      - "Attack traffic not matched by too-narrow rule"
+      - "FlowSpec matching unexpected packets"
+      - "Collateral damage from DDoS mitigation"
+    troubleshooting_hints:
+      - "FlowSpec match fields: src/dst IP prefix, src/dst port, protocol, ICMP type/code, TCP flags, packet length"
+      - "Match criteria AND-ed (all must match)"
+      - "Use exact prefix length for targeted drops"
+      - "Use port range (gt/lt/eq) for specific applications"
+      - "TCP flags filter: SYN, ACK, FIN, RST, URG, PSH"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for match fields"
+    applicability: "DDoS mitigation with BGP FlowSpec"
+
+  rtbh_community:
+    name: "RTBH (Remotely Triggered Black Hole) Community Misconfiguration"
+    description: "Configure RTBH community on trigger router but not matched on edge routers"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - rtbh
+    symptoms:
+      - "RTBH route not installed on edge routers"
+      - "Blackhole community not recognized on edge"
+      - "Traffic not dropped as expected"
+      - "BGP route received but forwarding not affected"
+    troubleshooting_hints:
+      - "RTBH uses static route to null0 with a specific community"
+      - "Trigger router injects route with community (e.g., 100:666)"
+      - "Edge router: 'ip community-list <name> permit <community>'"
+      - "Edge router: 'route-map <name> permit 10 match community <list>' + 'set ip next-hop <null0>'"
+      - "Check 'show ip bgp <prefix>' on edge for community value"
+      - "Null0 route must be installed: 'show ip route <prefix>'"
+    applicability: "DDoS mitigation with RTBH"
+
+  rtbh_next_hop:
+    name: "RTBH Next-Hop / Static Route to Null0 Missing"
+    description: "RTBH trigger router missing static route to null0 for black hole next-hop"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - rtbh
+    symptoms:
+      - "RTBH route installed but not forwarded to null0"
+      - "Prefix routed normally despite RTBH configuration"
+      - "No 'ip route <trigger-ip> 255.255.255.255 null0' configured"
+      - "Blackhole discard route missing"
+    troubleshooting_hints:
+      - "RTBH requires 'ip route <ip> <mask> null0 <tag> <community>' on trigger"
+      - "The static route to null0 creates the BGP blackhole entry"
+      - "Use a specific tag (e.g., 666) for route-map matching"
+      - "Route-map on edge must set the next-hop to null0"
+      - "Check 'show ip bgp <prefix>' on edge for next-hop"
+      - "Verify 'show ip route <prefix>' on edge for null0 next-hop"
+    applicability: "RTBH blackhole filtering"
+
+  flowspec_validation:
+    name: "BGP FlowSpec Validation / Origination Issue"
+    description: "FlowSpec route not originated or rejected due to validation failure"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec rule not propagated beyond direct peers"
+      - "Validation check failure (RFC 5575)"
+      - "FlowSpec rule stuck at first hop"
+      - "Origination not matching route reachability checks"
+    troubleshooting_hints:
+      - "FlowSpec validation (RFC 5575): dest prefix must match a BGP route"
+      - "Disable validation with 'bgp flowspec validation disable' for testing"
+      - "Default: validation is enabled (recommended)"
+      - "FlowSpec origination via 'local-policy' or route-policy"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for validation status"
+      - "On RR: no need for validation (pass-through)"
+    applicability: "BGP FlowSpec inter-AS deployments"

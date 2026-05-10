@@ -1,0 +1,166 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "NetFlow/IPFIX/sFlow Issues Injection"
+description: "NetFlow, IPFIX, sFlow export and collector related network faults"
+category: "injection"
+protocols:
+  - netflow
+  - ipfix
+  - sflow
+
+issues:
+  netflow_export_destination:
+    name: "NetFlow Export Collector Unreachable"
+    description: "Configure NetFlow export to wrong or unreachable collector IP/port"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - netflow
+      - ipfix
+    symptoms:
+      - "NetFlow data not received at collector"
+      - "Export UDP packets sent to wrong destination"
+      - "Export port (default 2055) blocked or wrong"
+      - "Flow export failures in logs"
+    troubleshooting_hints:
+      - "Check NetFlow export with 'show ip flow export' (Cisco) or 'display netflow export' (Huawei)"
+      - "Verify 'ip flow-export destination <ip> <port>'"
+      - "Default NetFlow port: 2055 (v5/v9), IPFIX: 4739"
+      - "Use 'nslookup <host>' if collector is DNS name"
+      - "Check route: 'show ip route <collector-ip>'"
+      - "Verify firewall allows UDP to collector port"
+    applicability: "NetFlow monitoring deployments"
+
+  netflow_version:
+    name: "NetFlow Export Version Misconfiguration"
+    description: "Configure NetFlow export version that collector does not support"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - netflow
+      - ipfix
+    symptoms:
+      - "NetFlow version mismatch between exporter and collector"
+      - "Collector discarding flow records"
+      - "Unsupported template or record format"
+      - "v5 vs v9 vs IPFIX incompatibility"
+    troubleshooting_hints:
+      - "Check NetFlow version with 'show ip flow export'"
+      - "NetFlow v5: fixed format, no templates, IPv4 only"
+      - "NetFlow v9: template-based, supports IPv4/IPv6/MPLS"
+      - "IPFIX (v10): IETF standard, based on v9 template"
+      - "Use 'ip flow-export version <5|9|10>' to set"
+      - "v9/IPFIX for MPLS and advanced features"
+    applicability: "NetFlow v5, v9, IPFIX deployments"
+
+  netflow_sampler:
+    name: "NetFlow Sampler / Sampling Rate Misconfiguration"
+    description: "Configure NetFlow sampling rate too high or too low affecting accuracy"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+      - sflow
+    symptoms:
+      - "Flow data not representative of actual traffic"
+      - "Sampling rate too high (over-sampling, high CPU)"
+      - "Sampling rate too low (under-sampling, inaccurate)"
+      - "Flow collector shows incorrect traffic volume"
+    troubleshooting_hints:
+      - "Check sampling with 'show flow-sampler' or 'show ip flow export'"
+      - "Configure sampler: 'sampler <name> mode random 1 out-of <rate>'"
+      - "Default: no sampling (full flow capture)"
+      - "Typical rates: 1:100 (high-volume), 1:1000 (very high-volume)"
+      - "Higher sampling = more accurate but more CPU"
+      - "sFlow uses fixed sampling, NetFlow v9 can use sampler"
+    applicability: "High-throughput NetFlow/sFlow deployments"
+
+  netflow_nbar:
+    name: "NetFlow with NBAR Application Recognition Issues"
+    description: "NetFlow using NBAR for application classification not matching expected traffic"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+      - nbar
+    symptoms:
+      - "NetFlow showing 'unknown' or wrong application"
+      - "Encrypted traffic not identified by NBAR"
+      - "NBAR misclassifying specific protocols"
+      - "Application statistics inaccurate"
+    troubleshooting_hints:
+      - "NBAR (Network-Based Application Recognition) classifies traffic"
+      - "Check 'show ip nbar protocol-discovery' for classification stats"
+      - "NBAR uses PDLM (Packet Description Language Module)"
+      - "Update PDLM: 'ip nbar pdlm <url>' for latest protocol support"
+      - "NetFlow v9/IPFIX exports app ID with flow record"
+      - "Encrypted traffic: NBAR cannot inspect encrypted payload"
+    applicability: "NetFlow with application visibility"
+
+  netflow_timeout:
+    name: "NetFlow Active/Inactive Timer Misconfiguration"
+    description: "Configure NetFlow timeout values causing premature or delayed flow export"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - netflow
+    symptoms:
+      - "Long-lived flows exported too many times (active timeout short)"
+      - "Short flows not exported (inactive timeout too long)"
+      - "Flow table overflows (both timeouts too long)"
+      - "Duplicate flow records due to frequent active timeouts"
+    troubleshooting_hints:
+      - "Check flow timers with 'show ip flow export' or 'show ip cache flow'"
+      - "Active timeout: 'ip flow-export timeout active <minutes>' (default 30)"
+      - "Inactive timeout: 'ip flow-export timeout inactive <seconds>' (default 15)"
+      - "Active: same flow exported periodically (for long-lived flows)"
+      - "Inactive: flow exported after idle period"
+      - "Adjust: active for HTTP vs database connections differently"
+    applicability: "NetFlow flow timeout tuning"
+
+  netflow_table_overflow:
+    name: "NetFlow Flow Table Overflow"
+    description: "NetFlow cache table overflows due to insufficient memory or excessive flows"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+    symptoms:
+      - "NetFlow cache table full"
+      - "New flows not created (dropped)"
+      - "Flow table utilization at 100%"
+      - "Packet loss for new flows under DoS traffic"
+    troubleshooting_hints:
+      - "Check flow cache with 'show ip cache flow'"
+      - "Maximum entries: platform dependent"
+      - "Use 'ip flow-cache entries <count>' to increase"
+      - "Aggressive timeout for short-lived flows (DDoS)"
+      - "Increase memory if platform supports"
+      - "Enable flow sampling to reduce table entries"
+    applicability: "High-traffic NetFlow deployments"
+
+  sflow_issues:
+    name: "sFlow Agent / Collector Misconfiguration"
+    description: "Configure sFlow with wrong agent IP or collector settings"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - sflow
+    symptoms:
+      - "sFlow datagrams not received at collector"
+      - "Wrong source IP in sFlow packets"
+      - "sFlow polling interval wrong or not working"
+      - "Collector cannot identify switch source"
+    troubleshooting_hints:
+      - "Check sFlow with 'show sflow' (Cisco) or 'display sflow' (Huawei)"
+      - "Agent IP: 'sflow agent-ip <ip>' or 'sflow source-interface <intf>'"
+      - "Collector: 'sflow collector <ip> [port <port>]'"
+      - "Default sFlow port: 6343 (UDP)"
+      - "Polling interval: 'sflow polling-interval <seconds>'"
+      - "sFlow is packet-sampled, not flow-based (different from NetFlow)"
+    applicability: "sFlow monitoring deployments"

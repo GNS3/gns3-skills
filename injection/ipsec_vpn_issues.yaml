@@ -1,0 +1,201 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IPsec/DMVPN/VPN Issues Injection"
+description: "IPsec, IKE, DMVPN and GRE tunnel related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ipsec
+  - ike
+  - vpn
+  - dmvpn
+  - nhrp
+  - gre
+  - tunnel
+
+issues:
+  ike_phase1:
+    name: "IKE Phase 1 Parameter Mismatch"
+    description: "Configure IKE phase 1 parameters that don't match between peers"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipsec
+      - ike
+      - vpn
+    symptoms:
+      - "IKE phase 1 negotiation fails"
+      - "IPsec tunnel not established"
+      - "No SA created (show crypto isakmp sa empty)"
+      - "ISAKMP aggressive/main mode mismatch"
+    troubleshooting_hints:
+      - "Check IKE SA with 'show crypto isakmp sa'"
+      - "Verify IKE policy: encryption, hash, DH group, auth, lifetime"
+      - "All phase 1 parameters must match exactly on both peers"
+      - "Pre-shared key must match on both sides"
+      - "Main mode (default): identity protected, 6 messages"
+      - "Aggressive mode: faster but less secure, 3 messages"
+    applicability: "Site-to-site and remote access IPsec VPNs"
+
+  ike_phase2:
+    name: "IKE Phase 2 / IPsec SA Mismatch"
+    description: "Configure IPsec transform sets with incompatible parameters"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipsec
+      - ike
+      - vpn
+    symptoms:
+      - "IKE phase 1 succeeds (MM_ACTIVE) but phase 2 fails"
+      - "No IPsec SA created"
+      - "QM_IDLE not reached"
+      - "Transform set mismatch between peers"
+    troubleshooting_hints:
+      - "Check IPsec SA with 'show crypto ipsec sa'"
+      - "Verify transform set: esp-aes, esp-sha-hmac, etc."
+      - "PFS (Perfect Forward Secrecy) group must match if configured"
+      - "Lifetime must match (seconds or kilobytes)"
+      - "Use 'show crypto ipsec transform-set' for settings"
+      - "Crypto map or profile must reference correct transform set"
+    applicability: "Site-to-site IPsec VPNs"
+
+  ipsec_acl:
+    name: "IPsec Crypto ACL / Interesting Traffic Mismatch"
+    description: "Configure crypto ACL that does not match actual traffic to be encrypted"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipsec
+      - vpn
+    symptoms:
+      - "IKE/IPsec SA established but traffic not encrypted"
+      - "Traffic bypassing the VPN tunnel"
+      - "Crypto ACL too broad or too narrow"
+      - "Mirror image ACL not matching"
+    troubleshooting_hints:
+      - "Check crypto ACL with 'show access-lists <acl>'"
+      - "Crypto ACL must match the traffic to encrypt (permit)"
+      - "Crypto ACL on each side should be mirror images"
+      - "ACL defines 'interesting traffic' that triggers IPsec"
+      - "Check 'show crypto ipsec sa' for packets encrypt/decrypt"
+      - "Use 'show crypto engine connections active' for packet counts"
+    applicability: "Site-to-site IPsec VPN with crypto map"
+
+  ipsec_nat_t:
+    name: "IPsec NAT Traversal (NAT-T) Issues"
+    description: "Configure IPsec NAT-T when a NAT device exists between peers"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipsec
+      - nat
+      - vpn
+    symptoms:
+      - "IPsec tunnel fails when NAT device is between peers"
+      - "ESP packets dropped by NAT"
+      - "NAT-T not negotiated"
+      - "IPsec over NAT fails on port 4500"
+    troubleshooting_hints:
+      - "NAT-T encapsulates ESP in UDP 4500"
+      - "Check 'show crypto isakmp sa' for NAT-T status"
+      - "Crypto map: use 'set nat-transparency udp-encapsulation'"
+      - "NAT device must allow UDP 500 and 4500"
+      - "NAT-T auto-detected when NAT device found between peers"
+      - "Use 'isakmp nat keepalive' to maintain NAT mapping"
+    applicability: "IPsec VPN across NAT boundaries"
+
+  dmvpn_nhrp:
+    name: "DMVPN NHRP Configuration Error"
+    description: "Configure NHRP (Next Hop Resolution Protocol) incorrectly in DMVPN"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dmvpn
+      - nhrp
+      - vpn
+    symptoms:
+      - "Spoke cannot register with hub via NHRP"
+      - "Spoke-to-spoke tunnel not forming"
+      - "NHRP resolution request failing"
+      - "DMVPN phase 2/3 shortcut not working"
+    troubleshooting_hints:
+      - "Check NHRP with 'show ip nhrp'"
+      - "NHRP network ID must match on all DMVPN nodes"
+      - "Hub: 'ip nhrp multicast dynamic' for spoke registration"
+      - "Spoke: 'ip nhrp nhs <hub-tunnel-ip>' to register"
+      - "NHRP authentication string must match"
+      - "Check 'show dmvpn' for DMVPN tunnel status"
+    applicability: "DMVPN hub-and-spoke and spoke-to-spoke tunnels"
+
+  dmvpn_phase:
+    name: "DMVPN Phase Misconfiguration"
+    description: "Configure wrong DMVPN phase (1/2/3) features causing routing or spoke-spoke issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dmvpn
+      - vpn
+    symptoms:
+      - "Spoke-to-spoke tunnels not forming (phase 2/3 expected)"
+      - "Traffic through hub when direct path should exist"
+      - "Phase 3 redirect not working"
+      - "Routing protocol not supporting spoke-spoke"
+    troubleshooting_hints:
+      - "DMVPN Phase 1: spoke-spoke through hub only"
+      - "DMVPN Phase 2: spoke-spoke with NHRP, no route summarization"
+      - "DMVPN Phase 3: spoke-spoke with NHRP redirect, supports summarization"
+      - "Check 'show dmvpn' for tunnel status and spoke peers"
+      - "Phase 3 uses 'ip nhrp redirect' on hub and 'ip nhrp shortcut' on spokes"
+      - "Phase 2 requires no route summarization on hub"
+    applicability: "DMVPN network design and migration"
+
+  gre_keepalive:
+    name: "GRE Tunnel Keepalive Misconfiguration"
+    description: "Configure GRE keepalive without proper routing causing tunnel flapping"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - gre
+      - tunnel
+      - vpn
+    symptoms:
+      - "GRE tunnel flapping up and down"
+      - "Keepalive failure despite reachable endpoint"
+      - "GRE keepalive not supported on both ends"
+      - "Tunnel destination unreachable for keepalives"
+    troubleshooting_hints:
+      - "GRE keepalives: 'keepalive <seconds> <retries>' on tunnel interface"
+      - "Keepalive requires routing through the tunnel (recursive)"
+      - "Use static route to tunnel destination via physical interface"
+      - "Some platforms do not support GRE keepalives"
+      - "Alternative: IP SLA tracking of the remote endpoint"
+      - "Keepalive interval default is 10 seconds"
+    applicability: "GRE tunnels needing endpoint availability detection"
+
+  gre_mtu:
+    name: "GRE/IPsec Tunnel MTU/Path MTU Issue"
+    description: "Configure GRE or IPsec tunnel with incorrect MTU causing fragmentation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - gre
+      - ipsec
+      - tunnel
+    symptoms:
+      - "Large packets dropped through tunnel"
+      - "PMTUD not working on tunnel interface"
+      - "TCP connections stall (MSS issues)"
+      - "Fragmentation on tunnel causing performance loss"
+    troubleshooting_hints:
+      - "GRE overhead: 24 bytes (4 bytes GRE + 20 bytes IP)"
+      - "IPsec overhead: varies (50-60+ bytes depending on auth/encrypt)"
+      - "GRE+IPsec: 24 + ~50 = ~74 bytes overhead"
+      - "Set tunnel MTU: 'ip mtu <size>' on tunnel interface"
+      - "Set TCP-MSS: 'ip tcp adjust-mss <size>' on tunnel"
+      - "Typical MSS for GRE: 1436, for GRE+IPsec: ~1386"
+    applicability: "GRE and IPsec tunnel deployments"

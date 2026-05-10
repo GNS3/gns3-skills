@@ -1,0 +1,187 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DHCP Snooping/DAI/PVLAN Issues Injection"
+description: "DHCP Snooping, DAI, IP Source Guard and Private VLAN related network faults"
+category: "injection"
+protocols:
+  - dhcp-snooping
+  - dai
+  - arp-inspection
+  - private-vlan
+
+issues:
+  dhcp_snooping_disabled:
+    name: "DHCP Snooping Disabled on Trusted Ports"
+    description: "Disable DHCP snooping or configure wrong trust state"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "DHCP server responses blocked on trusted port"
+      - "DHCP clients cannot get addresses"
+      - "Rogue DHCP server attack not prevented"
+      - "Untrusted port not filtering DHCP offers"
+    troubleshooting_hints:
+      - "Check DHCP snooping with 'show ip dhcp snooping'"
+      - "Enable globally: 'ip dhcp snooping'"
+      - "Enable per VLAN: 'ip dhcp snooping vlan <vlan>'"
+      - "Uplink ports to DHCP server must be 'ip dhcp snooping trust'"
+      - "Default: all ports are untrusted (block server responses)"
+      - "Check 'show ip dhcp snooping binding' for lease database"
+    applicability: "Switch access layer, DHCP security"
+
+  dhcp_snooping_rate:
+    name: "DHCP Snooping Rate Limit Exceeded"
+    description: "Configure DHCP snooping rate limit too low causing DHCP packets dropped"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "DHCP packets dropped on switchport"
+      - "DHCP clients timing out"
+      - "Rate limit exceeded errors in logs"
+      - "DHCP packets not reaching server"
+    troubleshooting_hints:
+      - "Check rate limit with 'show ip dhcp snooping'"
+      - "Use 'ip dhcp snooping limit rate <packets-per-sec>'"
+      - "Default rate limit is platform dependent"
+      - "High traffic environments may need higher limits"
+      - "Rate limit on untrusted ports prevents DOS attacks"
+      - "Use 'no ip dhcp snooping limit rate' to disable rate limit"
+    applicability: "DHCP snooping in high-density access environments"
+
+  dhcp_snooping_option82:
+    name: "DHCP Snooping Option 82 Misconfiguration"
+    description: "Configure DHCP snooping option 82 incorrectly (disable or wrong format)"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "DHCP server not receiving option 82 information"
+      - "Remote DHCP server rejecting due to option 82"
+      - "DHCP lease allocation not per-port"
+      - "Option 82 format not supported by DHCP server"
+    troubleshooting_hints:
+      - "Check option 82 with 'show ip dhcp snooping'"
+      - "Enable: 'ip dhcp snooping information option'"
+      - "Option 82 identifies switch port and VLAN"
+      - "Use 'ip dhcp snooping information option format remote-id'"
+      - "Circuit ID typically: switch-module/port format"
+      - "Disable option 82 for non-Cisco DHCP servers: 'no ip dhcp snooping information option'"
+    applicability: "DHCP snooping with centralized DHCP servers"
+
+  dai_disabled:
+    name: "DAI (Dynamic ARP Inspection) Not Configured"
+    description: "DAI not enabled on VLANs where ARP spoofing protection is needed"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dai
+      - arp-inspection
+    symptoms:
+      - "ARP spoofing attacks not prevented"
+      - "Man-in-the-middle via ARP not blocked"
+      - "DAI not validating ARP packets"
+      - "No DAI rate limiting on ARP packets"
+    troubleshooting_hints:
+      - "Check DAI with 'show ip arp inspection'"
+      - "Enable DAI: 'ip arp inspection vlan <vlan>'"
+      - "DAI requires DHCP snooping to validate ARP"
+      - "DAI validates MAC-IP bindings from DHCP snooping DB"
+      - "Trusted ports: 'ip arp inspection trust' (usually uplinks)"
+      - "Untrusted ports: validate ARP requests and responses"
+    applicability: "Access layer, security-sensitive environments"
+
+  dai_validation:
+    name: "DAI Validation Check Misconfiguration"
+    description: "Configure DAI with wrong validation checks (src-mac, dst-mac, ip)"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - dai
+      - arp-inspection
+    symptoms:
+      - "ARP packets incorrectly dropped"
+      - "Legitimate ARP not passing DAI validation"
+      - "Missing validation checks allowing spoofed ARP"
+      - "DAI not checking source MAC consistency"
+    troubleshooting_hints:
+      - "Check DAI validation with 'show ip arp inspection'"
+      - "Use 'ip arp inspection validate src-mac dst-mac ip'"
+      - "src-mac: checks source MAC in ARP matches Ethernet MAC"
+      - "dst-mac: checks destination MAC in ARP reply"
+      - "ip: checks IP-to-MAC binding from DHCP snooping"
+      - "All checks are enabled by default when DAI is enabled"
+    applicability: "DAI with specific validation requirements"
+
+  dai_rate_limit:
+    name: "DAI Rate Limit Exceeded"
+    description: "Configure DAI rate limit too low causing ARP packets dropped"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dai
+      - arp-inspection
+    symptoms:
+      - "ARP packets dropped on untrusted port"
+      - "Hosts cannot reach other devices on same VLAN"
+      - "ARP resolution failures"
+      - "Rate limit exceeded messages"
+    troubleshooting_hints:
+      - "Check DAI rate limit with 'show ip arp inspection interfaces'"
+      - "Use 'ip arp inspection limit rate <pps> burst interval <sec>'"
+      - "Default rate: 15 pps (Cisco)"
+      - "Increase rate limit for server/switch ports"
+      - "Rate limit applies only to untrusted ports"
+      - "Err-disabled: 'errdisable recovery cause arp-inspection'"
+    applicability: "DAI on high-traffic VLANs"
+
+  pvlan_mismatch:
+    name: "Private VLAN Association Mismatch"
+    description: "Configure wrong private VLAN type (primary, community, isolated) or incorrect association"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - private-vlan
+    symptoms:
+      - "Hosts in private VLAN cannot communicate as designed"
+      - "Isolated port can reach other isolated ports (shouldn't)"
+      - "Community VLAN not communicating within community"
+      - "Promiscuous port not working with secondary VLANs"
+    troubleshooting_hints:
+      - "Check PVLAN with 'show vlan private-vlan'"
+      - "PVLAN types: primary, community (within-group), isolated (no communication)"
+      - "Associate secondary to primary: 'private-vlan association <sec-vlans>'"
+      - "Promiscuous port (e.g., router) uses 'switchport mode private-vlan promiscuous'"
+      - "Host port: 'switchport mode private-vlan host'"
+      - "Mapping: 'private-vlan mapping <primary> <secondary>' on SVI"
+    applicability: "Private VLAN for multi-tenant or DMZ design"
+
+  pvlan_svi:
+    name: "Private VLAN SVI Misconfiguration"
+    description: "Configure SVI incorrectly for private VLAN routing"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - private-vlan
+    symptoms:
+      - "Inter-VLAN routing not working for private VLANs"
+      - "Secondary VLANs not routed to external network"
+      - "SVI not mapping secondary VLANs"
+      - "Private VLAN hosts cannot reach default gateway"
+    troubleshooting_hints:
+      - "Check PVLAN SVI with 'show interfaces vlan <primary>'"
+      - "SVI should be configured on the primary VLAN only"
+      - "Mapping: 'private-vlan mapping <primary> <secondary-vlans>'"
+      - "IP address on primary VLAN SVI serves all secondary VLANs"
+      - "Layer 3 communication flows through promiscuous port"
+      - "Use 'show ip interface vlan <vlan>' for SVI status"
+    applicability: "Private VLAN with Layer 3 routing"

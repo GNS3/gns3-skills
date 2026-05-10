@@ -1,0 +1,148 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "EtherChannel/LACP Issues Injection"
+description: "EtherChannel, LACP (802.3ad) and PAgP related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - lacp
+  - pagp
+  - etherchannel
+
+issues:
+  lacp_rate_mismatch:
+    name: "LACP Rate Mismatch"
+    description: "Configure different LACP rate (fast vs slow) on bundle members"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - lacp
+      - etherchannel
+    symptoms:
+      - "LACP rate negotiation issues on bundle"
+      - "Slow LACP PDU rate causing delayed failure detection"
+      - "LACP rate mismatch between peers"
+      - "Bundle convergence time not meeting requirements"
+    troubleshooting_hints:
+      - "Check LACP rate with 'show lacp <id> counters'"
+      - "Fast rate: 1s LACP PDUs, slow rate: 30s"
+      - "Use 'lacp rate fast' on interface for 1s hello"
+      - "Rate configuration affects link failure detection time"
+      - "Both sides can have different rates (rate not negotiated)"
+      - "Fast rate recommended for faster convergence"
+    applicability: "LACP EtherChannels needing fast convergence"
+
+  lacp_port_config:
+    name: "LACP Port Configuration Mismatch"
+    description: "Configure member ports with inconsistent settings (speed, duplex, VLAN)"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - lacp
+      - pagp
+      - etherchannel
+    symptoms:
+      - "EtherChannel bundle not forming"
+      - "Member ports stuck in 'suspended' state"
+      - "Inconsistent port parameters across bundle"
+      - "Some ports not joining the bundle"
+    troubleshooting_hints:
+      - "Check bundle with 'show etherchannel <id> summary'"
+      - "All member ports must have same speed and duplex"
+      - "All members must be same switchport mode (access/trunk)"
+      - "For trunk: all members must have same allowed VLAN list"
+      - "Use 'show interfaces <intf> etherchannel' for port status"
+      - "Suspended ports indicate parameter mismatch"
+    applicability: "All EtherChannel configurations"
+
+  lacp_max_bundle:
+    name: "LACP Max-Bundle Limit Exceeded"
+    description: "Configure LACP max-bundle too low causing ports to be placed in standby"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - lacp
+      - etherchannel
+    symptoms:
+      - "Not all ports in the bundle are active"
+      - "Some LACP ports in standby mode"
+      - "Total capacity lower than expected"
+      - "Load balancing not utilizing all links"
+    troubleshooting_hints:
+      - "Check bundle with 'show etherchannel <id> summary'"
+      - "Use 'lacp max-bundle <count>' to increase active ports"
+      - "Default: all eligible ports are active"
+      - "Standby ports activate if active ports fail"
+      - "Max-bundle limits the number of active ports"
+      - "Useful for deterministic capacity planning"
+    applicability: "LACP with active/standby port configuration"
+
+  pagp_mode:
+    name: "PAgP Mode Mismatch"
+    description: "Configure incompatible PAgP modes on peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - pagp
+      - etherchannel
+    symptoms:
+      - "PAgP bundle not forming"
+      - "Ports not bundling despite correct parameters"
+      - "PAgP negotiation failure between peers"
+      - "Bundle in 'auto' mode with other side also 'auto'"
+    troubleshooting_hints:
+      - "Check PAgP mode with 'show etherchannel <id> detail'"
+      - "PAgP modes: desirable, auto, on"
+      - "Desirable + Desirable = bundle (active negotiation)"
+      - "Desirable + Auto = bundle (one side initiates)"
+      - "Auto + Auto = no bundle (neither initiates)"
+      - "On + On = static bundle (no negotiation), no PAgP PDUs"
+    applicability: "PAgP-based EtherChannel (Cisco proprietary)"
+
+  load_balance:
+    name: "EtherChannel Load Balancing Misconfiguration"
+    description: "Configure inappropriate EtherChannel load balancing method causing uneven distribution"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - etherchannel
+      - lacp
+    symptoms:
+      - "Uneven traffic distribution across bundle members"
+      - "One link saturated while others underutilized"
+      - "Load balancing polarization"
+      - "Hash method not suitable for traffic pattern"
+    troubleshooting_hints:
+      - "Check load balance with 'show etherchannel load-balance'"
+      - "Use 'port-channel load-balance <method>' globally"
+      - "Methods: src-ip, dst-ip, src-dst-ip, src-mac, dst-mac, src-dst-mac"
+      - "src-dst-ip is common for routed interfaces"
+      - "src-dst-mac is common for switched interfaces"
+      - "L4 ports: use 'src-dst-ip l4port' for granular distribution"
+    applicability: "EtherChannel with specific traffic distribution requirements"
+
+  lacp_system_id:
+    name: "LACP System ID Duplicate"
+    description: "Configure duplicate LACP system ID causing bundle membership issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - lacp
+      - etherchannel
+    symptoms:
+      - "LACP bundle not forming between two switches"
+      - "LACP partner state mismatch across bundle"
+      - "System ID conflict detected"
+      - "Bundle instability with duplicate MAC addresses"
+    troubleshooting_hints:
+      - "LACP system ID = LACP priority + switch MAC address"
+      - "Use 'lacp system-priority <value>' to differentiate"
+      - "Stack switches share a MAC - adjust system priority"
+      - "Check 'show lacp neighbor' for actor/partner info"
+      - "Duplicate system IDs cause bundle confusion"
+      - "Each switch must have a unique LACP system identifier"
+    applicability: "Switch stacks and VSS/vPC environments"

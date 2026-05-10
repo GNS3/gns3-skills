@@ -1,0 +1,139 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "QoS Issues Injection"
+description: "QoS classification, marking, queuing, policing and shaping related network faults"
+category: "injection"
+protocols:
+  - qos
+
+issues:
+  qos_class_map:
+    name: "QoS Class-Map Match Criteria Error"
+    description: "Configure class-map with incorrect match criteria causing wrong traffic classification"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "Wrong traffic classified into QoS class"
+      - "Expected traffic not matching the class"
+      - "Match-all vs match-any logic confusion"
+      - "Multiple match criteria not working as designed"
+    troubleshooting_hints:
+      - "Check class-map with 'show class-map <name>'"
+      - "Match-all: all conditions must match (AND)"
+      - "Match-any: any condition match sufficient (OR)"
+      - "Verify match statements: dscp, precedence, access-group, protocol"
+      - "Match protocol requires NBAR configuration"
+      - "Use 'show policy-map interface <intf>' for class statistics"
+    applicability: "Modular QoS CLI (MQC) configurations"
+
+  qos_policy_attach:
+    name: "QoS Policy Not Attached to Interface"
+    description: "Configure policy-map but not attached to the interface or attached in wrong direction"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - qos
+    symptoms:
+      - "QoS policy not taking effect"
+      - "Traffic not classified/queued as expected"
+      - "No policy statistics available"
+      - "QoS not applied in the correct direction"
+    troubleshooting_hints:
+      - "Check 'show policy-map interface <intf>' for attachments"
+      - "Use 'service-policy input <name>' for inbound"
+      - "Use 'service-policy output <name>' for outbound"
+      - "Verify interface supports service-policy"
+      - "Check interface is correct (sub-interface vs main interface)"
+      - "Direction: input classifies before routing, output after routing"
+    applicability: "All MQC QoS deployments"
+
+  qos_bandwidth:
+    name: "QoS Bandwidth Allocation Exceeded"
+    description: "Configure QoS bandwidth allocation that exceeds interface capacity or violates scheduling"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "QoS policy rejected due to bandwidth over-allocation"
+      - "Interface bandwidth percentage exceeds 100%"
+      - "Shape/police rate exceeds interface speed"
+      - "Remaining bandwidth not distributed correctly"
+    troubleshooting_hints:
+      - "Check policy-map bandwidth sum with 'show policy-map <name>'"
+      - "Bandwidth sum in a policy cannot exceed interface bandwidth"
+      - "Use 'bandwidth remaining percent' for unused bandwidth"
+      - "Bandwidth command guarantees minimum, not maximum"
+      - "Shape: 'shape average <bps>' for traffic shaping"
+      - "Police: 'police <bps>' for traffic policing"
+    applicability: "QoS policies with bandwidth guarantees"
+
+  qos_queuing:
+    name: "QoS Queuing Strategy Misconfiguration"
+    description: "Configure incorrect queuing strategy (FIFO, WFQ, CBWFQ, LLQ) causing priority issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "Priority traffic not getting priority queuing"
+      - "LLQ starvation of other queues"
+      - "Excessive jitter for real-time traffic"
+      - "Queue congestion not managed correctly"
+    troubleshooting_hints:
+      - "Check queuing with 'show policy-map interface <intf>'"
+      - "LLQ (priority) queue: strict priority, can starve others"
+      - "Use 'priority <kbps>' for real-time traffic (voice/video)"
+      - "Use 'police <rate>' under priority to prevent starvation"
+      - "CBWFQ: 'bandwidth <kbps>' for guaranteed bandwidth"
+      - "Check queue depth and drops with 'show policy-map interface'"
+    applicability: "QoS for voice, video, and data convergence"
+
+  qos_marking:
+    name: "QoS Marking/Remarking Not Working"
+    description: "Configure QoS marking but CoS/DSCP/IP precedence not being set correctly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "Traffic not marked with expected DSCP or CoS"
+      - "QoS markings stripped by intermediate devices"
+      - "Untrusted DSCP values from incoming traffic"
+      - "Layer 2 CoS not matching Layer 3 DSCP"
+    troubleshooting_hints:
+      - "Use 'set dscp <value>' or 'set ip precedence <value>' in policy"
+      - "Trust boundary: 'mls qos trust cos' / 'mls qos trust dscp'"
+      - "Check CoS-to-DSCP and DSCP-to-CoS mappings"
+      - "Use 'show mls qos interface <intf>' for trust state"
+      - "Campus switches: trust at access edge, remark at distribution"
+      - "Use 'show policy-map interface <intf> class <class>' for marking stats"
+    applicability: "QoS marking and trust boundaries"
+
+  qos_policing:
+    name: "QoS Policing / Shaping Misconfiguration"
+    description: "Configure policing or shaping with incorrect rate or burst parameters"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "Traffic dropped below configured rate"
+      - "TCP global synchronization due to tail drop"
+      - "Burst too small causing premature drops"
+      - "Shape/police rate mismatch with interface speed"
+    troubleshooting_hints:
+      - "Policing drops exceeding traffic (can cause TCP retransmits)"
+      - "Shaping buffers then transmits exceeding traffic"
+      - "Use 'police <rate> <burst>' with appropriate burst size"
+      - "Burst = rate * 1.5 / 8 (typical Cisco calculation)"
+      - "Shaper: 'shape average <bps> <burst>'"
+      - "Use 'show policy-map interface <intf>' for violate/conform actions"
+    applicability: "Traffic policing at provider edge, shaping at customer edge"

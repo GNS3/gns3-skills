@@ -1,0 +1,141 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "UDLD/CDP/LLDP Issues Injection"
+description: "UDLD (Unidirectional Link Detection), CDP and LLDP related network faults"
+category: "injection"
+protocols:
+  - udld
+  - cdp
+  - lldp
+
+issues:
+  udld_disabled:
+    name: "UDLD Disabled on Fiber Links"
+    description: "Disable UDLD on fiber links where unidirectional links are possible"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - udld
+    symptoms:
+      - "Unidirectional link undetected (STP loop risk)"
+      - "Fiber RX failure not detected by the switch"
+      - "Traffic flows one direction, STP not blocking"
+      - "Silent frame loss on fiber link"
+    troubleshooting_hints:
+      - "Check UDLD status with 'show udld <intf>'"
+      - "Use 'udld enable' globally or 'udld port' per interface"
+      - "Normal mode: detects unidirectional links, warns"
+      - "Aggressive mode: err-disables port on unidirectional detection"
+      - "Fiber links should use aggressive UDLD"
+      - "UDLD is layer 2, works with STP to protect against loops"
+    applicability: "Fiber optic links, especially between switches"
+
+  udld_aggressive:
+    name: "UDLD Aggressive Mode Misconfiguration"
+    description: "Configure UDLD aggressive mode on ports where it causes false err-disable"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - udld
+    symptoms:
+      - "Port err-disabled due to UDLD aggressive"
+      - "False positive unidirectional link detection"
+      - "Link flapping due to UDLD neighbor lost"
+      - "Port recovery needed after UDLD event"
+    troubleshooting_hints:
+      - "Check UDLD aggressive with 'show udld <intf>'"
+      - "Aggressive mode err-disables on single direction failure"
+      - "Use on fiber only, not on copper/short links"
+      - "Use 'udld port aggressive' on fiber interfaces"
+      - "Recovery: 'udld reset' or errdisable recovery"
+      - "Aggressive: 8 retries of UDLD probes before err-disable"
+    applicability: "Fiber links with aggressive UDLD protection"
+
+  cdp_disabled:
+    name: "CDP Disabled Causing Neighbor Discovery Failure"
+    description: "Disable CDP on interfaces where it is needed for device discovery"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - cdp
+    symptoms:
+      - "No CDP neighbor information available"
+      - "'show cdp neighbors' shows no entries"
+      - "VoIP phones not receiving CDP QoS/power info"
+      - "Network topology discovery tool failure"
+    troubleshooting_hints:
+      - "Check CDP with 'show cdp interface'"
+      - "Use 'cdp run' globally to enable CDP"
+      - "Use 'cdp enable' per interface"
+      - "CDP is enabled by default on Cisco devices"
+      - "CDP sends advertisements to 01:00:0c:cc:cc:cc"
+      - "CDP delay: 'cdp timer <seconds>', holdtime: 'cdp holdtime <seconds>'"
+    applicability: "Cisco device discovery, VoIP deployments"
+
+  cdp_mismatch:
+    name: "CDP Version / Information Mismatch"
+    description: "CDP v1/v2 mismatch or CDP not compatible across devices"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - cdp
+    symptoms:
+      - "CDP neighbor missing despite enabling"
+      - "CDP v1/v2 incompatibility"
+      - "Non-Cisco devices not supported"
+      - "Device capabilities not advertised correctly"
+    troubleshooting_hints:
+      - "Check CDP version with 'show cdp'"
+      - "Use 'cdp version-2' for CDPv2 (supports more TLVs)"
+      - "CDP is Cisco proprietary (use LLDP for multi-vendor)"
+      - "CDPv2 supports native VLAN, duplex, power negotiation"
+      - "CDPv1 is basic - device ID, port ID, platform"
+      - "Non-Cisco devices typically do not support CDP"
+    applicability: "Cisco device discovery, mixed vendor environments"
+
+  lldp_disabled:
+    name: "LLDP Disabled Causing Multi-Vendor Discovery Failure"
+    description: "Disable LLDP on interfaces where it is needed for multi-vendor discovery"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - lldp
+    symptoms:
+      - "No LLDP neighbor information available"
+      - "Neighbors from other vendors not discovered"
+      - "'show lldp neighbors' shows no entries"
+      - "Network management tools missing topology data"
+    troubleshooting_hints:
+      - "Check LLDP with 'show lldp'"
+      - "Use 'lldp run' globally to enable"
+      - "Use 'lldp transmit' and 'lldp receive' per interface"
+      - "IEEE 802.1AB standard, multi-vendor support"
+      - "LLDP sends to 01:80:c2:00:00:0e or 01:80:c2:00:00:03"
+      - "Use 'lldp timer <seconds>' and 'lldp hold-multiplier <value>'"
+    applicability: "Multi-vendor network discovery"
+
+  lldp_tlv:
+    name: "LLDP TLV Filtering Misconfiguration"
+    description: "Configure LLDP TLV filtering blocking important device information"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - lldp
+    symptoms:
+      - "Missing device capabilities in LLDP"
+      - "LLDP-MED power negotiation not working"
+      - "Incomplete device information from LLDP"
+      - "VoIP phones not receiving correct VLAN info"
+    troubleshooting_hints:
+      - "Check LLDP local info with 'show lldp local'"
+      - "LLDP-MED TLVs: power, location, network policy"
+      - "VoIP uses LLDP-MED for voice VLAN and power"
+      - "Some switches allow TLV filtering for security"
+      - "Disable TLV filtering: 'no lldp tlv-select'"
+      - "Check 'show lldp neighbors detail' for received TLVs"
+    applicability: "Multi-vendor networks, VoIP, PoE deployments"

@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "EIGRP Issues Injection"
+description: "EIGRP protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - eigrp
+
+issues:
+  eigrp_k_value_mismatch:
+    name: "EIGRP K-Value Mismatch"
+    description: "Configure mismatched EIGRP K-values (metrics weights) between neighbors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails"
+      - "K-value mismatch error messages"
+      - "No EIGRP routes exchanged"
+    troubleshooting_hints:
+      - "Check EIGRP K-values with 'show ip protocols'"
+      - "K-values must match on all EIGRP neighbors"
+      - "Default K-values are K1=1, K3=1, others=0"
+      - "Ensure metric weights same across AS"
+      - "Use 'metric weights <tos> <k1> <k2> <k3> <k4> <k5>' to adjust"
+    applicability: "EIGRP configurations"
+
+  eigrp_as_number:
+    name: "EIGRP Autonomous System Number Mismatch"
+    description: "Configure EIGRP with different AS numbers on neighboring routers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails to form"
+      - "No EIGRP routes exchanged"
+      - "Neighbors stuck in INIT state"
+      - "AS number mismatch errors in logs"
+    troubleshooting_hints:
+      - "Check EIGRP AS number with 'show ip eigrp interfaces'"
+      - "Verify AS number matches on all routers in the same domain"
+      - "EIGRP AS number is specified in 'router eigrp <AS>'"
+      - "All routers in the same EIGRP domain must share the same AS"
+      - "Named mode EIGRP also requires matching AS number"
+    applicability: "All EIGRP configurations"
+
+  eigrp_passive_interface:
+    name: "EIGRP Passive Interface Blocking Neighbors"
+    description: "Configure passive-interface on EIGRP interface preventing neighbor discovery"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency not forming on specific interface"
+      - "No EIGRP hellos sent on the interface"
+      - "Routes missing only on one segment"
+      - "Other interfaces form adjacencies normally"
+    troubleshooting_hints:
+      - "Check EIGRP interfaces with 'show ip eigrp interfaces'"
+      - "Passive interfaces will not appear in EIGRP interface list"
+      - "Verify 'passive-interface default' if used"
+      - "Use 'no passive-interface <intf>' to allow adjacencies"
+      - "Check 'show run | section router eigrp' for passive statements"
+    applicability: "EIGRP with selective passive interface configuration"
+
+  eigrp_authentication_mismatch:
+    name: "EIGRP Authentication Mismatch"
+    description: "Configure EIGRP MD5 authentication on one side but not the other, or use wrong key"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails"
+      - "Authentication errors in logs"
+      - "EIGRP neighbors stuck in INIT state"
+      - "MD5 authentication failure messages"
+    troubleshooting_hints:
+      - "Check EIGRP authentication with 'show ip eigrp interfaces detail'"
+      - "Verify key-chain configuration matches on both sides"
+      - "Use 'authentication mode md5 key-chain <key-name>'"
+      - "Key-chain key must match exactly (case-sensitive)"
+      - "Check for 'authentication failure' in debug logs"
+      - "Verify 'ip authentication key-chain' is configured"
+    applicability: "EIGRP with authentication configured"

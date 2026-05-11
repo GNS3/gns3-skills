@@ -148,3 +148,70 @@ issues:
       - "Disable MAC advertisement: 'no evpn advertise mac'"
       - "IRB: routed interfaces need 'evpn arp advertise' for IP routes"
     applicability: "EVPN MPLS MAC learning across PEs"
+
+  evpn_mpls_control_word:
+    name: "EVPN MPLS Control-Word / Sequencing Misconfiguration"
+    description: "Configure EVPN MPLS control-word incorrectly causing frame sequencing or OAM issues"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "L2 frame sequencing issues across EVPN MPLS"
+      - "Control-word not preserving frame ordering"
+      - "OAM not working over EVPN MPLS PW"
+      - "Control-word mismatch between PEs"
+    troubleshooting_hints:
+      - "Control word (CW): 4 bytes preserving L2 header info"
+      - "Use 'mpls control-word' under EVPN instance or EVI"
+      - "CW must be consistent across all PEs in EVI"
+      - "CW includes: sequence number, flags, fragment info"
+      - "Check 'show evpn evi <id>' for control-word status"
+      - "Without CW: some L2 frames may arrive out of order"
+    applicability: "EVPN MPLS with frame ordering requirements"
+
+  evpn_mpls_bw:
+    name: "EVPN MPLS Bandwidth / EVI Load Balancing Issue"
+    description: "Configure EVPN MPLS multi-homing but bandwidth not load shared across PEs"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "Single PE carries all traffic for multi-homed CE"
+      - "EVPN multi-homing not load balancing across PEs"
+      - "DF election not distributing traffic per EVI"
+      - "Bandwidth across PEs not utilized"
+    troubleshooting_hints:
+      - "DF election per EVI determines traffic forwarding"
+      - "Check 'show evpn ethernet-segment <esi> evi <id>' for DF"
+      - "Load balancing: use service carving (DF per EVI)"
+      - "Use 'lacp max-bundle' or distribute VLANs across PEs"
+      - "Verify ESI configuration consistent on multi-homed PEs"
+      - "Check 'show evpn ethernet-segment' for multi-homing status"
+    applicability: "EVPN MPLS multi-homing with load sharing"
+
+  evpn_mpls_vxlan_gateway:
+    name: "EVPN MPLS-VXLAN Interworking Gateway"
+    description: "Configure EVPN MPLS to VXLAN interworking gateway but mapping between MPLS labels and VNI fails"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+      - vxlan
+    symptoms:
+      - "Traffic from EVPN MPLS domain not reaching VXLAN domain"
+      - "Gateway label-to-VNI mapping incorrect"
+      - "EVPN route exchange across gateway fails"
+      - "L2VPN stitching between MPLS and VXLAN broken"
+    troubleshooting_hints:
+      - "EVPN MPLS-to-VXLAN interworking: 'l2vpn evpn mpls vxlan'"
+      - "Gateway translates MPLS labels to VNI (and reverse)"
+      - "Check 'show evpn interworking' for gateway status"
+      - "VNI must map one-to-one with MPLS service label"
+      - "Control plane: BGP EVPN routes carry both info"
+      - "Data plane: label->VNI or VNI->label at gateway"
+    applicability: "EVPN MPLS-VXLAN interworking, DCI deployments"

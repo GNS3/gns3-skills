@@ -145,3 +145,92 @@ issues:
       - "Check 'show bgp ipv4 flowspec <prefix>' for validation status"
       - "On RR: no need for validation (pass-through)"
     applicability: "BGP FlowSpec inter-AS deployments"
+
+  flowspec_send_community:
+    name: "BGP FlowSpec Send-Community Missing"
+    description: "Configure FlowSpec without send-community extended, preventing action community propagation"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec routes exchanged but without action communities"
+      - "Actions (traffic-rate, redirect) not present in received rules"
+      - "FlowSpec rules received but no traffic effect"
+      - "Send-community not configured for FlowSpec address family"
+    troubleshooting_hints:
+      - "FlowSpec actions are carried in extended communities"
+      - "Use 'neighbor <ip> send-community extended' under flowspec AF"
+      - "Without extended community, actions are not signaled"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for communities"
+      - "Standard send-community is NOT sufficient for FlowSpec"
+      - "Use 'neighbor <ip> send-community' with no specific type"
+    applicability: "BGP FlowSpec rule deployment"
+
+  flowspec_route_policy:
+    name: "BGP FlowSpec Route Policy / Origination via Policy"
+    description: "Configure FlowSpec route origination via local policy but policy not correctly applied"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec rules not originated despite local policy configured"
+      - "Local policy not generating FlowSpec NLRIs"
+      - "Route-policy for FlowSpec not attached"
+      - "FlowSpec origination from static configuration fails"
+    troubleshooting_hints:
+      - "FlowSpec rules can be originated via local policy: 'bgp flowspec local-policy'"
+      - "Use route-policy to define match and action for FlowSpec"
+      - "Check 'show bgp ipv4 flowspec local-policy' for config"
+      - "Origination also via explicit commands or SDN controller"
+      - "For manual: configure 'ip bgp flow-spec <name>' and 'set' actions"
+      - "Verify 'bgp flowspec local-policy' references a valid route-policy"
+    applicability: "BGP FlowSpec route origination"
+
+  flowspec_hw_offload:
+    name: "BGP FlowSpec Hardware Offload / TCAM Programming"
+    description: "Configure BGP FlowSpec but rules not programmed in hardware forwarding"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec rules received but traffic not affected"
+      - "Software forwarding handling FlowSpec but hardware not"
+      - "TCAM entry not programmed for FlowSpec rule"
+      - "Platform FlowSpec hardware limitation"
+    troubleshooting_hints:
+      - "Not all platforms support FlowSpec in hardware"
+      - "Check 'show platform flowspec' for hardware programming"
+      - "FlowSpec hardware limitations: max rules, match field support"
+      - "Complex rules (multiple match fields) may not fit hardware"
+      - "Falling back to software forwarding for FlowSpec"
+      - "Reduce rule complexity for hardware support"
+    applicability: "BGP FlowSpec on hardware-forwarding platforms"
+
+  flowspec_v6_validation:
+    name: "BGP IPv6 FlowSpec Validation / Inter-AS Deployment"
+    description: "Configure IPv6 FlowSpec across AS boundaries but validation check prevents propagation"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+      - ipv6
+    symptoms:
+      - "IPv6 FlowSpec rules not accepted from eBGP peer"
+      - "Validation failure for FlowSpec rules from neighbor AS"
+      - "FlowSpec rules stuck, not installed"
+      - "Inter-AS DDoS mitigation not working"
+    troubleshooting_hints:
+      - "FlowSpec validation: destination must be reachable via BGP"
+      - "For eBGP: disable validation 'neighbor <ip> flowspec validation disable'"
+      - "Or: 'bgp flowspec validation disable' globally"
+      - "IPv6 inter-AS requires validation adjustment"
+      - "Route Reflector passes FlowSpec without validation"
+      - "Check 'show bgp ipv6 flowspec <prefix>' for validation status"
+    applicability: "Inter-AS IPv6 FlowSpec DDoS mitigation"

@@ -781,3 +781,326 @@ issues:
       - "Single process recommended unless multi-vendor isolation needed"
       - "Process ID is just a local identifier (1-65535)"
     applicability: "OSPF routers with multiple OSPF processes"
+
+  # Virtual Link Extended Issues
+
+  ospf_virtual_link_auth:
+    name: "OSPF Virtual Link Authentication Mismatch"
+    description: "Configure authentication on a virtual link that does not match the transit area's authentication"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF virtual link fails to establish"
+      - "Virtual link neighbor stuck in DOWN state"
+      - "Authentication works on physical interfaces but fails on virtual link"
+      - "Disconnected area cannot reach backbone"
+    troubleshooting_hints:
+      - "Virtual link inherits transit area's authentication settings"
+      - "If transit area uses MD5 auth: virtual link must also use MD5"
+      - "Check 'show ip ospf virtual-links' for virtual link state"
+      - "Virtual link authentication in 'area <id> virtual-link <rid> authentication'"
+      - "Key and auth type must match on both ends of the virtual link"
+      - "Different from interface auth: virtual link auth is per-area"
+    applicability: "Multi-area OSPF with virtual links and authentication"
+
+  ospf_virtual_link_transit:
+    name: "OSPF Virtual Link Transit Area Not Reachable"
+    description: "Configure virtual link but the transit area has no working path between the two endpoints"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Virtual link stays down"
+      - "Virtual link endpoint router-id not reachable via transit area"
+      - "Transit area routing incomplete"
+      - "Area 0 disconnection despite virtual link configured"
+    troubleshooting_hints:
+      - "Virtual link requires the two endpoint Router-IDs to be reachable within transit area"
+      - "Check 'show ip ospf border-routers' for ABR reachability"
+      - "Transit area must have full connectivity between the two ABRs"
+      - "Use 'show ip route <peer-router-id>' from each ABR"
+      - "If transit area is a stub area: virtual links NOT allowed"
+      - "Verify: 'area <id> virtual-link <rid>' on both ABRs with matching Router-ID"
+    applicability: "Multi-area OSPF with virtual link transit areas"
+
+  # OSPF Filtering Extended Issues
+
+  ospf_distribute_list_in:
+    name: "OSPF Distribute-List In / Route Suppression Misconfiguration"
+    description: "Configure distribute-list in on OSPF that filters legitimate intra-area or inter-area routes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF routes not installed in routing table despite being in database"
+      - "Distribute-list in blocking specific routes"
+      - "Intra-area routes missing on specific routers"
+      - "Access control filtering too broad"
+    troubleshooting_hints:
+      - "Distribute-list in: 'distribute-list <acl> in [<intf>]'"
+      - "OSPF installs routes from LSDB to RIB, distribute-list blocks installation"
+      - "Route still in LSDB ('show ip ospf database') but not in RIB ('show ip route')"
+      - "ACL permit/deny controls which prefixes get installed"
+      - "Implicit deny at end of ACL blocks all unpermitted prefixes"
+      - "Check 'show ip ospf distribute-list' for active filters"
+    applicability: "OSPF route filtering without LSA suppression"
+
+  ospf_filter_list:
+    name: "OSPF Filter-List on ABR / Area Prefix Suppression"
+    description: "Configure filter-list on ABR blocking Type 3 summary LSAs for specific prefixes between areas"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Specific prefixes not crossing area boundary"
+      - "ABR not generating Type 3 summary LSAs for filtered prefixes"
+      - "Inter-area routes missing in non-backbone areas"
+      - "Filter-list ACL matching wrong prefixes"
+    troubleshooting_hints:
+      - "Filter-list: 'area <id> filter-list prefix <name> in|out' on ABR"
+      - "Out = prefixes filtered before being advertised into the area"
+      - "In = prefixes filtered when received from the area"
+      - "Type 3 LSAs are suppressed entirely (not in LSDB either)"
+      - "Check 'show ip ospf database summary' for missing Type 3 LSAs"
+      - "Different from distribute-list: filter-list prevents LSA generation, not RIB install"
+    applicability: "Multi-area OSPF with inter-area route control"
+
+  ospf_interface_filter:
+    name: "OSPF Interface LSA Filter / Outbound LSA Suppression"
+    description: "Configure ip ospf database-filter on interface blocking all outbound LSAs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency up but no LSAs received"
+      - "Database not synchronized across the link"
+      - "One side has complete database, other has empty database"
+      - "Routes not advertised across specific interface only"
+    troubleshooting_hints:
+      - "'ip ospf database-filter all out' blocks all outgoing LSAs on an interface"
+      - "Neighbor adjacency stays up (Hellos still exchanged)"
+      - "LSDB never synchronizes: missing Type 1, 2, 3, 4, 5 LSAs"
+      - "Check 'show ip ospf interface <intf>' for database-filter status"
+      - "Router can receive LSAs but never sends any"
+      - "Common misconfiguration when trying to optimize LSA flooding"
+    applicability: "OSPF interfaces with LSA flooding restrictions"
+
+  # OSPF Default Route Extended Issues
+
+  ospf_default_always:
+    name: "OSPF Default-Information Originate Always / Conditional Issue"
+    description: "Configure default-information originate without 'always' keyword when no default in routing table"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Default route not advertised by ASBR"
+      - "Default-information originate configured but OSPF default missing"
+      - "No default route in routing table on ASBR itself"
+      - "Other routers have no 0.0.0.0/0 in OSPF"
+    troubleshooting_hints:
+      - "'default-information originate' requires a default route in routing table"
+      - "Without 'always': OSPF does not generate default if no 0.0.0.0/0 exists"
+      - "With 'always': OSPF always advertises default (even without one in RIB)"
+      - "Check 'show ip route' for 0.0.0.0/0 on the ASBR"
+      - "Use 'default-information originate always' for forced advertisement"
+      - "Set metric and metric-type: 'default-information originate always metric <n> metric-type 1|2'"
+    applicability: "OSPF autonomous system boundary routers"
+
+  ospf_default_metric_type:
+    name: "OSPF Default Route Metric / Type Mismatch"
+    description: "Configure OSPF default route with incorrect metric type (E1 vs E2) or metric value"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Default route received but path selection suboptimal"
+      - "E1 vs E2 confusion causing routing asymmetry"
+      - "Default route metric too high (unreachable) or too low"
+      - "Multiple default routes not selecting best path"
+    troubleshooting_hints:
+      - "Metric-type E1 (external + internal cost), E2 (external cost only)"
+      - "In 'show ip route': 'E1' or 'E2' after OSPF code"
+      - "E2 default: routers closest to ASBR get same cost as far routers"
+      - "E1 default: cost accumulates as distance from ASBR increases"
+      - "Use 'default-information originate metric-type 1|2'"
+      - "Default metric: 'metric <value>' (default 10 for external routes)"
+    applicability: "Multi-homed OSPF default route deployments"
+
+  # OSPF Authentication Extended Issues
+
+  ospf_auth_key_chain:
+    name: "OSPF Key-Chain Authentication Rollover Failure"
+    description: "Configure OSPF MD5/SHA authentication with key-chain but key rollover causes adjacency flap"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF adjacency flapping during key rollover"
+      - "Authentication failure with new or old key"
+      - "Key send-time mismatch between neighbors"
+      - "Brief OSPF outage during rolling key update"
+    troubleshooting_hints:
+      - "Key-chain: multiple keys with send-lifetime/accept-lifetime"
+      - "Both ends must have overlapping accept periods for old and new keys"
+      - "Send-lifetime: when router starts sending with new key"
+      - "Accept-lifetime: when router accepts old key (should overlap with peer's send)"
+      - "Higher key-ID preferred for sending"
+      - "Use 'debug ip ospf packet' to see auth key-ID during rollover"
+    applicability: "OSPF with managed key rotation"
+
+  ospf_auth_type_null:
+    name: "OSPF Null Authentication / Authentication Migration Issue"
+    description: "Configure 'ip ospf authentication null' on an interface that needs authentication"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF adjacency fails due to authentication type mismatch"
+      - "One side uses null auth, other uses MD5"
+      - "Authentication migration from null to MD5 incomplete"
+      - "Temporary adjacency loss during auth transition"
+    troubleshooting_hints:
+      - "OSPF auth types: 0 (null), 1 (simple password), 2 (MD5 cryptographic)"
+      - "'ip ospf authentication null' disables auth on that interface"
+      - "Auth type mismatch: both sides must agree on same auth type"
+      - "Migration: 'ip ospf authentication message-digest' on both sides"
+      - "Use 'ip ospf message-digest-key <id> md5 <key>' for MD5"
+      - "During transition: both sides should have matching key first"
+    applicability: "OSPF authentication migration deployments"
+
+  ospf_auth_area_vs_interface:
+    name: "OSPF Area-Level vs Interface-Level Authentication Conflict"
+    description: "Configure OSPF authentication at area level but override at interface level inconsistently"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Some interfaces in the same area have different auth settings"
+      - "Area authentication enabled but specific interface not matching"
+      - "OSPF adjacency works on some links but not others in same area"
+      - "Inconsistent authentication across area causing partial connectivity"
+    troubleshooting_hints:
+      - "Area auth: 'area <id> authentication [message-digest]'"
+      - "Interface auth: 'ip ospf authentication [message-digest|null]'"
+      - "Interface setting overrides area setting"
+      - "If area auth enabled but interface uses null auth: adjacency fails"
+      - "Check 'show ip ospf interface <intf>' for effective auth mode"
+      - "All interfaces in the same area should use consistent auth"
+    applicability: "Multi-area OSPF with mixed authentication requirements"
+
+  # OSPF Area Types Extended Issues
+
+  ospf_totally_stubby:
+    name: "OSPF Totally Stubby Area / Type 3 Summary Missing"
+    description: "Configure totally stubby area but default summary route not generated by ABR"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Totally stubby area routers have no default route"
+      - "ABR not injecting Type 3 default summary into totally stubby area"
+      - "Area routers cannot reach destinations outside the area"
+      - "No inter-area routes (as expected) but also no default"
+    troubleshooting_hints:
+      - "Totally stubby: 'area <id> stub no-summary' on ABR only"
+      - "Blocks all Type 3/4/5 LSAs into the area (including inter-area routes)"
+      - "ABR automatically injects Type 3 default (0.0.0.0/0)"
+      - "If no default: check 'area <id> stub' (without no-summary) on ABR"
+      - "Non-ABRs in area still use 'area <id> stub' (without no-summary)"
+      - "Check 'show ip ospf database summary' for default Type 3 LSA"
+    applicability: "Totally stubby area OSPF deployments"
+
+  ospf_nssa_translate:
+    name: "OSPF NSSA Type-7 to Type-5 Translation Failure"
+    description: "Configure NSSA ABR but Type-7 LSAs not translated to Type-5 for other areas"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "External routes from NSSA area not reaching other areas"
+      - "Type-7 LSAs present in NSSA but missing as Type-5 in backbone"
+      - "Translation flag not set on NSSA ABR"
+      - "P-bit incorrectly set or cleared"
+    troubleshooting_hints:
+      - "NSSA Type-7 LSAs carry external routes within the NSSA"
+      - "Only the ABR with highest Router-ID translates Type-7 to Type-5"
+      - "Translation election: 'show ip ospf' for 'NSSA Translator' status"
+      - "P-bit (propagate bit) determines which Type-7 to translate"
+      - "If P-bit not set: LSA stays within NSSA, not advertised to other areas"
+      - "Use 'area <id> nssa translate type7 suppress-fa' for forwarding address"
+    applicability: "NSSA area with external route propagation"
+
+  ospf_nssa_default:
+    name: "OSPF NSSA Default Route / No-Redistribution Flag Issue"
+    description: "Configure NSSA area with no-redistribution flag preventing Type-7 default route generation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "NSSA routers have no default route"
+      - "NSSA area with no-redistribution not getting default"
+      - "ABR not injecting Type-7 default into NSSA"
+      - "External connectivity from NSSA broken"
+    troubleshooting_hints:
+      - "'area <id> nssa [no-redistribution] [default-information-originate]'"
+      - "no-redistribution: prevents redistributed routes from entering NSSA"
+      - "default-information-originate: generates Type-7 default into NSSA"
+      - "Without 'default-information-originate': no default injected"
+      - "With 'no-redistribution': redistributed routes blocked but default still injected if configured"
+      - "Check 'show ip ospf database nssa-external' for Type-7 default"
+    applicability: "NSSA area with controlled external route distribution"
+
+  ospf_area_cost_default:
+    name: "OSPF Area Default-Cost / Summary Path Cost Misconfiguration"
+    description: "Configure area default-cost on ABR with incorrect metric for stub/NSSA default route"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Default route cost into stub/NSSA area too high or too low"
+      - "Multiple ABRs inject default with same cost (no load balancing)"
+      - "Suboptimal exit path from the area"
+      - "Traffic always exits through same ABR regardless of cost"
+    troubleshooting_hints:
+      - "'area <id> default-cost <cost>' sets the metric of the default route into the area"
+      - "Default cost: 1 by default"
+      - "Higher cost = less preferred exit from the area"
+      - "Set different costs on different ABRs for primary/backup exit"
+      - "Only applies to stub/NSSA/totally-stubby areas"
+      - "Check 'show ip ospf database summary' for default route cost"
+    applicability: "Stub/NSSA areas with multiple ABRs"

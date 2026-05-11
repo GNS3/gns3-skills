@@ -198,10 +198,14 @@ For detailed CI/CD documentation, see [`.github/scripts/README.md`](.github/scri
 
 ## Contributing
 
-1. Create a new YAML file in the appropriate directory (`injection/` or `device/`)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed conventions on naming, issue format, writing guidelines, and the PR workflow.
+
+Quick checklist:
+
+1. Create a new YAML file in `injection/`
 2. Follow the [skill format](#skill-format) shown above
 3. Run local validation: `python3 .github/scripts/validate_skills.py`
-4. Submit a pull request (CI will automatically validate your changes)
+4. Submit a pull request targeting `main`
 
 ## License
 

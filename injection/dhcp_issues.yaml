@@ -1,0 +1,258 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DHCP Issues Injection"
+description: "DHCP server, DHCP relay, DHCPv6, prefix delegation related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - dhcp
+  - dhcpv6
+  - dhcp-relay
+  - dhcp-server
+
+issues:
+  # DHCP Server Issues
+
+  dhcp_pool_exhausted:
+    name: "DHCP Address Pool Exhausted"
+    description: "Configure DHCP pool too small for number of clients causing new clients unable to obtain addresses"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dhcp
+    symptoms:
+      - "New DHCP clients fail to obtain IP address"
+      - "DHCP server logs 'address pool exhausted'"
+      - "Manual static IP works but DHCP does not"
+      - "Some hosts get IP while new ones cannot"
+    troubleshooting_hints:
+      - "Check DHCP pool usage with 'show ip dhcp binding'"
+      - "Verify 'network <prefix> <mask>' address range"
+      - "Use 'ip dhcp excluded-address' to check reserved range"
+      - "Default lease time is 1 day (reduces churn)"
+      - "Increase pool size or reduce lease time"
+      - "Check 'show ip dhcp pool <name>' for utilization statistics"
+    applicability: "All DHCP server deployments"
+
+  dhcp_wrong_subnet:
+    name: "DHCP Pool Subnet / Default Gateway Mismatch"
+    description: "Configure DHCP pool with wrong subnet or default-router not matching client VLAN"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dhcp
+    symptoms:
+      - "DHCP clients receive IP addresses but cannot reach default gateway"
+      - "Default gateway IP different from client subnet"
+      - "Hosts get IP but have no network connectivity"
+      - "Ping to default gateway fails despite DHCP success"
+    troubleshooting_hints:
+      - "Check 'default-router <ip>' in DHCP pool matches client subnet"
+      - "Verify 'network <network> <mask>' covers client subnet"
+      - "Client gets address from DHCP but routing fails if gw wrong"
+      - "Use 'show ip dhcp pool' to verify pool configuration"
+      - "DHCP options: 3 (default-router), 6 (dns-server)"
+      - "Ping the default gateway from a client to verify"
+    applicability: "DHCP server provisioning"
+
+  dhcp_static_wrong:
+    name: "DHCP Static / Manual Binding Misconfiguration"
+    description: "Configure DHCP static binding (reservation) with wrong MAC address or IP"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - dhcp
+    symptoms:
+      - "Specific host does not get the reserved IP address"
+      - "IP assigned to different device than expected"
+      - "MAC mismatch between DHCP binding and client"
+      - "Duplicate IP due to reservation overlapping with pool"
+    troubleshooting_hooks:
+      - "DHCP manual binding: 'ip dhcp pool <name>' then 'host <ip> <mask>' and 'hardware-address <mac>'"
+      - "Verify MAC address format: xxxx.xxxx.xxxx (Cisco format)"
+      - "Check 'show ip dhcp binding' for active reservations"
+      - "If client MAC does not match reservation: client gets dynamic address"
+      - "If reserved IP in pool range: possible duplicate IP"
+      - "Use 'show run | section ip dhcp pool' to review all bindings"
+    applicability: "DHCP reservations for servers or infrastructure"
+
+  # DHCP Relay Issues
+
+  dhcp_relay_udp:
+    name: "DHCP Relay / UDP 67/68 Forwarding Failure"
+    description: "Configure DHCP relay (ip helper-address) but DHCP discover/offer not forwarded"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp
+      - dhcp-relay
+    symptoms:
+      - "DHCP clients in relay VLAN cannot get IP address"
+      - "DHCP discover never reaches the server"
+      - "DHCP server responds but reply not forwarded back"
+      - "Only directly connected VLAN clients get IP"
+    troubleshooting_hooks:
+      - "DHCP relay: 'ip helper-address <server-ip>' on VLAN interface"
+      - "Relay forwards UDP 67/68 broadcasts as unicast to server"
+      - "Check 'show ip interface <vlan>' for helper-address configuration"
+      - "Verify IP routing between relay agent and DHCP server"
+      - "Relay inserts Option 82 (giaddr) for server to know source subnet"
+      - "Check firewall: UDP 67/68 must be routable between relay and server"
+    applicability: "Multi-VLAN DHCP deployments with centralized server"
+
+  dhcp_relay_giaddr:
+    name: "DHCP Relay giaddr / Source Subnet Identification Error"
+    description: "Configure DHCP relay but giaddr (gateway address) not set correctly causing server fails to assign correct subnet"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp
+      - dhcp-relay
+    symptoms:
+      - "DHCP clients receive IP from wrong subnet pool"
+      - "Server cannot determine which pool to allocate from"
+      - "Relay giaddr missing or set to wrong IP"
+      - "Client gets IP that does not match its VLAN"
+    troubleshooting_hooks:
+      - "Relay sets giaddr = primary IP of the incoming interface"
+      - "DHCP server uses giaddr to select which pool to use"
+      - "If giaddr is missing or wrong: server picks wrong pool or no pool"
+      - "Check 'show ip dhcp relay' for relay statistics"
+      - "Use debug: 'debug ip dhcp server' to see giaddr in requests"
+      - "Ensure interface has IP in the expected subnet for the client VLAN"
+    applicability: "DHCP relay with multiple subnets"
+
+  dhcp_relay_uc:
+    name: "DHCP Unicast Reply / Server Unreachable for Unicast"
+    description: "Configure DHCP relay but server cannot reach client via unicast for ACK/NAK"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp
+      - dhcp-relay
+    symptoms:
+      - "DHCP DISCOVER/OFFER works but ACK fails"
+      - "Client gets to SELECTING state but never gets ACK"
+      - "DHCP relay forwards discovery but reply fails"
+      - "Intermittent DHCP success"
+    troubleshooting_hooks:
+      - "After relay forwards DISCOVER to server: server responds via unicast to relay"
+      - "Relay must be reachable from DHCP server via unicast"
+      - "VERIFY: 'ping <relay-ip>' from DHCP server"
+      - "Route back from server to relay IP + client subnet required"
+      - "Check extended ACL on relay that may block unicast DHCP replies"
+      - "Use 'debug ip dhcp server events' to track packet flow"
+    applicability: "DHCP relay across routed segments"
+
+  # DHCP Options Issues
+
+  dhcp_option_missing:
+    name: "DHCP Option / Additional Parameters Missing"
+    description: "Configure DHCP pool without essential options causing client operation issues"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - dhcp
+    symptoms:
+      - "DHCP clients get IP but cannot resolve hostnames (no DNS)"
+      - "DHCP clients cannot reach outside network (no domain-list)"
+      - "PXE/network boot clients fail (no next-server/option 66)"
+      - "IP phones cannot find call manager (option 150)"
+    troubleshooting_hooks:
+      - "Common DHCP options: 3 (router), 6 (dns), 15 (domain), 150 (tftp-server)"
+      - "Configure: 'dns-server <ip>', 'domain-name <name>', 'option <num> <value>'"
+      - "Check 'show ip dhcp pool <name>' for configured options"
+      - "Use 'default-router', 'dns-server', 'domain-name' sub-commands"
+      - "Option 150 (tftp) for Cisco IP phones"
+      - "Option 66/67 for PXE network boot"
+    applicability: "DHCP with application-specific options"
+
+  dhcp_lease_time:
+    name: "DHCP Lease Time / Renewal Misconfiguration"
+    description: "Configure DHCP lease time too short causing excessive renewal traffic or too long causing address depletion"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - dhcp
+    symptoms:
+      - "Frequent DHCP renewal requests filling server logs"
+      - "DHCP server high CPU due to lease renewals"
+      - "Address pool depletion due to long lease times"
+      - "Clients fail to renew before lease expiry"
+    troubleshooting_hooks:
+      - "Lease time: 'lease {days [hours [minutes]] | infinite}'"
+      - "Default: 1 day (86400 seconds)"
+      - "Short lease = frequent renewals, faster address turnover"
+      - "Long lease = fewer renewals, slower address recovery"
+      - "Client renews at roughly 50% and 87.5% of lease time"
+      - "Check 'show ip dhcp binding' for lease expiration times"
+    applicability: "DHCP lease time optimization"
+
+  # DHCPv6 Issues
+
+  dhcpv6_stateless:
+    name: "DHCPv6 Stateless / Stateful Mode Misconfiguration"
+    description: "Configure DHCPv6 with wrong mode (stateless vs stateful) for client needs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dhcpv6
+    symptoms:
+      - "DHCPv6 clients do not receive IPv6 addresses"
+      - "Clients get other-config but no managed address"
+      - "IPv6 SLAAC works but DHCPv6 assigned address missing"
+      - "Stateless DHCPv6 providing addresses incorrectly"
+    troubleshooting_hooks:
+      - "DHCPv6 modes: stateless (SLAAC + other config), stateful (managed addresses)"
+      - "ND flags: 'ipv6 nd managed-config-flag' (stateful), 'ipv6 nd other-config-flag' (stateless)"
+      - "Stateful: DHCPv6 server assigns /64 or /128 addresses"
+      - "Stateless: SLAAC addresses + DHCPv6 provides DNS, domain, etc."
+      - "Check 'show ipv6 dhcp interface <intf>' for DHCPv6 mode"
+      - "Both flags cannot be unset for DHCPv6 to work"
+    applicability: "DHCPv6 for IPv6 address assignment"
+
+  dhcpv6_pd:
+    name: "DHCPv6 Prefix Delegation / Prefix Pool Misconfiguration"
+    description: "Configure DHCPv6 prefix delegation (PD) but CE does not receive delegated prefix"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dhcpv6
+    symptoms:
+      - "CPE router does not receive IPv6 prefix via DHCPv6 PD"
+      - "DHCPv6 IA-PD option missing from server response"
+      - "CE router cannot assign global IPv6 addresses downstream"
+      - "DHCPv6 prefix pool exhausted"
+    troubleshooting_hooks:
+      - "DHCPv6 PD: 'ipv6 dhcp pool <name>' then 'prefix-delegation pool <pool-name>'"
+      - "CE requests: 'ipv6 dhcp client pd <name>' on WAN interface"
+      - "Check 'show ipv6 dhcp binding' for prefix delegation bindings"
+      - "Verify prefix pool has available prefixes"
+      - "IA-PD lifetime must not expire before renewal"
+      - "Check 'show ipv6 dhcp interface' for PD status"
+    applicability: "ISP IPv6 prefix delegation deployments"
+
+  dhcpv6_rapid_commit:
+    name: "DHCPv6 Rapid Commit / Two-Way Exchange Failure"
+    description: "Configure DHCPv6 rapid commit on server but client does not support two-way exchange"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - dhcpv6
+    symptoms:
+      - "DHCPv6 rapid commit not used despite configuration"
+      - "Client falls back to four-way exchange (SOLICIT-ADVERTISE-REQUEST-REPLY)"
+      - "Rapid commit option missing from server reply"
+      - "Longer DHCPv6 exchange time than expected"
+    troubleshooting_hooks:
+      - "Rapid commit: two-way exchange (SOLICIT-REPLY) instead of four-way"
+      - "Server: 'ipv6 dhcp server <pool> [rapid-commit]'"
+      - "Client must include rapid-commit option in SOLICIT"
+      - "If client does not support rapid-commit: falls back to four-way"
+      - "Check 'debug ipv6 dhcp detail' for option codes"
+      - "Rapid commit reduces address assignment latency"
+    applicability: "DHCPv6 performance optimization"

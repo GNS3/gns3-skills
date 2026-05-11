@@ -324,3 +324,72 @@ issues:
       - "RIP may need workarounds: PBR + IP tracking for faster convergence"
       - "Consider replacing RIP with EIGRP or OSPF if fast convergence needed"
     applicability: "RIP deployments needing faster convergence"
+
+  ripng_interface_enable:
+    name: "RIPng Interface Not Enabled for IPv6"
+    description: "Configure RIPng globally but not enabled on the required interface"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - rip
+      - ripng
+      - ipv6
+    symptoms:
+      - "RIPng not advertising IPv6 routes"
+      - "No RIPng updates sent on specific interface"
+      - "IPv6 routes missing from RIPng database"
+      - "RIPng process running but no routes exchanged"
+    troubleshooting_hooks:
+      - "RIPng: 'ipv6 rip <process> enable' under interface"
+      - "Check 'show ipv6 rip' for RIPng status"
+      - "RIPng uses multicast FF02::9 (must not be blocked)"
+      - "Global RIPng config: 'ipv6 router rip <tag>'"
+      - "Without interface enable: RIPng process exists but no updates"
+      - "Check 'show ipv6 rip interface' for enabled interfaces"
+    applicability: "RIPng IPv6 routing deployments"
+
+  ripng_split_horizon:
+    name: "RIPng Split Horizon / Poison Reverse Issue"
+    description: "Configure RIPng with split horizon enabled on hub causing spoke-to-spoke routing failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+      - ripng
+      - ipv6
+    symptoms:
+      - "RIPng routes not propagating from hub to spokes"
+      - "Split horizon blocking route advertisement"
+      - "Spoke-to-spoke reachability via hub fails"
+      - "Partial IPv6 routing table on spokes"
+    troubleshooting_hooks:
+      - "RIPng split horizon: enabled by default on all interfaces"
+      - "Prevents advertising routes back out of received interface"
+      - "Hub needs split horizon disabled for spoke-to-spoke routing"
+      - "Use 'no ipv6 split-horizon' under interface (if supported)"
+      - "Alternative: 'ipv6 rip <tag> poison-reverse' for loop prevention"
+      - "Check 'show ipv6 rip interface <intf>' for split horizon status"
+    applicability: "Hub-and-spoke RIPng deployments"
+
+  ripng_default:
+    name: "RIPng Default Route / Default-Information Originate"
+    description: "Configure RIPng default route but propagation fails"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - rip
+      - ripng
+      - ipv6
+    symptoms:
+      - "No IPv6 default route (::/0) via RIPng"
+      - "RIPng routers have no default in IPv6 routing table"
+      - "Static default not redistributed into RIPng"
+      - "Default-information originate not configured"
+    troubleshooting_hooks:
+      - "RIPng: 'ipv6 rip <tag> default-information originate'"
+      - "Requires existing default route in IPv6 RIB on this router"
+      - "Alternative: 'redistribute static' with IPv6 static default"
+      - "Check 'show ipv6 rip database' for ::/0 entry"
+      - "Default route metric must be <= 15 (RIP limit)"
+      - "Compare with IPv4 RIP: same default-information originate behavior"
+    applicability: "RIPng default route deployment"

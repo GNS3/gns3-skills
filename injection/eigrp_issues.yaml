@@ -676,3 +676,47 @@ issues:
       - "Named mode: 'af-interface <intf>' then 'no shutdown'"
       - "Passive interface affects EIGRPv6 same as EIGRPv4"
     applicability: "EIGRPv6 deployments"
+
+  eigrp_ipv6_named_not_shutdown:
+    name: "EIGRPv6 Named Mode Address-Family Not Activated"
+    description: "Configure EIGRPv6 in named mode but address-family IPv6 not no-shutdown"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "EIGRPv6 process not starting in named mode"
+      - "Address-family IPv6 shows administratively down"
+      - "EIGRPv6 neighbors not forming"
+      - "Named mode requires explicit AF no shutdown"
+    troubleshooting_hooks:
+      - "Named EIGRP: 'address-family ipv6' under 'router eigrp <name>'"
+      - "EIGRP named mode requires 'no shutdown' inside address-family"
+      - "Check 'show eigrp address-family ipv6' for AF status"
+      - "Classic EIGRPv6: 'ipv6 router eigrp <as>' different from named"
+      - "Named mode supports IPv4 and IPv6 in single process"
+      - "Named mode EIGRPv6 requires router-id (IPv4 format)"
+    applicability: "EIGRP named mode IPv6 deployments"
+
+  eigrp_ipv6_redistribute:
+    name: "EIGRPv6 Route Redistribution / External Route Issue"
+    description: "Configure redistribution into EIGRPv6 with missing metric or route-map"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "Redistributed IPv6 routes not appearing in EIGRPv6 topology"
+      - "Missing metric for redistributed routes"
+      - "Redistribution route-map not matching expected IPv6 prefixes"
+      - "Static IPv6 routes not redistributed"
+    troubleshooting_hooks:
+      - "EIGRPv6 redistribution: 'redistribute <protocol> metric <bw> <delay> <rel> <load> <mtu>'"
+      - "Or 'redistribute <protocol> route-map <name>' under AF IPv6"
+      - "IPv6 route-map uses 'match ipv6 address prefix-list <name>'"
+      - "Default-metric applies if not specified in redistribute command"
+      - "Check 'show eigrp address-family ipv6 topology' for redistributed routes"
+      - "Verify source route exists in IPv6 routing table"
+    applicability: "EIGRPv6 redistribution from static or other protocols"

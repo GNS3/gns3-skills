@@ -358,3 +358,96 @@ issues:
       - "TCP-MSS adjustment critical: typically 1360 or lower"
       - "Check 'show crypto ipsec sa' for protocol of encrypted packets"
     applicability: "Advanced IPsec+GRE tunnel designs"
+
+  dmvpn_phase2_spoke_spoke:
+    name: "DMVPN Phase 2 Spoke-to-Spoke Tunnel Not Forming"
+    description: "Configure DMVPN Phase 2 but NHRP shortcut not creating direct spoke-to-spoke tunnel"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dmvpn
+      - nhrp
+      - vpn
+    symptoms:
+      - "Traffic between spokes always goes through hub"
+      - "NHRP resolution completes but IPsec not triggered"
+      - "Spoke-to-spoke tunnel not established"
+      - "DMVPN Phase 2 shortcut not working"
+    troubleshooting_hooks:
+      - "Phase 2: spoke requests NHRP resolution, hub forwards, spokes form direct tunnel"
+      - "Check 'show dmvpn' for spoke-to-spoke peers"
+      - "Verify crypto ACL includes spoke-to-spoke traffic"
+      - "Phase 2 requires 'ip nhrp redirect' on hub"
+      - "Phase 2 allows spokes to learn each other's NBMA addresses"
+      - "If crypto ACL only matches hub subnet: spoke-spoke IPsec never triggers"
+    applicability: "DMVPN Phase 2 spoke-to-spoke direct tunnels"
+
+  dmvpn_phase3_redirect:
+    name: "DMVPN Phase 3 NHRP Redirect / Shortcut Failure"
+    description: "Configure DMVPN Phase 3 with NHRP redirect but shortcut not triggered"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dmvpn
+      - nhrp
+      - vpn
+    symptoms:
+      - "Traffic between spokes does not use direct path"
+      - "NHRP redirect not sent by hub"
+      - "Spoke not sending NHRP resolution request after redirect"
+      - "Phase 3 summarization breaking spoke-spoke paths"
+    troubleshooting_hooks:
+      - "Phase 3: hub sets 'ip nhrp redirect', spokes set 'ip nhrp shortcut'"
+      - "Hub sends NHRP redirect when traffic it forwards matches"
+      - "Spoke receives redirect and sends NHRP resolution to target spoke"
+      - "Phase 3 supports route summarization (unlike Phase 2)"
+      - "Check 'show dmvpn' for shortcut status"
+      - "If route summarization on hub hides specifics: spoke-cannot resolve remote prefix"
+    applicability: "DMVPN Phase 3 deployments with summarization"
+
+  dmvpn_ipv6:
+    name: "DMVPNv6 / DMVPN over IPv6 Transport"
+    description: "Configure DMVPN with IPv6 transport (GRE over IPv6) but spoke registration fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dmvpn
+      - nhrp
+      - ipv6
+      - vpn
+    symptoms:
+      - "Spoke NHRP registration fails over IPv6 transport"
+      - "DMVPN tunnel using IPv6 NBMA addresses but not forming"
+      - "IPv6 multicast forwarding (FF02::/16) not working"
+      - "GRE IPv6 tunnel mode not configured"
+    troubleshooting_hooks:
+      - "DMVPNv6: 'tunnel mode gre ipv6' for IPv6 transport"
+      - "NHRP must use IPv6 NBMA addresses: 'ip nhrp nhs <ipv6-addr>'"
+      - "Multicast: 'ip nhrp map multicast <ipv6-addr>'"
+      - "Hub tunnel source: IPv6 address on physical interface"
+      - "Spoke must have IPv6 reachability to hub's tunnel source"
+      - "Check 'show dmvpn ipv6' for DMVPNv6 status"
+    applicability: "DMVPN over IPv6 transport networks"
+
+  dmvpn_crypto_spoke_spoke:
+    name: "DMVPN Spoke-to-Spoke IPsec Protection Profile Mismatch"
+    description: "Configure different IPsec profiles on hub and spokes preventing spoke-spoke tunnel"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dmvpn
+      - ipsec
+      - vpn
+    symptoms:
+      - "Spoke-to-hub IPsec works but spoke-to-spoke fails"
+      - "Spokes use different transform sets or IKE profiles"
+      - "IPsec SA not negotiated between spokes"
+      - "DMVPN direct tunnel formed but no encryption"
+    troubleshooting_hooks:
+      - "DMVPN IPsec: all spokes must share compatible IKE and IPsec parameters"
+      - "Hub IPsec profile propagated to spokes via mGRE"
+      - "Check 'show crypto ipsec sa' for spoke-to-spoke SA"
+      - "Different Phase 2 proposals, PFS settings cause SAs to fail"
+      - "Use consistent IPsec transform set across all DMVPN peers"
+      - "Pre-shared key: can be per-spoke or shared (group key)"
+    applicability: "DMVPN with consistent IPsec policies"

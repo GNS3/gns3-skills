@@ -1,6 +1,6 @@
 # GNS3-Skills Summary
 
-**Updated**: 2026-05-11 | **Total Skills**: 50 | **Total Issues**: 776
+**Updated**: 2026-05-11 | **Total Skills**: 50 | **Total Issues**: 815
 
 ---
 
@@ -10,7 +10,7 @@
 |--------|-------|
 | Total Skills | 50 |
 | Injection Skills | 50 |
-| Total Issues | 776 |
+| Total Issues | 815 |
 | Protocols Covered | 60+ |
 
 ### By Severity

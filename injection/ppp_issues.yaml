@@ -1,0 +1,172 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "PPP/Serial Issues Injection"
+description: "PPP encapsulation, CHAP/PAP authentication and serial link related network faults"
+category: "injection"
+protocols:
+  - ppp
+  - chap
+  - pap
+  - serial
+  - hdlc
+  - mlppp
+
+issues:
+  ppp_encapsulation:
+    name: "PPP Encapsulation / HDLC Mismatch"
+    description: "Configure HDLC on one side and PPP on the other causing serial link protocol down"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ppp
+      - serial
+    symptoms:
+      - "Serial interface up/up but protocol down"
+      - "Line protocol down on serial interface"
+      - "Encapsulation mismatch between endpoints"
+      - "Keepalive sent but not acknowledged"
+    troubleshooting_hints:
+      - "Check 'show interfaces serial <id>' for encapsulation type"
+      - "Default encapsulation on Cisco: HDLC"
+      - "Use 'encapsulation ppp' to switch to PPP"
+      - "Both sides must match encapsulation exactly"
+      - "HDLC <-> PPP mismatch: Layer 1 up, Layer 2 down"
+      - "Common when connecting Cisco (HDLC default) to non-Cisco (PPP default)"
+    applicability: "Serial links between routers"
+
+  ppp_chap_mismatch:
+    name: "PPP CHAP Authentication Password Mismatch"
+    description: "Configure CHAP with mismatched passwords causing PPP authentication failure"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ppp
+      - chap
+    symptoms:
+      - "PPP link comes up but authentication fails"
+      - "CHAP challenge/response failure"
+      - "Serial line protocol up but then drops"
+      - "Authentication failure errors in logs"
+    troubleshooting_hooks:
+      - "CHAP: 3-way handshake (challenge-response-ack)"
+      - "Password must match the remote router's hostname in local config"
+      - "Configure: 'username <hostname-of-peer> password <key>' on BOTH sides"
+      - "Case-sensitive: both hostname and password must match exactly"
+      - "Check 'show running-config | include username' for configured credentials"
+      - "Use 'debug ppp authentication' to see CHAP exchange"
+    applicability: "PPP serial links with CHAP authentication"
+
+  ppp_chap_hostname:
+    name: "PPP CHAP Router Hostname / Username Mismatch"
+    description: "Configure CHAP but router hostname does not match the username expected by the peer"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ppp
+      - chap
+    symptoms:
+      - "CHAP authentication fails despite correct password"
+      - "CHAP challenge uses wrong hostname"
+      - "Router hostname changed but CHAP config not updated"
+      - "One side expects username based on old hostname"
+    troubleshooting_hooks:
+      - "CHAP sends local hostname to peer during challenge"
+      - "Peer looks up username <received-hostname> password <key>"
+      - "If hostname changed: peer looks up wrong username"
+      - "Use 'username <new-hostname> password <key>' on peer"
+      - "CHAP callin/callback: directional authentication"
+      - "Use 'ppp chap hostname <overide>' to override router hostname"
+    applicability: "PPP CHAP authentication"
+
+  ppp_pap:
+    name: "PPP PAP Authentication / Clear-Text Credentials Issue"
+    description: "Configure PAP authentication with incorrect username or password"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ppp
+      - pap
+    symptoms:
+      - "PPP authentication fails with PAP"
+      - "PAP username/password mismatch"
+      - "Serial line protocol up but drops after auth"
+      - "Both sides send credentials at same time (two-way auth)"
+    troubleshooting_hooks:
+      - "PAP: 2-way handshake (send credentials - accept/reject)"
+      - "Less secure than CHAP (credentials sent in clear text)"
+      - "Configure: 'ppp pap sent-username <name> password <key>'"
+      - "Peer must have 'username <name> password <key>'"
+      - "PAP sends credentials immediately (no challenge)"
+      - "Use 'debug ppp authentication' for PAP exchange debugging"
+    applicability: "PPP serial links with PAP authentication"
+
+  ppp_auth_type:
+    name: "PPP Authentication Protocol Type Mismatch"
+    description: "Configure CHAP on one side and PAP on the other causing PPP authentication failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ppp
+      - chap
+      - pap
+    symptoms:
+      - "PPP link negotiation fails at LCP phase"
+      - "Authentication protocol option mismatch"
+      - "LCP keeps restarting authentication negotiation"
+      - "Link stays up but no IP traffic passes"
+    troubleshooting_hooks:
+      - "LCP negotiates authentication protocol during link establishment"
+      - "Both sides must agree on same auth protocol (CHAP or PAP)"
+      - "Use 'ppp authentication chap' or 'ppp authentication pap'"
+      - "Both: 'ppp authentication chap pap' (try CHAP first, fallback PAP)"
+      - "If one side only offers CHAP and the other only PAP: no agreement"
+      - "Check 'debug ppp negotiation' for LCP auth option negotiation"
+    applicability: "PPP with different authentication configurations"
+
+  ppp_ipcp:
+    name: "PPP IPCP / IP Address Negotiation Failure"
+    description: "Configure PPP IPCP with wrong IP address negotiation causing no IP on interface"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ppp
+    symptoms:
+      - "Serial interface up/up but no IP address assigned"
+      - "IPCP negotiation fails"
+      - "PPP link up but cannot ping the remote end"
+      - "IP address not assigned via IPCP"
+    troubleshooting_hooks:
+      - "IPCP negotiates IP addresses after LCP + authentication"
+      - "PPP: 'ip address negotiated' (client gets IP from server)"
+      - "Server: 'peer default ip address <ip>' (assigns to client)"
+      - "Both ends configured with static IP: IPCP skipped"
+      - "Check 'debug ppp ipcp' for IPCP negotiation"
+      - "Check 'show interfaces serial <id>' for IPCP status"
+    applicability: "PPP IP address assignment (e.g., dial/DSL)"
+
+  ppp_mlp:
+    name: "MLP (Multilink PPP) Fragment / Bundle Misconfiguration"
+    description: "Configure MLP with member links but bundle not established or fragment reorder fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ppp
+      - mlppp
+    symptoms:
+      - "Multilink bundle not coming up"
+      - "Member links in the bundle but no traffic passes"
+      - "Packet fragmentation/reassembly mismatch"
+      - "Bundle interface down despite member links up"
+    troubleshooting_hooks:
+      - "MLP: bundles multiple PPP links into one logical link"
+      - "PPP multilink: 'ppp multilink' on member interfaces"
+      - "Multilink group: 'multilink-group <id>' same on all members"
+      - "Bundle interface: 'interface multilink <id>'"
+      - "Fragment size: 'ppp multilink fragment <size>' default 512"
+      - "Check 'show ppp multilink' for bundle status and fragment ordering"
+    applicability: "PPP bandwidth aggregation deployments"

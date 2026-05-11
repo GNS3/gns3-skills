@@ -1,0 +1,134 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for ICMP/ICMPv6
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "ICMP / ICMPv6 Packet Analysis"
+description: "ICMP (Internet Control Message Protocol) v4 and v6 packet analysis for connectivity and PMTUD troubleshooting"
+protocol: "icmp or icmpv6"
+display_filter: "icmp or icmpv6"
+
+fields:
+  - label: "Frame Number"
+    field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Source IP"
+    field: "ip.src"
+    description: "IPv4 source address (present for IPv4 packets)"
+
+  - label: "Destination IP"
+    field: "ip.dst"
+    description: "IPv4 destination address"
+
+  - label: "IPv6 Source"
+    field: "ipv6.src"
+    description: "IPv6 source address (present for IPv6 packets)"
+
+  - label: "IPv6 Destination"
+    field: "ipv6.dst"
+    description: "IPv6 destination address"
+
+  - label: "ICMP Type (v4)"
+    field: "icmp.type"
+    description: "ICMPv4 type: 0=Echo Reply, 3=Dest Unreachable, 8=Echo, 11=TTL Exceeded, 5=Redirect"
+
+  - label: "ICMP Code (v4)"
+    field: "icmp.code"
+    description: "ICMPv4 code (sub-type for each type)"
+
+  - label: "ICMP Sequence (v4)"
+    field: "icmp.seq"
+    description: "ICMPv4 echo request/reply sequence number"
+
+  - label: "ICMPv6 Type"
+    field: "icmpv6.type"
+    description: "ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 128=EchoReq, 129=EchoRep"
+
+  - label: "ICMPv6 Code"
+    field: "icmpv6.code"
+    description: "ICMPv6 code (sub-type for each type)"
+
+  - label: "ICMPv6 Sequence"
+    field: "icmpv6.seq"
+    description: "ICMPv6 echo request/reply sequence number"
+
+  - label: "Unreachable Port (v4)"
+    field: "icmp.dstport.unreachable"
+    description: "Destination port in ICMPv4 unreachable message"
+
+  - label: "PMTU Value (v6)"
+    field: "icmpv6.mtu"
+    description: "Path MTU value in ICMPv6 Packet Too Big message"
+
+  - label: "Redirect Gateway"
+    field: "icmp.redirect.gateway"
+    description: "ICMP redirect: suggested alternative gateway address"
+
+checks:
+  - name: "ping_timeout"
+    severity: minor
+    message: "Ping timeout: no echo reply for seq {icmp.seq} from {ip.dst}"
+    condition: "icmp.type == 8 and no matching icmp.type == 0 within expected window"
+
+  - name: "icmp_unreachable_network"
+    severity: major
+    message: "Network unreachable: {ip.src} cannot reach {ip.dst} (ICMP type 3 code 0)"
+    condition: "icmp.type == 3 and icmp.code == 0"
+
+  - name: "icmp_unreachable_host"
+    severity: major
+    message: "Host unreachable: {ip.src} cannot reach {ip.dst} (ICMP type 3 code 1)"
+    condition: "icmp.type == 3 and icmp.code == 1"
+
+  - name: "icmp_unreachable_protocol"
+    severity: major
+    message: "Protocol unreachable: {ip.dst} does not support protocol requested by {ip.src} (ICMP type 3 code 2)"
+    condition: "icmp.type == 3 and icmp.code == 2"
+
+  - name: "icmp_unreachable_port"
+    severity: major
+    message: "Port unreachable: port {icmp.dstport.unreachable} on {ip.dst} not reachable from {ip.src}"
+    condition: "icmp.type == 3 and icmp.code == 3"
+
+  - name: "icmp_frag_needed"
+    severity: major
+    message: "Fragmentation needed but DF set: {ip.src} to {ip.dst} — PMTUD issue"
+    condition: "icmp.type == 3 and icmp.code == 4"
+
+  - name: "icmp_redirect"
+    severity: minor
+    message: "ICMP redirect from {ip.src}: use {icmp.redirect.gateway} instead of current gateway"
+    condition: "icmp.type == 5"
+
+  - name: "icmp_ttl_exceeded"
+    severity: minor
+    message: "TTL exceeded in transit: packet from {ip.src} to {ip.dst} expired at intermediate router"
+    condition: "icmp.type == 11 and icmp.code == 0"
+
+  - name: "icmpv6_unreachable_network"
+    severity: major
+    message: "IPv6 network unreachable: {ipv6.src} to {ipv6.dst} (ICMPv6 type 1 code 0)"
+    condition: "icmpv6.type == 1 and icmpv6.code == 0"
+
+  - name: "icmpv6_unreachable_port"
+    severity: major
+    message: "IPv6 port unreachable: {ipv6.dst} port not reachable from {ipv6.src}"
+    condition: "icmpv6.type == 1 and icmpv6.code == 4"
+
+  - name: "icmpv6_packet_too_big"
+    severity: major
+    message: "IPv6 Path MTU issue: {ipv6.src} to {ipv6.dst}, suggested MTU {icmpv6.mtu}"
+    condition: "icmpv6.type == 2"
+
+  - name: "icmpv6_ttl_exceeded"
+    severity: minor
+    message: "IPv6 Hop Limit exceeded: packet from {ipv6.src} to {ipv6.dst} expired in transit"
+    condition: "icmpv6.type == 3"
+
+  - name: "consecutive_ping_loss"
+    severity: minor
+    message: "Consecutive ping loss detected: {count} echo requests with no reply from {ip.dst}"
+    condition: "icmp.type == 8 and more than 3 consecutive seq numbers without matching icmp.type == 0"

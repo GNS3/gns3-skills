@@ -1,0 +1,159 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for OSPF/OSPFv3
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "OSPF / OSPFv3 Packet Analysis"
+description: "OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange, and routing issues"
+protocol: "ospf or ospfv3"
+display_filter: "ospf or ospfv3"
+
+fields:
+  - label: "Frame Number"
+    field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Source IP"
+    field: "ip.src"
+    description: "IPv4 source address"
+
+  - label: "Destination IP"
+    field: "ip.dst"
+    description: "IPv4 destination address (224.0.0.5=allSPF, 224.0.0.6=allDR)"
+
+  - label: "OSPF Message Type"
+    field: "ospf.msg"
+    description: "OSPF message type: 1=Hello, 2=DBD, 3=LSR, 4=LSU, 5=LSACK"
+
+  - label: "OSPF Router ID"
+    field: "ospf.router.id"
+    description: "Originating router ID"
+
+  - label: "OSPF Area ID"
+    field: "ospf.area.id"
+    description: "Area ID of the originating interface"
+
+  - label: "OSPF Auth Type"
+    field: "ospf.auth.type"
+    description: "Authentication type: 0=None, 1=Simple, 2=MD5/Cryptographic"
+
+  - label: "OSPF Auth Key ID"
+    field: "ospf.auth.key_id"
+    description: "MD5 authentication key ID"
+
+  - label: "Hello Interval"
+    field: "ospf.hello.interval"
+    description: "Hello interval in seconds"
+
+  - label: "Dead Interval"
+    field: "ospf.dead.interval"
+    description: "Dead interval (hello multiplier) in seconds"
+
+  - label: "OSPF Neighbor"
+    field: "ospf.neighbor"
+    description: "Router ID of neighbors seen in Hello"
+
+  - label: "OSPF Options"
+    field: "ospf.options"
+    description: "OSPF options flags (E=external, MC=multicast, N=NSSA, DC=demand)"
+
+  - label: "DBD MTU"
+    field: "ospf.dbdescr.mtu"
+    description: "Interface MTU advertised in DBD packet"
+
+  - label: "DBD Flags"
+    field: "ospf.dbdescr.flags"
+    description: "DBD flags: I=Init, M=More, MS=Master/Slave"
+
+  - label: "DBD Sequence"
+    field: "ospf.dbdescr.seq"
+    description: "DBD sequence number for master/slave negotiation"
+
+  - label: "LSA Type"
+    field: "ospf.lsa.type"
+    description: "LSA type: 1=Router, 2=Network, 3=Summary(IP), 4=Summary(ASBR), 5=External, 7=NSSA"
+
+  - label: "LSA ID"
+    field: "ospf.lsa.id"
+    description: "Link-State ID (varies by LSA type)"
+
+  - label: "LSA Advertising Router"
+    field: "ospf.lsa.advrouter"
+    description: "Router that originated the LSA"
+
+  - label: "LSA Age"
+    field: "ospf.lsa.age"
+    description: "LSA age in seconds (max 3600)"
+
+  - label: "LSA Sequence"
+    field: "ospf.lsa.seq"
+    description: "LSA sequence number (higher = newer)"
+
+  - label: "LSA Options"
+    field: "ospf.lsa.options"
+    description: "LSA options flags"
+
+  - label: "OSPFv3 Source"
+    field: "ipv6.src"
+    description: "IPv6 source address (for OSPFv3)"
+
+  - label: "OSPFv3 Instance ID"
+    field: "ospfv3.instance"
+    description: "OSPFv3 instance ID (must match on both sides)"
+
+  - label: "OSPFv3 Area ID"
+    field: "ospfv3.area.id"
+    description: "OSPFv3 area ID"
+
+checks:
+  - name: "hello_dead_mismatch"
+    severity: critical
+    message: "Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.interval}s, dead={ospf.dead.interval}s)"
+    condition: "ospf.msg == 1 and ospf.hello.interval or ospf.dead.interval differs from neighbor"
+
+  - name: "area_id_mismatch"
+    severity: critical
+    message: "Area ID mismatch: Router {ospf.router.id} area {ospf.area.id} vs neighbor area"
+    condition: "ospf.msg == 1 and ospf.area.id differs from neighbor router's area id"
+
+  - name: "router_id_conflict"
+    severity: critical
+    message: "Router ID conflict detected: {ospf.router.id} appears from multiple sources"
+    condition: "Same ospf.router.id from different ip.src addresses"
+
+  - name: "mtu_mismatch_dbd"
+    severity: major
+    message: "MTU mismatch: router {ip.src} advertises MTU {ospf.dbdescr.mtu} in DBD"
+    condition: "ospf.msg == 2 and ospf.dbdescr.mtu differs between neighbors (ospf.dbdescr.mtu shows different values)"
+
+  - name: "dbd_stuck_exstart"
+    severity: major
+    message: "Neighbor stuck in EXSTART: DBD negotiation failed between {ip.src} and neighbor"
+    condition: "ospf.msg == 2 with I-bit set and repeated DBD retransmissions without state progression"
+
+  - name: "stuck_in_init"
+    severity: major
+    message: "Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast not in neighbor's hello"
+    condition: "ospf.msg == 1 and ospf.neighbor does not contain the expected neighbor router-id"
+
+  - name: "auth_mismatch"
+    severity: critical
+    message: "Authentication mismatch between {ip.src} (auth type {ospf.auth.type}) and neighbor"
+    condition: "ospf.auth.type differs from neighbor, or ospf.auth.key_id differs between peers"
+
+  - name: "lsa_aged_out"
+    severity: minor
+    message: "LSA approaching max age: type {ospf.lsa.type}, ID {ospf.lsa.id}, age {ospf.lsa.age}"
+    condition: "ospf.lsa.age > 3500"
+
+  - name: "lsa_flooding_high_rate"
+    severity: minor
+    message: "Excessive LSA flooding from {ip.src}: {count} LSUs in short interval"
+    condition: "More than 10 LSU (ospf.msg == 4) from same source within 1 second"
+
+  - name: "ospfv3_instance_mismatch"
+    severity: critical
+    message: "OSPFv3 instance ID mismatch: router has instance {ospfv3.instance}"
+    condition: "ospfv3.instance differs between OSPFv3 neighbors"

@@ -216,3 +216,134 @@ issues:
       - "Check 'show nat64 translations' for translation entries"
       - "Verify DNS64 prefix matches NAT64 prefix"
     applicability: "IPv6-only to IPv4 communication"
+
+  ipv6_nd_ra:
+    name: "IPv6 Neighbor Discovery / RA Guard Misconfiguration"
+    description: "Configure IPv6 ND Router Advertisement incorrectly causing SLAAC or Neighbor Discovery failures"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv6
+    symptoms:
+      - "Hosts not receiving IPv6 RA for SLAAC"
+      - "Duplicate IPv6 address due to DAD failure"
+      - "Router not advertising IPv6 prefix"
+      - "IPv6 ND proxy not working as expected"
+    troubleshooting_hints:
+      - "Check RA with 'show ipv6 interface <intf>' for ND info"
+      - "RA interval: 'ipv6 nd ra-interval <seconds>'"
+      - "Default RA: every 200s (max), route lifetime 1800s"
+      - "Managed flag: 'ipv6 nd managed-config-flag' (DHCPv6)"
+      - "Other flag: 'ipv6 nd other-config-flag' (DHCPv6 stateless)"
+      - "RA guard on switches: 'ipv6 nd raguard' on untrusted ports"
+    applicability: "IPv6 SLAAC and stateless address autoconfiguration"
+
+  ipv6_dhcpv6_pd:
+    name: "DHCPv6 Prefix Delegation / IA-PD Configuration Error"
+    description: "Configure DHCPv6 prefix delegation but CE router not receiving delegated prefix"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ipv6
+    symptoms:
+      - "CE router does not receive IPv6 prefix via DHCPv6-PD"
+      - "DHCPv6 IA-PD request fails"
+      - "CE downstream network has no global IPv6 prefix"
+      - "Prefix delegation timeout"
+    troubleshooting_hints:
+      - "DHCPv6-PD: CE requests prefix via IA-PD option"
+      - "Check 'show ipv6 dhcp interface' on CE"
+      - "PE/Server must have prefix pool for delegation"
+      - "Use 'ipv6 dhcp pool <name>' with 'prefix-delegation pool <pool>'"
+      - "Verify 'ipv6 dhcp client pd <name>' on CE"
+      - "Check one-to-one map: CE IA-ID matches PE configuration"
+    applicability: "ISP IPv6 prefix delegation deployments"
+
+  ipv6_mls:
+    name: "IPv6 MLD / Multicast Listener Discovery Misconfiguration"
+    description: "Configure IPv6 MLD incorrectly causing multicast group membership issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ipv6
+      - mld
+    symptoms:
+      - "IPv6 hosts cannot join multicast groups"
+      - "MLD queries not sent by router"
+      - "MLD snooping not working on layer 2"
+      - "IPv6 multicast not delivered to receivers"
+    troubleshooting_hints:
+      - "MLD is IPv6 equivalent of IGMP"
+      - "Check 'show ipv6 mld groups' for group membership"
+      - "MLDv2 supports (S,G) source-specific joins like IGMPv3"
+      - "MLD snooping: 'ipv6 mld snooping' on switches"
+      - "MLD querier: 'ipv6 mld querier' on VLAN"
+      - "Default MLD query interval: 125s"
+    applicability: "IPv6 multicast deployments"
+
+  ipv6_vrrp:
+    name: "IPv6 FHRP / VRRPv3 / HSRPv6 Gateway Redundancy Issue"
+    description: "Configure VRRPv3 or HSRP for IPv6 incorrectly causing default gateway failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv6
+      - vrrp
+      - hsrp
+    symptoms:
+      - "IPv6 default gateway not redundant"
+      - "VRRPv3/HSRP for IPv6 not establishing"
+      - "IPv6 hosts cannot reach external networks"
+      - "Dual-stack hosts lose IPv6 connectivity on failover"
+    troubleshooting_hints:
+      - "VRRPv3 supports IPv6: 'vrrp <group> address-family ipv6'"
+      - "HSRP for IPv6: 'standby <group> ipv6 <link-local>'"
+      - "Check 'show vrrp ipv6' or 'show standby ipv6' for status"
+      - "IPv6 ND RA uses virtual MAC for seamless failover"
+      - "All routers in group must have matching configuration"
+      - "Link-local address override for virtual gateway"
+    applicability: "Dual-stack IPv4/IPv6 redundant gateway deployments"
+
+  ipv6_multicast_pim:
+    name: "IPv6 PIM / Multicast Routing Misconfiguration"
+    description: "Configure IPv6 PIM sparse mode incorrectly causing IPv6 multicast forwarding failure"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ipv6
+      - pim
+    symptoms:
+      - "IPv6 multicast traffic not forwarded"
+      - "IPv6 PIM neighbors not established"
+      - "RP discovery for IPv6 groups failing"
+      - "IPv6 multicast (S,G) entries not created"
+    troubleshooting_hints:
+      - "IPv6 PIM: 'ipv6 pim [sparse-mode|dense-mode|sparse-dense-mode]'"
+      - "IPv6 RP: 'ipv6 pim rp-address <ip> [group-list <acl>]'"
+      - "BSR for IPv6: 'ipv6 pim bsr-candidate <intf>'"
+      - "Check 'show ipv6 pim neighbor' for PIM adjacencies"
+      - "Check 'show ipv6 mroute' for multicast routing table"
+      - "IPv6 PIM uses embedded RP (RFC 3956) for RP discovery"
+    applicability: "IPv6 multicast routing deployments"
+
+  ipv6_ospfv3_redistribute:
+    name: "OSPFv3 Route Redistribution / External Route Issue"
+    description: "Configure OSPFv3 redistribution from other IPv6 sources but external routes not propagated"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv6
+      - ospfv3
+    symptoms:
+      - "OSPFv3 external routes (Type 7) missing from database"
+      - "Redistributed IPv6 routes not appearing in OSPFv3"
+      - "OSPFv3 default route not advertised"
+      - "Redistribution route map not filtering correctly"
+    troubleshooting_hints:
+      - "OSPFv3 redistribution: 'redistribute <protocol> route-map <name>' under ospfv3"
+      - "Check 'show ipv6 ospf database external' for Type 5/7 LSAs"
+      - "OSPFv3: external routes, metric type E1/E2"
+      - "Default route: 'default-information originate' under ospfv3"
+      - "Verify redistributed route exists in IPv6 routing table"
+      - "Use route-map with match ipv6 address prefix-list"
+    applicability: "OSPFv3 redistribution from/in IPv6 networks"

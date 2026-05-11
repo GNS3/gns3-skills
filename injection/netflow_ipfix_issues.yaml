@@ -164,3 +164,131 @@ issues:
       - "Polling interval: 'sflow polling-interval <seconds>'"
       - "sFlow is packet-sampled, not flow-based (different from NetFlow)"
     applicability: "sFlow monitoring deployments"
+
+  netflow_export_acl:
+    name: "NetFlow ACL / Filter Misconfiguration"
+    description: "Configure NetFlow with capture ACL that matches too broadly or too narrowly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+    symptoms:
+      - "NetFlow only capturing a subset of intended traffic"
+      - "ACL filtering out valid traffic flows"
+      - "Flow statistics incomplete"
+      - "Wrong traffic being monitored"
+    troubleshooting_hints:
+      - "NetFlow ACL filter: 'ip flow-capture <acl>' on interface"
+      - "Only traffic matching the forwarded DSCP or ACL is considered"
+      - "Check ACL hits: 'show access-lists <acl>'"
+      - "Without ACL: all traffic is analyzed by default"
+      - "Use 'match ip address <acl>' for selective capture"
+      - "Verify ACL permits the intended source/destination IPs"
+    applicability: "NetFlow selective traffic monitoring"
+
+  netflow_template_refresh:
+    name: "NetFlow v9/IPFIX Template Refresh Rate Issue"
+    description: "Configure NetFlow v9/IPFIX template refresh rate too slow causing collector data loss"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+      - ipfix
+    symptoms:
+      - "Collector loses ability to decode flow records"
+      - "Template timeout on collector"
+      - "Flow data showing as unknown template ID"
+      - "Template refresh not reaching collector"
+    troubleshooting_hints:
+      - "NetFlow v9/IPFIX use templates to describe flow format"
+      - "Templates sent periodically: 'ip flow-export template refresh-rate <count>'"
+      - "Default: 20 packets, timeout 1800s (30 min)"
+      - "Template rate too slow: collector times out, discards data"
+      - "Template rate too fast: extra bandwidth for templates"
+      - "IPFIX: 'ip flow-export template options refresh-rate <count>'"
+      - "Verify template on collector: check template ID in received packets"
+    applicability: "NetFlow v9 and IPFIX deployments"
+
+  netflow_top_talkers:
+    name: "NetFlow Top Talkers / Aggregation Misconfiguration"
+    description: "Configure NetFlow top talkers or aggregation cache but statistics not populated"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - netflow
+    symptoms:
+      - "NetFlow top talkers show no data or incomplete data"
+      - "Aggregation cache not generating expected reports"
+      - "Predefined aggregation scheme not matching requirements"
+      - "Top talkers statistics timing out"
+    troubleshooting_hints:
+      - "Show top talkers: 'show ip flow top-talkers'"
+      - "Configure: 'ip flow-top-talkers sort-by bytes|packets'"
+      - "Top talkers match: 'match source-ip|destination-ip|protocol'"
+      - "Aggregation: 'ip flow-aggregat-cache <name>'"
+      - "Aggregation schemes: AS, prefix, protocol-port, source-prefix, dest-prefix"
+      - "Export aggregation: 'export destination <ip> <port>'"
+    applicability: "NetFlow traffic analysis deployments"
+
+  netflow_ipfix_enterprise:
+    name: "IPFIX Enterprise / Vendor-Specific IE Misconfiguration"
+    description: "Configure IPFIX with enterprise Information Elements (IEs) not recognized by collector"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - ipfix
+    symptoms:
+      - "IPFIX enterprise fields not decoded by collector"
+      - "Vendor-specific data fields missing from collector"
+      - "Enterprise element not matching collector expectations"
+      - "Private enterprise numbers not configured"
+    troubleshooting_hints:
+      - "IPFIX enterprise IEs use PEN (Private Enterprise Number)"
+      - "Check collector supports the specific vendor's IPFIX extensions"
+      - "Cisco IOS-XE supports IPFIX enterprise IEs for AVC"
+      - "Common PENs: Cisco (9), Juniper (2636), Huawei (2011)"
+      - "Verify template includes the enterprise IE definitions"
+      - "Use 'show flow-exporter <name>' to verify IPFIX version"
+    applicability: "Advanced IPFIX with vendor-specific extensions"
+
+  sflow_counter_poll:
+    name: "sFlow Counter Polling / Interface Statistics Issue"
+    description: "Configure sFlow counter polling interval too long or too short"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - sflow
+    symptoms:
+      - "Interface counters updated too infrequently"
+      - "sFlow counter data misleading"
+      - "Counter poll interval too short causing excessive traffic"
+      - "Traffic graphs showing flat lines due to lack of counter data"
+    troubleshooting_hints:
+      - "sFlow counter polling: 'sflow sampling <direction> <rate>'"
+      - "Use 'sflow counter-interval <seconds>' to set polling frequency"
+      - "Default: varies by vendor (typically 10-30s)"
+      - "Short interval = more accurate but more CPU/bandwidth"
+      - "Long interval = less accurate but lighter overhead"
+      - "Check 'show sflow' for current polling interval"
+    applicability: "sFlow interface counter monitoring"
+
+  netflow_med_export:
+    name: "NetFlow Mediation / Flow Aggregation Export Issue"
+    description: "Configure NetFlow mediation device (flow aggregator) but flows not forwarded properly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - netflow
+    symptoms:
+      - "NetFlow mediation not receiving flow data from exporters"
+      - "Aggregated flows not reaching final collector"
+      - "Mediation device not processing flow records"
+      - "Flow format mismatch between exporter and mediation"
+    troubleshooting_hints:
+      - "NetFlow mediation: aggregates flows from multiple exporters"
+      - "Collector receives aggregated (not raw) flow data"
+      - "Mediation changes export format (e.g., v5 to v9)"
+      - "Mediation may add or remove fields in flow records"
+      - "Provide correct collector destination on mediation"
+      - "Verify exporter sends to mediator IP, not directly to collector"
+    applicability: "Large-scale NetFlow mediation architectures"

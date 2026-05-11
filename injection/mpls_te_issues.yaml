@@ -169,3 +169,108 @@ issues:
       - "Authentication key must match between peers"
       - "Check 'show ip rsvp neighbor detail' for hello status"
     applicability: "MPLS-TE with RSVP-based signaling"
+
+  te_path_option:
+    name: "TE Path Option / Explicit Path Configuration Error"
+    description: "Configure explicit path option for TE tunnel with wrong hops or path order"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls-te
+    symptoms:
+      - "TE tunnel path option configured but not used"
+      - "Explicit path has unusable or unreachable hops"
+      - "Path option preference not selected correctly"
+      - "Strict vs loose hop ordering issue"
+    troubleshooting_hints:
+      - "Check path option with 'show mpls traffic-eng tunnels'"
+      - "Configure explicit path: 'ip explicit-path name <name> enable'"
+      - "Explicit path hops: 'next-address [loose|strict] <ip>'"
+      - "Strict: directly connected next-hop required"
+      - "Loose: can route through intermediate hops"
+      - "Path option: 'tunnel mpls traffic-eng path-option <num> explicit name <name>'"
+    applicability: "MPLS-TE with explicit path control"
+
+  te_routing_loose:
+    name: "TE Loose Hop / ERO Expansion Failure"
+    description: "Configure TE tunnel with loose hops but ERO expansion (route computation for loose hops) fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls-te
+    symptoms:
+      - "TE tunnel path computation fails for loose hop"
+      - "CSPF cannot compute path to loose hop destination"
+      - "ERO expansion incomplete"
+      - "Tunnel remains down despite topology"
+    troubleshooting_hints:
+      - "Loose hop: TE does not specify every hop (only key waypoints)"
+      - "CSPF expands loose hops into full path (ERO)"
+      - "Check TE topology: 'show mpls traffic-eng topology'"
+      - "Requires full TE topology database for path computation"
+      - "Verify IGP has complete link-state information"
+      - "Loose hop = 'next-address loose <ip>' in explicit path"
+    applicability: "MPLS-TE with loose hop path specification"
+
+  te_inter_area:
+    name: "TE Inter-Area / Inter-AS Tunnel Misconfiguration"
+    description: "Configure TE tunnel across IGP areas or AS boundaries but path computation fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls-te
+    symptoms:
+      - "TE tunnel cannot be established across areas"
+      - "ABR/ASBR not propagating TE information"
+      - "Inter-area TE topology incomplete"
+      - "Path computation fails at area boundary"
+    troubleshooting_hints:
+      - "Inter-area TE: ABR propagates summarized TE info"
+      - "Check 'show mpls traffic-eng topology area <id>'"
+      - "Inter-area TE requires loose hop at ABR"
+      - "ABR must support TE and re-optimize paths"
+      - "Inter-AS TE: requires Inter-AS TE links"
+      - "Use loose hops at boundary nodes for multi-area paths"
+    applicability: "Multi-area OSPF/ISIS with MPLS-TE"
+
+  te_pce:
+    name: "TE PCE (Path Computation Element) Communication Failure"
+    description: "Configure TE PCE/PCEP but headend cannot communicate with PCE for path computation"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls-te
+    symptoms:
+      - "Tunnel path computation request to PCE fails"
+      - "PCEP session not established between PCC and PCE"
+      - "PCE returns no path for tunnel"
+      - "Fallback to local CSPF not working"
+    troubleshooting_hints:
+      - "PCEP uses TCP 4189 for path computation"
+      - "Check PCEP: 'show mpls traffic-eng pce peer'"
+      - "Configure PCC: 'pce peer <ip>' and 'pce path-option <num> pce group <group>'"
+      - "PCE must have full TE topology of the network"
+      - "Use 'pce profile <name>' for session parameters"
+      - "Dead timer mismatch causes PCEP session flap"
+    applicability: "PCE-based MPLS-TE deployments"
+
+  te_lsp_hierarchical:
+    name: "TE Hierarchical LSP / LSP Nesting Error"
+    description: "Configure TE tunnel as a forwarding adjacency for another TE tunnel but nesting fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls-te
+    symptoms:
+      - "Outer TE tunnel cannot carry inner TE tunnel"
+      - "LSP nesting not working as expected"
+      - "Forwarding adjacency tunnel acts as link but not discovered"
+      - "Hierarchical LSP path computation fails"
+    troubleshooting_hints:
+      - "Hierarchical LSP: one TE tunnel inside another TE tunnel"
+      - "Outer tunnel: forwarding adjacency advertised into IGP"
+      - "Inner tunnel: uses outer tunnel as a link in path computation"
+      - "Check 'show mpls traffic-eng forwarding-adjacency'"
+      - "Outer tunnel must have autoroute or forwarding adjacency"
+      - "Bandwidth scaling: inner tunnel inherits outer's available BW"
+    applicability: "Advanced MPLS-TE hierarchical deployments"

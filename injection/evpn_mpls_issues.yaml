@@ -215,3 +215,70 @@ issues:
       - "Control plane: BGP EVPN routes carry both info"
       - "Data plane: label->VNI or VNI->label at gateway"
     applicability: "EVPN MPLS-VXLAN interworking, DCI deployments"
+
+  evpn_mpls_seg_routing:
+    name: "EVPN MPLS over SR-MPLS / SR Policy Interop Issue"
+    description: "Configure EVPN MPLS over Segment Routing transport but SID labels not properly processed"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+      - segment-routing
+    symptoms:
+      - "EVPN traffic not forwarded over SR-MPLS transport"
+      - "SR labels not pushed for EVPN traffic"
+      - "Transport LSP broken between EVPN PEs"
+      - "EVPN service label combined incorrectly with SR label"
+    troubleshooting_hints:
+      - "EVPN over SR-MPLS: transport via SR labels, service via EVPN label"
+      - "Check 'show mpls forwarding-table <evpn-peer>' for SR label stack"
+      - "EVPN service label = inner, SR label = outer"
+      - "Requires prefix-SID for all PEs in IGP"
+      - "Check EVPN tunnel encapsulation: 'show evpn evi <id> detail'"
+      - "SR-TE policies may override default SR paths"
+    applicability: "EVPN MPLS over Segment Routing transport"
+
+  evpn_mpls_dual_homing:
+    name: "EVPN MPLS CE Dual-Homing / Active-Active Failure"
+    description: "Configure EVPN MPLS dual-homing with active-active mode but traffic not load balanced"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "Only one PE forwarding traffic for multi-homed CE"
+      - "Active-active mode not load balancing"
+      - "DF election not distributing traffic per EVI"
+      - "Single-homed-like behavior despite multi-homing config"
+    troubleshooting_hooks:
+      - "Active-active: both PEs forward traffic for multi-homed CE"
+      - "DF election per (ESI, EVI) determines forwarding"
+      - "Check 'show evpn ethernet-segment <esi> evi <id>'"
+      - "Service carving: distribute DF role across PEs per EVI"
+      - "Verify ESI configuration identical on both PEs"
+      - "E-ALIAS enables single-active/active-active modes"
+    applicability: "EVPN MPLS CE multi-homing deployments"
+
+  evpn_mpls_pmsi:
+    name: "EVPN MPLS PMSI Tunnel / Inclusive Multicast Issue"
+    description: "Configure EVPN MPLS PMSI (Provider Multicast Service Interface) tunnel but BUM traffic not flowing"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+      - mpls
+    symptoms:
+      - "BUM traffic not delivered to all PEs in EVI"
+      - "PMSI tunnel not established"
+      - "IMET route (Type 3) missing PMSI tunnel attribute"
+      - "Ingress replication not working for BUM"
+    troubleshooting_hints:
+      - "PMSI: Inclusive (I-PMSI) or Selective (S-PMSI)"
+      - "I-PMSI: one tunnel per EVI, all PEs receive all BUM"
+      - "Check 'show bgp l2vpn evpn route-type 3' for PMSI info"
+      - "PMSI tunnel type: ingress-rep, mLDP P2MP, RSVP-TE P2MP"
+      - "Ingress replication: each PE replicates to all PEs"
+      - "P2MP tunnel: more efficient for multicast distribution"
+    applicability: "EVPN MPLS BUM traffic handling"

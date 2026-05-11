@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Network Programmability Issues Injection"
+description: "NETCONF, RESTCONF, YANG, gNMI, model-driven telemetry related network faults"
+category: "injection"
+protocols:
+  - netconf
+  - restconf
+  - yang
+  - gnmi
+  - telemetry
+  - automation
+
+issues:
+  netconf_session:
+    name: "NETCONF Session Not Establishing"
+    description: "Configure NETCONF but SSH-based NETCONF session between client and device fails"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - netconf
+    symptoms:
+      - "NETCONF client cannot connect to device"
+      - "SSH to port 830 refused or timeout"
+      - "NETCONF capabilities not exchanged"
+      - "Hello message not received from server"
+    troubleshooting_hints:
+      - "NETCONF uses TCP 830 over SSH"
+      - "Enable: 'netconf-yang' on IOS-XE, 'netconf ssh' on NX-OS"
+      - "Check 'show netconf-yang sessions' for active sessions"
+      - "Verify SSH server is enabled on the device"
+      - "Check AAA authorization for NETCONF users"
+      - "VTY access-class must allow NETCONF client IP"
+    applicability: "NETCONF-based network automation"
+
+  netconf_capability:
+    name: "NETCONF Capability / YANG Module Mismatch"
+    description: "Configure NETCONF client and server with incompatible capabilities or missing YANG modules"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - netconf
+      - yang
+    symptoms:
+      - "Client cannot execute NETCONF operations"
+      - "YANG module not supported by device"
+      - "Capability exchange incomplete"
+      - "NETCONF <get> operation returns empty"
+    troubleshooting_hooks:
+      - "NETCONF capabilities define which YANG modules are supported"
+      - "Check 'show netconf-yang capabilities' for supported modules"
+      - "Client must use operations from supported modules only"
+      - "Different IOS versions support different YANG models"
+      - "Use <get-schema> to retrieve YANG module from device"
+      - "Native models (Cisco) vs OpenConfig models may differ"
+    applicability: "NETCONF automation with YANG models"
+
+  netconf_lock:
+    name: "NETCONF Datastore Lock / Configuration Conflict"
+    description: "Configure multiple NETCONF sessions attempting to lock datastore simultaneously"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - netconf
+    symptoms:
+      - "NETCONF <lock> operation fails"
+      - "Another session holds the datastore lock"
+      - "Configuration commit fails due to lock contention"
+      - "Candidate datastore cannot be modified"
+    troubleshooting_hooks:
+      - "NETCONF locks prevent concurrent configuration changes"
+      - "Only one session can hold the lock at a time"
+      - "Check 'show netconf-yang sessions' to find lock owner"
+      - "Use <kill-session> to force release (if authorized)"
+      - "<unlock> releases lock on session close"
+      - "Implement retry logic in automation scripts"
+    applicability: "Concurrent NETCONF automation deployments"
+
+  restconf_api:
+    name: "RESTCONF API / HTTP Method Misconfiguration"
+    description: "Configure RESTCONF but HTTP methods (GET/PUT/POST/DELETE) not working correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - restconf
+    symptoms:
+      - "RESTCONF GET returns 404 or 400"
+      - "PATCH/PUT fails to modify configuration"
+      - "Authentication to RESTCONF API rejected"
+      - "RESTCONF HTTPS endpoint not reachable"
+    troubleshooting_hooks:
+      - "RESTCONF uses HTTPS (TCP 443)"
+      - "Enable: 'restconf' on IOS-XE, 'feature restconf' on NX-OS"
+      - "Check 'show restconf' for endpoint status"
+      - "Use 'ip http secure-server' for HTTPS (IOU-XE)"
+      - "RESTCONF uses YANG-patch: PATCH content-type application/yang-data+json"
+      - "Verify AAA authentication for RESTCONF API users"
+    applicability: "RESTCONF-based automation deployments"
+
+  telemetry_subscription:
+    name: "Model-Driven Telemetry Subscription Failure"
+    description: "Configure MDT subscription but collector not receiving telemetry data"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - telemetry
+    symptoms:
+      - "Telemetry collector not receiving data"
+      - "Subscription shows 'connected' but no data"
+      - "Dial-out mode telemetry not reaching collector"
+      - "Telemetry stream starts then stops"
+    troubleshooting_hooks:
+      - "MDT: subscription to YANG model paths (dial-in or dial-out)"
+      - "Dial-out: device pushes data to collector"
+      - "Check 'show telemetry subscription <id>' for status"
+      - "Verify collector IP and port (default gRPC: 57500)"
+      - "Encoding: GPB (Google Protocol Buffers) or JSON"
+      - "Use 'show telemetry data' for periodic push statistics"
+    applicability: "Model-driven telemetry deployments"
+
+  gnmi_session:
+    name: "gNMI (gRPC Network Management Interface) Session Failure"
+    description: "Configure gNMI but gRPC session between client and device not established"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - gnmi
+    symptoms:
+      - "gNMI client cannot connect to device"
+      - "gRPC channel not established"
+      - "gNMI CapabilityRequest fails"
+      - "TLS certificate validation error"
+    troubleshooting_hooks:
+      - "gNMI uses gRPC over TCP (default port 57400)"
+      - "Enable: 'gnmi-yang' on IOS-XE, 'feature grpc' on NX-OS"
+      - "Check 'show gnmi status' for session state"
+      - "TLS: device certificate must be trusted by client"
+      - "Use 'gnmi' over no-tls for testing (not recommended in production)"
+      - "Verify AAA authorization for gNMI operations"
+    applicability: "gNMI-based streaming telemetry and device management"
+
+  yang_data_validation:
+    name: "YANG Data Model / JSON/XML Encoding Validation Error"
+    description: "Configure NETCONF/RESTCONF with incorrect YANG data format causing operation failure"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - yang
+      - netconf
+      - restconf
+    symptoms:
+      - "NETCONF <edit-config> fails with data validation error"
+      - "RESTCONF PUT returns 400 (invalid data)"
+      - "YANG leaf constraints violation"
+      - "XML/JSON encoding does not match YANG model"
+    troubleshooting_hooks:
+      - "YANG defines data structure, type constraints, and ranges"
+      - "Use <get-schema> to retrieve YANG model for reference"
+      - "Common errors: wrong type, out-of-range, missing mandatory leaf"
+      - "Validate JSON/XML payload against YANG model before sending"
+      - "Use 'show netconf-yang schema' for module validation"
+      - "YANG must-value, mandatory-statement, and constraint errors are common"
+    applicability: "YANG-based automation and data modeling"

@@ -1,0 +1,198 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Infrastructure Security Issues Injection"
+description: "Control Plane Policing, uRPF, management plane security related network faults"
+category: "injection"
+protocols:
+  - copp
+  - urpf
+  - control-plane
+  - management-plane
+  - security
+
+issues:
+  # CoPP (Control Plane Policing)
+
+  copp_not_configured:
+    name: "CoPP (Control Plane Policing) Not Configured"
+    description: "Control Plane Policing not configured leaving the control plane unprotected against DoS"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+      - control-plane
+    symptoms:
+      - "High CPU on route processor under normal traffic"
+      - "Control plane vulnerable to DoS attacks"
+      - "Routing protocol packets compete with management traffic"
+      - "No rate limiting on packets destined to control plane"
+    troubleshooting_hints:
+      - "Check 'show control-plane' for CoPP policy"
+      - "Configure: 'control-plane' then 'service-policy input <policy-map>'"
+      - "CoPP classifies: routing protocol vs management vs unknown"
+      - "Typical classes: ospf, bgp, ssh, snmp, icmp, unknown"
+      - "Without CoPP: all control plane traffic gets same priority"
+      - "Use 'show policy-map control-plane' for CoPP statistics"
+    applicability: "All routers in production networks"
+
+  copp_overly_restrictive:
+    name: "CoPP Too Restrictive Blocking Legitimate Traffic"
+    description: "Configure CoPP with rate-limiter that drops legitimate routing protocol or management packets"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+      - control-plane
+    symptoms:
+      - "OSPF/BGP/EIGRP neighbor flapping"
+      - "SSH sessions timeout or rejected"
+      - "ICMP unreachable not generated"
+      - "CoPP drop counters incrementing for routing protocols"
+    troubleshooting_hints:
+      - "Check 'show policy-map control-plane class <class>' for drops"
+      - "CoPP classes: match protocol (ospf, bgp, ssh, snmp, telnet)"
+      - "If routing protocol class is dropping: increase rate"
+      - "Default CoPP rate may be too low for busy routers"
+      - "Use 'show policy-map control-plane class <name>' to see conform/exceed"
+      - "Adjust rates: 'police <rate> <burst>' in policy-map"
+    applicability: "Routers with active control-plane policing"
+
+  copp_missing_classes:
+    name: "CoPP Missing Critical Protocol Class"
+    description: "Configure CoPP but missing class for essential routing or management protocol"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+      - control-plane
+    symptoms:
+      - "CoPP policy does not classify specific routing protocol"
+      - "BGP packets dropped (no specific class)"
+      - "ICMP traffic not rate-limited but supposed to be"
+      - "Some protocols go through default class (not properly handled)"
+    troubleshooting_hooks:
+      - "Check CoPP class-map definitions: 'show class-map'"
+      - "Verify each routing protocol has its own class"
+      - "Default class handles all non-classified traffic"
+      - "Missing class = protocol handled by default class"
+      - "Common missing: ICMP, SNMP, NTP, BGP, EIGRP"
+      - "Use 'match protocol <protocol>' in class-map for precise matching"
+    applicability: "CoPP deployments with incomplete classification"
+
+  # uRPF (Unicast Reverse Path Forwarding)
+
+  urpf_missing:
+    name: "uRPF (Unicast RPF) Not Configured"
+    description: "Configure interfaces without uRPF allowing IP spoofed traffic to enter the network"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - urpf
+      - security
+    symptoms:
+      - "IP spoofing possible from connected subnet"
+      - "Source address validation not enforced on edge"
+      - "DDoS reflection/amplification traffic can enter"
+      - "No anti-spoofing protection on customer-facing interfaces"
+    troubleshooting_hooks:
+      - "uRPF: verifies source IP is reachable via the interface it arrived"
+      - "Use 'ip verify unicast source reachable-via rx|any' on interface"
+      - "rx: source IP must match route via this interface (strict)"
+      - "any: source IP must be in routing table (loose)"
+      - "Strict uRPF on customer-facing interfaces"
+      - "Loose uRPF on internet-facing interfaces (with ACL allow-list)"
+    applicability: "Edge routers and customer-facing interfaces"
+
+  urpf_strict_blocking:
+    name: "uRPF Strict Mode Blocking Legitimate Asymmetric Traffic"
+    description: "Configure uRPF strict mode causing drops for asymmetric routed traffic"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - urpf
+      - security
+    symptoms:
+      - "Legitimate packets dropped due to uRPF strict check"
+      - "Asymmetric routing causing uRPF failures"
+      - "Traffic from valid source dropped on return path"
+      - "uRPF drops incrementing for known-good sources"
+    troubleshooting_hooks:
+      - "Strict uRPF: packet arrives on interface X, best route to source out interface X"
+      - "Asymmetric routing: return path different from forward path = uRPF drop"
+      - "Check 'show ip interface <intf>' for uRPF drops"
+      - "Use 'ip verify unicast source reachable-via any' for loose mode"
+      - "Or allow-listing: 'ip verify unicast source reachable-via rx allow-list <acl>'"
+      - "Loose mode: source IP must be in routing table (any interface)"
+    applicability: "Networks with asymmetric routing requiring uRPF"
+
+  # Management Plane Protection
+
+  mpp_no_acl:
+    name: "Management Plane / VTY Access-List Not Configured"
+    description: "Configure VTY lines without access-class allowing unauthorized management access"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - management-plane
+      - security
+    symptoms:
+      - "Management access allowed from any source IP"
+      - "VTY lines not protected by access-class"
+      - "Unauthorized IPs can SSH/telnet to router"
+      - "Management plane exposure to network"
+    troubleshooting_hooks:
+      - "Check 'show line vty' for access-class configuration"
+      - "Use 'access-class <acl> in' under line vty for source filtering"
+      - "Use 'access-class <acl> out' for destination filtering"
+      - "Define ACL with permitted management station IPs"
+      - "Also: 'ip access-group <acl>' on management interface"
+      - "Best practice: out-of-band management with dedicated VLAN"
+    applicability: "All network devices with management access"
+
+  mpp_copp_mgmt:
+    name: "Management Plane CoPP / Rate-Limit Missing"
+    description: "Configure CoPP without management traffic class causing SSH/SNMP susceptible to DoS"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+      - management-plane
+    symptoms:
+      - "SSH sessions drop during high CPU"
+      - "Management plane traffic competes with routing protocols"
+      - "CoPP has no dedicated class for SSH/SNMP/NTP"
+      - "Management access lost during network incidents"
+    troubleshooting_hooks:
+      - "Create management traffic class in CoPP policy"
+      - "Class-map: match protocol ssh, match protocol snmp, match protocol ntp"
+      - "Allocate guaranteed bandwidth: 'police <rate>' within limits"
+      - "Prioritize: routing protocol classes above management classes"
+      - "Use 'show policy-map control-plane class <mgmt>' for drops"
+      - "Consider mgmt-plane allow-list + CoPP combined protection"
+    applicability: "Router management plane protection"
+
+  mpp_mgmt_interface:
+    name: "Management VRF / Dedicated Mgmt Interface Misconfiguration"
+    description: "Configure management VRF or dedicated management interface incorrectly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - management-plane
+    symptoms:
+      - "Management traffic using production routing table"
+      - "Management VRF not separating management from production"
+      - "Route-leaking between mgmt VRF and production VRFs"
+      - "Management interface not configured in correct VRF"
+    troubleshooting_hooks:
+      - "Use 'vrf definition Mgmt-intf' for management VRF"
+      - "Check 'show vrf' for management VRF definition"
+      - "Management interface: 'interface <intf> vrf forwarding Mgmt-intf'"
+      - "OOB (out-of-band): separate physical management network"
+      - "mgmt VRF isolates management from in-band traffic"
+      - "Use 'management' or 'vrf' for specific platform mgmt config"
+    applicability: "Devices with out-of-band management requirements"

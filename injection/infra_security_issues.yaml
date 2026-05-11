@@ -196,3 +196,90 @@ issues:
       - "mgmt VRF isolates management from in-band traffic"
       - "Use 'management' or 'vrf' for specific platform mgmt config"
     applicability: "Devices with out-of-band management requirements"
+
+  copp_class_map_detail:
+    name: "CoPP Class-Map / Protocol Matching Not Working"
+    description: "Configure CoPP class-map with match protocol but protocol not classified correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+      - control-plane
+    symptoms:
+      - "CoPP class-map match count shows no hits"
+      - "Protocol packets classified into default class"
+      - "NBAR protocol matching not working for CoPP"
+      - "Routing protocol BGP/OSPF packets bypass CoPP classes"
+    troubleshooting_hooks:
+      - "CoPP class-map: 'match protocol <name>' for routing protocols"
+      - "Check 'show class-map <name>' for match type (match-all/match-any)"
+      - "Match-all: all conditions must match (AND)"
+      - "Match-any: any condition matches (OR)"
+      - "Protocol options: ospf, bgp, eigrp, isis, ldp, rsvp, pim, icmp, ssh, snmp"
+      - "Check 'show policy-map control-plane class <name>' for classification stats"
+    applicability: "CoPP with NBAR protocol classification"
+
+  urpf_allow_list:
+    name: "uRPF Allow-List / Bogon Filter Misconfiguration"
+    description: "Configure uRPF allow-list incorrectly permitting spoofed traffic or blocking legitimate sources"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - urpf
+      - security
+    symptoms:
+      - "Spoofed traffic passes uRPF due to allow-list"
+      - "uRPF allow-list blocking legitimate customer prefixes"
+      - "Allow-list too permissive allowing bogon source addresses"
+      - "uRPF strict + allow-list interaction unexpected"
+    troubleshooting_hooks:
+      - "uRPF allow-list: 'ip verify unicast source reachable-via rx allow-default'"
+      - "Or use route-map: 'ip verify unicast source reachable-via rx allow-default'"
+      - "Allow-list adds prefixes that bypass uRPF check"
+      - "Common for default route pointing to interface"
+      - "Use route-map specific prefixes, not entire default"
+      - "Check 'show ip interface <intf>' for uRPF allow-list status"
+    applicability: "uRPF with allow-listed source prefixes"
+
+  copp_traps:
+    name: "CoPP for ICMP Unreachable / Trap Rate-Limit Issue"
+    description: "Configure CoPP without ICMP class causing excessive ICMP unreachable generation or suppression"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - copp
+    symptoms:
+      - "ICMP unreachable not generated during high traffic"
+      - "Traceroute fails in transit because TTL-expired not sent"
+      - "CoPP ICMP class rate limiting too aggressively"
+      - "Router not generating fragmentation-needed packets"
+    troubleshooting_hooks:
+      - "ICMP unreachable needs separate CoPP class"
+      - "Class-map: match protocol icmp"
+      - "Rate-limit ICMP to prevent CPU overload, but allow enough for PMTUD"
+      - "Check 'show policy-map control-plane class icmp' for drops"
+      - "Traceroute: uses ICMP TTL-exceeded (time-exceeded type 11)"
+      - "PMTUD: uses ICMP unreachable need-frag (type 3 code 4)"
+    applicability: "Routers with ICMP rate-limiting for PMTUD"
+
+  cp_protect:
+    name: "Control Plane Protection (CPPr) / Sub-Interface Misconfiguration"
+    description: "Configure CPPr (Cisco Control Plane Protection) with wrong sub-interface classification"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - copp
+      - control-plane
+    symptoms:
+      - "CPPr host sub-interface blocking legitimate traffic to router"
+      - "CPPr transit sub-interface misclassified as host"
+      - "CPPr cef-exception traffic not matching expected class"
+      - "Control plane protection bypassed due to incorrect classification"
+    troubleshooting_hooks:
+      - "CPPr: control-plane with sub-interface types (host, transit, cef-exception)"
+      - "host: traffic destined to router (SSH, BGP, routing)"
+      - "transit: traffic passing through router (forwarded)"
+      - "cef-exception: punts to CPU (ICMP unreachable, redirect)"
+      - "Check 'show control-plane host open-ports' for listening services"
+      - "Incorrect classification = no protection for that traffic type"
+    applicability: "Advanced control plane protection deployments"

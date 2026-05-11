@@ -218,3 +218,67 @@ issues:
       - "Service VPNs are isolated by default"
       - "Leak routes via: OMP inter-vpn or static routes with vrf forwarding"
     applicability: "SD-WAN multi-tenant service VPN deployments"
+
+  sdwan_site_id:
+    name: "SD-WAN Site-ID / System-IP Duplicate"
+    description: "Configure duplicate system-IP or site-ID across SD-WAN fabric causing route confusion"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+    symptoms:
+      - "Duplicate System-IP detected in fabric"
+      - "vSmart sees multiple vEdges with same System-IP"
+      - "OMP routes from one site interfering with another"
+      - "Site-ID mismatch causing TLOC affinity issues"
+    troubleshooting_hooks:
+      - "System-IP must be unique across entire SD-WAN fabric"
+      - "Site-ID identifies the geographic/logical site"
+      - "Check 'show omp summary' for duplicate System-IP detection"
+      - "Use 'show bfd sessions' to see TLOC conflicts"
+      - "Duplicate System-IP: verify vEdge configuration"
+      - "Duplicate Site-ID: sites may receive wrong route policies"
+    applicability: "SD-WAN fabric bringup and provisioning"
+
+  sdwan_vsmart_policy:
+    name: "SD-WAN vSmart Policy / Centralized Policy Not Applied"
+    description: "Configure vSmart centralized policy but vEdges not receiving or applying it"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+      - vsmart
+    symptoms:
+      - "vEdge shows no policy received from vSmart"
+      - "Policy configured on vSmart but no effect in network"
+      - "Centralized policy not pushed to specific vEdge"
+      - "Policy mismatch between vSmart and vEdge versions"
+    troubleshooting_hooks:
+      - "Centralized policies: control-policy, data-policy, app-route-policy, cflowd-policy"
+      - "Check 'show policy from-vsmart' on vEdge for received policies"
+      - "Check 'show omp peers' to verify vEdge-vSmart connectivity"
+      - "Policy activated on vSmart: 'apply-policy <name> site-list <list>'"
+      - "Direction: 'from-tunnel' or 'from-service' for data-policy"
+      - "Use 'show running-config policy' to verify policy definition"
+    applicability: "SD-WAN centralized policy management"
+
+  sdwan_secure_fabric:
+    name: "SD-WAN Secure Fabric / Control/Data Plane Authentication"
+    description: "Configure SD-WAN control and data plane authentication with incorrect parameters"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+    symptoms:
+      - "vEdge cannot join fabric - control authentication failure"
+      - "IPsec tunnel between vEdges not forming (data auth fail)"
+      - "Organization name mismatch"
+      - "Certificate validation fails for vEdge"
+    troubleshooting_hooks:
+      - "Control plane auth: DTLS/TLS with organization-name and certificates"
+      - "Organization name must match on all devices in fabric"
+      - "Data plane auth: IPsec using pre-shared-keys or certificates"
+      - "Check 'show control-connections' for DTLS/TLS status"
+      - "Check 'show ipsec kma' for IPsec SA negotiation"
+      - "vEdge requires valid certificate signed by fabric root CA"
+    applicability: "SD-WAN fabric bringup with authentication"

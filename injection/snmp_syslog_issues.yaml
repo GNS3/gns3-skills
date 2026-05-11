@@ -164,3 +164,87 @@ issues:
       - "Without persistence: ifIndex may change on config change"
       - "NMS uses ifIndex to correlate interface history data"
     applicability: "SNMP-based interface monitoring"
+
+  snmp_acl:
+    name: "SNMP ACL / Community Access-List Misconfiguration"
+    description: "Configure SNMP community with access-list blocking legitimate NMS or allowing unauthorized hosts"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - snmp
+    symptoms:
+      - "NMS cannot poll device but community string is correct"
+      - "Access-list on SNMP community too restrictive"
+      - "SNMP server ACL ignoring NMS IP"
+      - "No SNMP access despite correct credentials"
+    troubleshooting_hooks:
+      - "SNMP ACL: 'snmp-server community <string> ro <acl>'"
+      - "Check ACL entries with 'show access-lists <acl>'"
+      - "Default: no ACL = all source IPs allowed"
+      - "ACL deny entry blocks all NMS from that subnet"
+      - "Use 'permit <nms-ip>' in ACL for specific management stations"
+      - "Check ACL hit counters to verify matching"
+    applicability: "SNMP deployments with access control"
+
+  snmp_vacm:
+    name: "SNMP VACM / View-Based Access Control Misconfiguration"
+    description: "Configure SNMPv3 VACM restricting access to specific MIB trees incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMPv3 user cannot poll specific OID trees"
+      - "VACM view too restrictive blocking legitimate polling"
+      - "Read-only access prevents writing but needed"
+      - "SNMPv3 user gets noSuchObject for valid OIDs"
+    troubleshooting_hooks:
+      - "SNMPv3 VACM: 'snmp-server view <name> <oid-tree> included'"
+      - "VACM associates groups to views (read/write/notify)"
+      - "Check 'show snmp group' for group-to-view mapping"
+      - "Check 'show snmp user' for user-to-group mapping"
+      - "Three views per group: read, write, notify"
+      - "If no matching view: request returns noSuchObject/none"
+    applicability: "SNMPv3 role-based access control"
+
+  syslog_facility:
+    name: "Syslog Facility / Level / Origin-ID Misconfiguration"
+    description: "Configure syslog with wrong facility code causing server-side filtering issues"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - syslog
+    symptoms:
+      - "Syslog messages filtered at server by facility code"
+      - "Wrong facility (e.g., local0 vs local7) causing misrouting"
+      - "Origin-ID missing making it hard to identify source"
+      - "Syslog server cannot distinguish messages from different devices"
+    troubleshooting_hooks:
+      - "Syslog facility: 'logging facility <facility>' (default: local7)"
+      - "Facility codes: local0-local7, syslog, user, daemon"
+      - "Origin-ID: 'logging origin-id {hostname|ip|<string>}'"
+      - "Server rules use facility + severity to route messages"
+      - "Consistent origin-id across device helps server correlation"
+      - "Check 'show logging' for current facility and origin-id"
+    applicability: "Syslog infrastructure with filtering rules"
+
+  snmp_engine_id:
+    name: "SNMP Engine ID / Discovery Conflict"
+    description: "Configure SNMPv3 engine ID incorrectly causing authentication failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMPv3 user authentication fails on first poll"
+      - "Engine ID change invalidates existing SNMPv3 users"
+      - "Multiple devices share same engine ID (rare issue)"
+      - "SNMPv3 discovery returns unexpected engine ID"
+    troubleshooting_hooks:
+      - "Engine ID uniquely identifies SNMP entity"
+      - "Default: auto-generated from MAC address"
+      - "Use 'snmp-server engineID local <hex>' for manual override"
+      - "Engine ID change requires re-creating SNMPv3 users"
+      - "Check 'show snmp engineID' for current engine ID"
+      - "NMS uses engine ID for authentication cache (may need reset)"
+    applicability: "SNMPv3 deployments with authentication"

@@ -166,3 +166,89 @@ issues:
       - "Use 'show netconf-yang schema' for module validation"
       - "YANG must-value, mandatory-statement, and constraint errors are common"
     applicability: "YANG-based automation and data modeling"
+
+  netconf_filter:
+    name: "NETCONF Subtree / XPath Filter Misconfiguration"
+    description: "Configure NETCONF <get> or <get-config> with incorrect filter returning too much or too little data"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - netconf
+    symptoms:
+      - "NETCONF filter returns empty data"
+      - "Filter returns entire configuration instead of subset"
+      - "XPath expression not supported by device"
+      - "Subtree filter structure incorrect"
+    troubleshooting_hooks:
+      - "NETCONF filters: subtree (default) or xpath (if supported)"
+      - "Subtree filter: include only the YANG container path"
+      - "XPath filter: expression format like '/interfaces/interface[name='GigabitEthernet1']'"
+      - "Check device capabilities for xpath support (capability:filter)"
+      - "Subtree filter returns matching nodes and all descendants"
+      - "Use 'with-defaults' capability for explicit default values"
+    applicability: "NETCONF data retrieval with filtering"
+
+  netconf_commit:
+    name: "NETCONF Commit / Confirmed-Commit Failure"
+    description: "Configure NETCONF confirmed-commit but rollback not working as expected"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - netconf
+    symptoms:
+      - "NETCONF confirmed-commit rollback not triggered on timeout"
+      - "Commit fails due to validation errors"
+      - "Confirmed-commit timer expires but changes remain"
+      - "Multi-session commit coordination failure"
+    troubleshooting_hooks:
+      - "Confirmed-commit: <commit confirmed> with <confirm-timeout>"
+      - "If no follow-up <commit> within timeout: automatic rollback"
+      - "Check 'show netconf-yang sessions' for confirmed-commit status"
+      - "Use persistent-confirmed-commit for CLI-based rollback"
+      - "Cancel confirmed-commit: <cancel-commit> or another <commit>"
+      - "Only the session that started confirmed-commit can commit or cancel"
+    applicability: "NETCONF configuration management with rollback"
+
+  restconf_patch:
+    name: "RESTCONF YANG-PATCH / Partial Update Failure"
+    description: "Configure RESTCONF PATCH operation but partial update not applied correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - restconf
+    symptoms:
+      - "RESTCONF PATCH returns 200 but configuration not updated"
+      - "YANG-PATCH edit list incorrectly ordered"
+      - "Partial update breaking configuration consistency"
+      - "RESTCONF PUT overwrites entire configuration when PATCH expected"
+    troubleshooting_hooks:
+      - "RESTCONF PATCH: partial update, only specified fields change"
+      - "RESTCONF PUT: replace entire resource (more destructive)"
+      - "Use 'application/yang-patch+json' content-type for PATCH"
+      - "YANG-PATCH: array of edits with operation (merge/replace/create/delete)"
+      - "Edits applied in order, failure may leave partial state"
+      - "Verify edit-list uses correct target resource URI"
+    applicability: "RESTCONF-based partial configuration updates"
+
+  gnmi_subscribe:
+    name: "gNMI Subscribe / On-Change Telemetry Issue"
+    description: "Configure gNMI subscription with on-change mode but updates not triggered when value changes"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - gnmi
+      - telemetry
+    symptoms:
+      - "gNMI on-change subscription not sending updates"
+      - "Stream of values never sent (sample mode)"
+      - "On-change target not reporting changes for specific paths"
+      - "gNMI subscription reconnection causing duplicate data"
+    troubleshooting_hooks:
+      - "gNMI subscription modes: ONCE, POLL, STREAM (sample/on-change)"
+      - "On-change: device sends update when value changes"
+      - "Sample: device sends periodic updates (interval)"
+      - "Check 'show gnmi subscription' for subscription state"
+      - "On-change requires device support for change detection per path"
+      - "Suppress-redundant: avoid sending same-value updates"
+      - "Heartbeat-interval: periodic update even if no value change"
+    applicability: "gNMI streaming telemetry subscriptions"

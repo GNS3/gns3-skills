@@ -124,3 +124,1247 @@ issues:
       - "TTL security and ebgp-multihop are mutually exclusive"
       - "Default eBGP TTL is 1 (directly connected only)"
     applicability: "eBGP across multiple hops or security-conscious deployments"
+
+  # Peering / Session Issues
+
+  bgp_hold_timer_mismatch:
+    name: "BGP Hold Timer Mismatch"
+    description: "Configure different BGP hold timers on peers, causing session to reset to lower value or repeatedly flap"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session establishes but resets periodically"
+      - "Hold time expires prematurely on one side"
+      - "BGP session flapping with keepalive failures"
+      - "'Hold timer expired' error messages"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for negotiated hold timer"
+      - "BGP negotiates to the lower of the two hold timers"
+      - "Default hold timer is 180 seconds (3 minutes)"
+      - "Use 'timers bgp <keepalive> <hold>' to adjust"
+      - "Keepalive timer should be 1/3 of hold timer (default: 60s)"
+      - "Holding time of 0 means no keepalives sent"
+    applicability: "All BGP deployments, especially over congested links"
+
+  bgp_tcp_mss_issue:
+    name: "BGP TCP MSS / Path MTU Issue"
+    description: "Configure BGP over a network path with PMTUD issues or TCP MSS clamping problems, causing session to stall or fail"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session establishes but fails to exchange UPDATE messages"
+      - "TCP connection appears established but no routes received"
+      - "BGP UPDATE messages never complete"
+      - "Larger UPDATE messages consistently fail"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for TCP connection state"
+      - "Verify path MTU between peers with ping don't-fragment"
+      - "Common with GRE tunnels, IPsec, or MPLS transport"
+      - "Configure 'ip tcp mss' or adjust MTU on interfaces"
+      - "TCP MSS = interface MTU - 40 (IP+TCP headers)"
+      - "Check for fragmentation issues in transit network"
+    applicability: "BGP over tunnel interfaces, IPsec, or constrained MTU paths"
+
+  bgp_passive_mode:
+    name: "BGP Passive Mode Misconfiguration"
+    description: "Configure BGP peer in passive mode on both sides, preventing TCP connection initiation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session never establishes"
+      - "Both sides waiting for incoming connection"
+      - "BGP stuck in IDLE or ACTIVE state"
+      - "No TCP connection attempt on port 179"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for connection state"
+      - "Passive mode means router does not initiate TCP connection"
+      - "At least one side must not be passive to establish session"
+      - "Use 'neighbor <ip> passive' command"
+      - "Default is active mode (both sides initiate)"
+      - "Passive mode useful for single-sided configuration"
+    applicability: "BGP deployments with manual session control"
+
+  bgp_session_flapping:
+    name: "BGP Session Flapping"
+    description: "Create conditions causing BGP session to repeatedly go up and down due to interface flapping, route changes, or configuration changes"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session goes up and down repeatedly"
+      - "Routes constantly withdrawn and readvertised"
+      - "Network-wide route instability"
+      - "High CPU usage due to route processing"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for session uptime and reset counts"
+      - "Look for 'BGP notification sent/received' in logs"
+      - "Check interface stability with 'show interface'"
+      - "Verify update-source interface is stable (use loopback)"
+      - "Implement route dampening to suppress flapping prefixes"
+      - "Check for error messages indicating reset cause"
+    applicability: "All BGP deployments with unstable sessions"
+
+  # Route Advertisement Issues
+
+  bgp_network_advertise_missing:
+    name: "BGP Network Advertisement Missing"
+    description: "Fail to configure 'network' statement under BGP for routes that should be advertised, causing networks to not be announced to peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Specific networks not advertised to BGP peers"
+      - "Routes present in routing table but not in BGP"
+      - "Missing prefixes in BGP table"
+      - "Remote peers cannot reach the missing networks"
+    troubleshooting_hints:
+      - "Check 'show ip bgp' for missing prefixes"
+      - "Verify 'network <network> mask <mask>' under BGP configuration"
+      - "Network statement requires exact route match in routing table"
+      - "Use 'show ip route <network>' to verify route exists"
+      - "For connected routes, ensure they exist before network statement"
+      - "Use 'network <network> mask <mask>' format for classless networks"
+    applicability: "All BGP deployments announcing prefixes"
+
+  bgp_prefix_filter_blocking:
+    name: "BGP Prefix List / Distribute List Filtering Routes"
+    description: "Configure prefix-list or distribute-list that inadvertently blocks legitimate prefixes from being advertised or received"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Specific routes not sent to or received from neighbor"
+      - "Partial routing table received from peer"
+      - "Some prefixes missing from BGP table"
+      - "Implicit deny at end of prefix-list blocking unexpected prefixes"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor <ip> prefix-list' for filters"
+      - "Verify 'neighbor <ip> prefix-list <name> (in|out)' commands"
+      - "Check 'distribute-list' under BGP configuration"
+      - "Prefix-lists have implicit deny at the end"
+      - "Use 'show ip prefix-list <name>' to verify entries"
+      - "Add 'permit any' at end for testing purposes (not recommended in production)"
+    applicability: "BGP deployments with route filtering policies"
+
+  bgp_route_map_filter_error:
+    name: "BGP Route-Map Filtering Error"
+    description: "Configure route-map with incorrect match or set conditions, causing routes to be filtered or modified incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Routes filtered unexpectedly or modified with wrong attributes"
+      - "Route-map conditions not matching as intended"
+      - "Routes not matching any permit statement"
+      - "Set actions not applied to matched routes"
+    troubleshooting_hints:
+      - "Check 'show route-map <name>' for match counts"
+      - "Verify sequence numbers order (lower = higher priority)"
+      - "Use 'show ip bgp route <prefix>' to check applied policies"
+      - "Route-maps have implicit deny if no match"
+      - "Check for 'match ip address' referencing wrong ACL/prefix-list"
+      - "Verify 'set' commands in each sequence produce expected results"
+    applicability: "BGP deployments with complex route policies"
+
+  bgp_aggregate_config:
+    name: "BGP Route Aggregation / Summarization Issue"
+    description: "Configure BGP aggregation incorrectly, causing black holes or missing more specific routes"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Aggregate route advertised but more specific routes missing"
+      - "Traffic black holes for subnets within aggregate"
+      - "Summary route not generated despite component routes"
+      - "Atoms (suppressed routes) not visible to peers"
+    troubleshooting_hints:
+      - "Check 'show ip bgp summary' for aggregate routes"
+      - "Use 'aggregate-address <network> <mask> summary-only' to suppress specifics"
+      - "Use 'aggregate-address <network> <mask> as-set' to maintain AS path info"
+      - "Use 'aggregate-address <network> <mask> attribute-map' to set attributes"
+      - "Verify component routes exist before aggregate is generated"
+      - "Use 'show ip bgp <prefix>' to see if route is suppressed"
+    applicability: "BGP deployments with route summarization"
+
+  bgp_conditional_advertise:
+    name: "BGP Conditional Advertisement Failure"
+    description: "Configure BGP conditional advertisement with incorrect exist-map or non-exist-map, causing prefixes to not be advertised when expected"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Backup prefixes not advertised when primary fails"
+      - "Conditional prefixes never advertised"
+      - "Primary/backup failover not working"
+      - "Prefixes advertised even when condition says they shouldn't"
+    troubleshooting_hints:
+      - "Check 'neighbor <ip> advertise-map <name> exist-map <name>' configuration"
+      - "Verify exist-map routes are present in routing table"
+      - "Non-exist-map triggers advertisement when route disappears"
+      - "Use 'show ip bgp neighbor <ip>' to check advertise status"
+      - "Ensure advertise-map prefixes exist in BGP table"
+      - "Check prefix-lists and route-maps referenced in conditional config"
+    applicability: "eBGP deployments with primary/backup failover"
+
+  # Path Selection Issues
+
+  bgp_med_misconfig:
+    name: "BGP MED Misconfiguration"
+    description: "Configure incorrect BGP Multi-Exit Discriminator (MED) values, causing suboptimal inbound traffic flow"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Inbound traffic enters through non-optimal ingress point"
+      - "Uneven traffic distribution across multiple peering points"
+      - "Traffic engineering not working as intended"
+      - "MED comparison not happening (different AS)"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for MED value"
+      - "MED is a hint to remote AS about preferred entry point"
+      - "Lower MED value is preferred"
+      - "MED is compared only when paths come from same neighboring AS"
+      - "Use 'bgp always-compare-med' to compare MED from different ASes"
+      - "Set MED with 'set metric <value>' in route-map"
+    applicability: "Multi-homed eBGP deployments with traffic engineering"
+
+  bgp_local_pref_misconfig:
+    name: "BGP Local Preference Misconfiguration"
+    description: "Configure incorrect local preference values, causing suboptimal outbound traffic path selection"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ibgp
+      - ebgp
+    symptoms:
+      - "Outbound traffic exits through non-optimal edge router"
+      - "Unexpected path selection for external destinations"
+      - "Local preference changes not propagating across iBGP"
+      - "Lower local preference path preferred over higher"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for local preference"
+      - "Higher local preference is preferred for outbound traffic"
+      - "Default local preference is 100"
+      - "Set with 'bgp default local-preference <value>' under BGP process"
+      - "Override with 'set local-preference <value>' in inbound route-map"
+      - "Local preference is exchanged within AS only (not sent to eBGP)"
+    applicability: "Multi-homed BGP deployments controlling outbound traffic"
+
+  bgp_as_path_prepend:
+    name: "BGP AS Path Prepending Not Working"
+    description: "Configure AS path prepending incorrectly, failing to influence outbound path selection from remote AS"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "AS path prepending not affecting inbound traffic path"
+      - "Remote AS still prefers path despite longer AS path"
+      - "Incorrect AS prepended (private AS leaked)"
+      - "AS path prepending not present in BGP updates"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for prepended AS numbers"
+      - "Use 'set as-path prepend <asn>' in outbound route-map"
+      - "Prepend router's own AS (or neighbor AS if configured)"
+      - "AS path prepending is least preferred path selection"
+      - "Other attributes (MED, local pref) can override longer AS path"
+      - "Check for 'remove-private-as' stripping prepended private AS"
+    applicability: "Multi-homed eBGP deployments with traffic engineering"
+
+  bgp_weight_misconfig:
+    name: "BGP Weight Misconfiguration (Cisco)"
+    description: "Configure incorrect BGP weight values, causing unexpected path selection for specific routes"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Unexpected path selected for specific routes"
+      - "Weight override causing other path selection attributes ignored"
+      - "Traffic forwarding mismatch between routers"
+      - "Weight changes not affecting route selection as expected"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for weight value"
+      - "Weight is Cisco-proprietary, highest weight is preferred"
+      - "Default weight is 0 (locally generated routes: 32768)"
+      - "Set weight per neighbor: 'neighbor <ip> weight <value>'"
+      - "Override with 'set weight <value>' in inbound route-map"
+      - "Weight is local to the router, not advertised to peers"
+    applicability: "Cisco BGP deployments with multi-homed connections"
+
+  bgp_multipath_config:
+    name: "BGP Multipath / Load Balancing Configuration Error"
+    description: "Configure BGP multipath incorrectly, preventing equal-cost load balancing across multiple paths"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Multiple BGP paths available but not used for load balancing"
+      - "Only one path installed in routing table"
+      - "Uneven traffic distribution"
+      - "Multipath not working despite multiple equal paths"
+    troubleshooting_hints:
+      - "Check 'maximum-paths <number>' under BGP configuration"
+      - "For eBGP: paths must have same AS path length (usually)"
+      - "For iBGP: paths must have same IGP metric to next-hop"
+      - "Use 'maximum-paths ibgp <number>' for iBGP multipath"
+      - "Use 'bgp bestpath as-path multipath-relax' for different AS paths"
+      - "Verify all path selection attributes are equal for multipath"
+    applicability: "BGP deployments requiring load balancing across multiple paths"
+
+  # iBGP Design Issues
+
+  bgp_route_reflector_cluster_id:
+    name: "BGP Route Reflector Cluster-ID Conflict"
+    description: "Configure multiple route reflectors with different cluster-IDs in same cluster, causing route looping and suboptimal routing"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ibgp
+    symptoms:
+      - "Route looping within iBGP cluster"
+      - "Redundant route reflectors not working together"
+      - "Routes reflected back to clients incorrectly"
+      - "ORF (Originator ID) causing route rejection"
+    troubleshooting_hints:
+      - "Check 'show ip bgp' for cluster-list attribute"
+      - "Redundant route reflectors in same cluster must share cluster-id"
+      - "Use 'bgp cluster-id <id>' to set cluster-id"
+      - "Cluster-id prevents route looping between reflectors"
+      - "Multiple clusters in same AS should have unique cluster-ids"
+      - "Check 'show ip bgp neighbor' for route-reflector-client status"
+    applicability: "iBGP deployments with redundant route reflectors"
+
+  bgp_confederation_misconfig:
+    name: "BGP Confederation Misconfiguration"
+    description: "Configure BGP confederation with incorrect AS numbers or peer mappings, breaking inter-sub-AS routing"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Inter-sub-AS BGP sessions not establishing"
+      - "Confederation AS numbers not matching"
+      - "Routes not propagating between sub-ASes"
+      - "Next-hop issues across confederation boundaries"
+    troubleshooting_hints:
+      - "Check 'bgp confederation identifier <asn>' for parent AS"
+      - "Verify 'bgp confederation peers <asns>' lists all sub-ASes"
+      - "Confederation AS numbers are local to the parent AS"
+      - "eBGP-like behavior within confederation (LP preserved)"
+      - "Next-hop-self not automatic in confederation peers"
+      - "Confederation routes treated as internal (not eBGP) for path selection"
+    applicability: "Large BGP deployments using confederation for iBGP scalability"
+
+  bgp_ibgp_fullmesh_missing:
+    name: "iBGP Full Mesh Missing (Without Route Reflection)"
+    description: "Fail to establish iBGP sessions between all routers in AS without route reflection, causing incomplete route propagation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ibgp
+    symptoms:
+      - "BGP routes from one iBGP router not reaching another"
+      - "Routes learned from iBGP peer not advertised to other iBGP peers"
+      - "Partial routing information within AS"
+      - "iBGP split-horizon rule blocking route propagation"
+    troubleshooting_hints:
+      - "iBGP requires full mesh (all routers peer with each other)"
+      - "iBGP learned routes are NOT advertised to other iBGP peers by default"
+      - "Use route reflectors or confederation to avoid full mesh"
+      - "Check 'show ip bgp summary' for missing iBGP sessions"
+      - "N*(N-1)/2 sessions required for full mesh"
+      - "Alternative: configure route reflector or confederation"
+    applicability: "Small to medium iBGP deployments without route reflection"
+
+  bgp_route_dampening_issue:
+    name: "BGP Route Dampening Misconfiguration"
+    description: "Configure BGP route dampening with overly aggressive parameters, causing stable routes to be suppressed"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Stable routes suppressed (history state)"
+      - "Routes not advertised despite being stable"
+      - "Slow convergence after flap dampening"
+      - "Routes remain in 'dampened' state indefinitely"
+    troubleshooting_hints:
+      - "Check 'show ip bgp dampened-paths' for suppressed routes"
+      - "Verify dampening parameters: 'bgp dampening <half-life> <reuse> <suppress> <max-suppress>'"
+      - "Default half-life: 15 minutes"
+      - "Default suppress threshold: 2000"
+      - "Default reuse threshold: 750"
+      - "Use 'show ip bgp flap-statistics' to see flap history"
+    applicability: "eBGP deployments with route instability protection"
+
+  bgp_next_hop_self_missing:
+    name: "BGP Next-Hop-Self Not Configured for iBGP"
+    description: "Fail to configure next-hop-self on route reflector or iBGP peers, causing next-hop unreachable for iBGP learned routes"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ibgp
+    symptoms:
+      - "Routes in BGP table but not usable (next-hop unreachable)"
+      - "iBGP routes showing 'next hop not reachable'"
+      - "Routes not installed in routing table"
+      - "Forwarding fails for iBGP learned prefixes"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for next-hop status"
+      - "Use 'neighbor <ip> next-hop-self' to force router's own IP as next-hop"
+      - "Common when eBGP next-hop is not reachable via IGP"
+      - "Route reflector does not modify next-hop by default"
+      - "Check if eBGP next-hop is reachable in IGP before configuring"
+      - "Alternatively, redistribute eBGP next-hop routes into IGP"
+    applicability: "iBGP deployments where eBGP next-hop not in IGP"
+
+  # eBGP Specific Issues
+
+  bgp_ebgp_multihop_missing:
+    name: "eBGP Multihop Configuration Missing"
+    description: "Fail to configure ebgp-multihop when eBGP peers are not directly connected, preventing session establishment"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "eBGP session fails over non-directly connected links"
+      - "BGP stuck in IDLE state"
+      - "TTL of 1 not sufficient to reach peer"
+      - "Session works only over directly connected interface"
+    troubleshooting_hints:
+      - "Default eBGP TTL is 1 (directly connected only)"
+      - "Use 'neighbor <ip> ebgp-multihop <hop-count>' to increase TTL"
+      - "Must also configure 'neighbor <ip> update-source <intf>'"
+      - "Set hop-count to at least actual number of hops"
+      - "Use ping with increasing TTL (traceroute) to verify path"
+      - "TTL security and ebgp-multihop are mutually exclusive"
+    applicability: "eBGP deployments with non-directly connected peers"
+
+  bgp_allowas_in_misconfig:
+    name: "BGP Allowas-In Misconfiguration"
+    description: "Configure allowas-in incorrectly, causing AS path loop prevention to block legitimate routes or allowing loops"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP rejects prefixes with own AS in AS path"
+      - "Legitimate routes (from same AS) not accepted"
+      - "AS path loop prevention blocking intended routes"
+      - "Need to accept prefixes containing own AS"
+    troubleshooting_hints:
+      - "By default, BGP rejects updates containing own AS in AS_PATH"
+      - "Use 'neighbor <ip> allowas-in <count>' to accept n occurrences of own AS"
+      - "Use 'neighbor <ip> allowas-in 1' to accept one occurrence"
+      - "Common in MPLS L3VPN or multi-homed scenarios"
+      - "Alternative: use 'neighbor <ip> disable-connected-check'"
+      - "Warning: allowas-in can create routing loops if misused"
+    applicability: "eBGP in MPLS VPN or complex multi-homed deployments"
+
+  bgp_as_path_loop:
+    name: "BGP AS Path Loop / AS Number Leak"
+    description: "Misconfigure route leaking between ASes causing AS path prepend loops or private AS numbers visible to internet"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Prefixes with own AS in path not accepted"
+      - "Private AS numbers (64512-65535) visible to internet peers"
+      - "AS path growing unboundedly"
+      - "Route flapping due to AS path loop detection"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for AS path contents"
+      - "Use 'remove-private-as' on eBGP outbound to strip private ASes"
+      - "ACLs or prefix-lists should filter private AS ranges (RFC 6996)"
+      - "Ensure no route redistribution creates AS path loops"
+      - "Use as-set with aggregate-address to avoid path hiding"
+      - "BGP loop prevention: router rejects routes with own AS in path"
+    applicability: "eBGP deployments with private AS or multi-homed scenarios"
+
+  # Security and Policy Issues
+
+  bgp_max_prefix_limit:
+    name: "BGP Maximum Prefix Limit Exceeded"
+    description: "Configure BGP max-prefix limit too low, causing session to be torn down when legitimate prefixes exceed limit"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP session goes down unexpectedly"
+      - "Message: 'maximum prefix limit exceeded'"
+      - "BGP session in IDLE state (not trying to re-establish)"
+      - "All routes from peer lost after session reset"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor <ip>' for prefix counts"
+      - "Default max-prefix limit: none (unless configured)"
+      - "Use 'neighbor <ip> maximum-prefix <max> <threshold>'"
+      - "When limit exceeded: session teardown, optional restart timer"
+      - "Use 'restart <minutes>' to auto-reestablish after limit exceeded"
+      - "Consider warning-only option to avoid session teardown"
+    applicability: "eBGP deployments with prefix limit controls"
+
+  bgp_md5_password_mismatch:
+    name: "BGP MD5 / TTL Security Password Mismatch"
+    description: "Configure BGP MD5 authentication with mismatched passwords between peers, preventing TCP connection establishment"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session fails to establish"
+      - "BGP stuck in IDLE or ACTIVE state"
+      - "TCP connection fails (MD5 signature mismatch)"
+      - "No BGP updates exchanged"
+    troubleshooting_hints:
+      - "Check 'neighbor <ip> password <password>' configuration"
+      - "BGP uses TCP MD5 signature option (RFC 2385)"
+      - "Passwords must match exactly on both peers"
+      - "Password change requires session reset"
+      - "Specific to Cisco: 'neighbor <ip> password' command"
+      - "Check for special characters in password string"
+    applicability: "BGP deployments with MD5 authentication between peers"
+
+  bgp_inbound_route_limit:
+    name: "BGP Inbound Route Limit via Prefix Filter"
+    description: "Configure excessively restrictive inbound prefix filtering causing routing table incompleteness"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Only partial internet routing table received"
+      - "Specific destination networks unreachable"
+      - "Blocked prefixes logs showing rejections"
+      - "ACL or prefix-list logging showing denied entries"
+    troubleshooting_hints:
+      - "Check inbound filters: 'show ip bgp neighbor <ip> prefix-list'"
+      - "Verify 'neighbor <ip> prefix-list <name> in' configuration"
+      - "Log denied entries with 'log' keyword in prefix-list"
+      - "Ensure required prefixes are permitted"
+      - "Check AS_PATH filters (regex) that may be too restrictive"
+      - "Use 'show ip bgp neighbor <ip> routes' to see received routes"
+    applicability: "eBGP deployments limiting full routing table reception"
+
+  # Advanced Features
+
+  bgp_graceful_restart_issue:
+    name: "BGP Graceful Restart Capability Mismatch"
+    description: "Configure BGP graceful restart with incompatible parameters or failure to preserve forwarding state during restart"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Forwarding stops during BGP peer restart"
+      - "Graceful restart helper not preserving routes"
+      - "Stale routes immediately deleted on session failure"
+      - "BGP NSF (Non-Stop Forwarding) not working"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for graceful restart capability"
+      - "Both peers must advertise graceful restart capability"
+      - "Restart time and stale path timer must be compatible"
+      - "Use 'bgp graceful-restart' to enable"
+      - "Verify forwarding plane preserves stale routes during restart"
+      - "End-of-RIB marker required for convergence signaling"
+    applicability: "BGP deployments requiring high availability and NSF"
+
+  bgp_community_stripping:
+    name: "BGP Community / Extended Community Stripped"
+    description: "Configure outbound route-map that unintentionally strips BGP communities, preventing propagation of routing policy markers"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Communities not present in received BGP updates"
+      - "Community-based policies not working on peer router"
+      - "BGP communities set on one side but missing on other"
+      - "Extended communities (RT, SoO) missing"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for community attributes"
+      - "By default, communities are NOT sent to eBGP peers"
+      - "Use 'neighbor <ip> send-community' and 'send-community extended'"
+      - "Outbound route-maps may strip communities if not explicitly permitted"
+      - "'set communities none' clears all communities"
+      - "Use 'set community <value> additive' to preserve existing communities"
+      - "Verify 'ip bgp-community new-format' for dotted format display"
+    applicability: "BGP deployments using community-based routing policies"
+
+  bgp_soo_misconfig:
+    name: "BGP Site-of-Origin (SoO) Misconfiguration"
+    description: "Configure incorrect BGP Site-of-Origin extended community, causing route acceptance issues in MPLS VPN or multi-homed scenarios"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP routes re-advertised back to originating site"
+      - "Sub-optimal routing in multi-homed site"
+      - "Route looping between CE and PE"
+      - "SoO mismatch preventing legitimate route acceptance"
+    troubleshooting_hints:
+      - "SoO prevents routing loops in multi-homed sites"
+      - "Use 'neighbor <ip> soo <ext-community>' command"
+      - "SoO attached to all routes received from that neighbor"
+      - "Check 'show ip bgp <prefix>' for SoO extended community"
+      - "All CEs in same site should have same SoO value"
+      - "Routes with matching SoO are rejected to prevent loops"
+    applicability: "BGP/MPLS VPN deployments with multi-homed sites"
+
+  bgp_origin_attribute:
+    name: "BGP Origin Attribute Misconfiguration"
+    description: "Configure BGP origin attribute incorrectly (IGP, EGP, incomplete), affecting path selection"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP paths not selected as expected"
+      - "Origin code 'incomplete' affecting path preference"
+      - "Redistributed routes showing '?' origin"
+      - "Origin attribute manipulation not working"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for origin code (i, e, ?)"
+      - "Origin preference order: IGP (i) > EGP (e) > incomplete (?)"
+      - "Network-advertised routes get origin IGP"
+      - "Redistributed routes get origin 'incomplete' (?)"
+      - "Use 'set origin igp|egp|incomplete' in route-map"
+      - "Origin is compared before MED in path selection"
+    applicability: "BGP deployments where origin attribute affects path selection"
+
+  bgp_peer_group_issue:
+    name: "BGP Peer Group Misconfiguration"
+    description: "Configure BGP peer group with incorrect template or override, causing inconsistent peer policies"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Peers in same group have different behavior"
+      - "Peer group template overrides not taking effect"
+      - "Individual neighbor configuration conflicts with peer-group"
+      - "Inconsistent route advertisements within peer group"
+    troubleshooting_hints:
+      - "Check 'show ip bgp peer-group <group>' for configuration"
+      - "Individual neighbor configuration overrides peer-group settings"
+      - "Some commands cannot be applied to peer-group directly"
+      - "Use 'inherit peer-session <name>' and 'inherit peer-policy <name>'"
+      - "Session templates: update-source, remote-as, password"
+      - "Policy templates: route-map, prefix-list, filter-list"
+    applicability: "BGP deployments with many peers using configuration templates"
+
+  # Path Selection - Additional Principles
+
+  bgp_admin_distance:
+    name: "BGP Administrative Distance Affecting Route Selection"
+    description: "Configure BGP administrative distance incorrectly, causing BGP routes to be less preferred than IGP or other routing sources"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP routes not installed in routing table despite being in BGP table"
+      - "IGP routes preferred over BGP routes for same prefix"
+      - "Unexpected route source winning"
+      - "show ip route shows non-BGP route source winning"
+    troubleshooting_hints:
+      - "Default AD: eBGP 20, iBGP 200, OSPF 110, IS-IS 115, Static 1"
+      - "Check 'show ip route <prefix>' for route source and AD"
+      - "Use 'distance bgp <ext> <int> <local>' to adjust BGP AD"
+      - "iBGP default AD 200 means OSPF routes always preferred"
+      - "Lower AD value = more trusted route source"
+      - "Adjust per neighbor: 'neighbor <ip> distance <value>'"
+    applicability: "BGP deployments where BGP routes compete with IGP routes"
+
+  bgp_ebgp_vs_ibgp:
+    name: "eBGP vs iBGP Path Selection Conflict"
+    description: "Configure both eBGP and iBGP paths for same prefix, where eBGP path should be preferred but iBGP path wins due to attribute manipulation"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "iBGP path preferred over eBGP path for same destination"
+      - "Traffic engineering not working as expected"
+      - "Unexpected path selection with eBGP and iBGP paths"
+    troubleshooting_hints:
+      - "eBGP path (AD 20) preferred over iBGP (AD 200) by default"
+      - "But local-preference evaluated before eBGP/iBGP preference"
+      - "Higher local-preference on iBGP path overrides eBGP"
+      - "Check 'show ip bgp <prefix>' for path selection comparison"
+      - "eBGP vs iBGP is step 7 of BGP path selection"
+      - "Use weight or local-preference to control without changing AD"
+    applicability: "BGP deployments with both eBGP and iBGP paths"
+
+  bgp_igp_metric_next_hop:
+    name: "BGP IGP Metric to Next-Hop Affecting Path Selection"
+    description: "Configure iBGP paths with different IGP metrics to next-hop, causing suboptimal BGP path selection"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ibgp
+    symptoms:
+      - "iBGP path with longer IGP path to next-hop preferred"
+      - "Suboptimal BGP route selection within AS"
+      - "Uneven traffic distribution across iBGP paths"
+    troubleshooting_hints:
+      - "IGP metric to next-hop is step 8 of BGP path selection"
+      - "Check 'show ip bgp <prefix>' for path comparison"
+      - "Lower IGP metric to next-hop is preferred"
+      - "Check IGP metric with 'show ip route <next-hop>'"
+      - "Adjust IGP metric or use BGP attributes to override"
+      - "Common in networks with unequal IGP path costs to route reflectors"
+    applicability: "Large iBGP deployments with unequal IGP metrics"
+
+  bgp_oldest_path:
+    name: "BGP Oldest Path Not Preserved After Reset"
+    description: "Reset BGP session or clear BGP table, losing oldest path preference and potentially causing suboptimal path selection"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Path selection changes after BGP session reset"
+      - "Previously non-preferred path becomes preferred"
+      - "Traffic shifts after maintenance window"
+      - "Path flapping due to preferred path aging"
+    troubleshooting_hints:
+      - "Step 10: prefer older eBGP path for stability"
+      - "Use 'clear ip bgp <prefix>' carefully - resets path age"
+      - "BGP session restart resets path age"
+      - "Use graceful restart to preserve forwarding state"
+      - "bgp update-delay helps with post-restart stability"
+      - "Older path preferred to minimize route flapping"
+    applicability: "eBGP deployments where path stability matters"
+
+  bgp_router_id_selection:
+    name: "BGP Router ID Affecting Path Selection"
+    description: "Configure BGP with Router ID making suboptimal paths preferred due to lower Router ID tie-breaking"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Unexpected path selected when all other attributes equal"
+      - "Router with lower Router ID preferred over better-performing path"
+      - "Asymmetric routing due to Router ID comparison"
+    troubleshooting_hints:
+      - "Router ID is step 11 of BGP path selection"
+      - "Lower Router ID is preferred"
+      - "Router ID selected: highest loopback > highest physical IP"
+      - "Use 'bgp router-id <id>' to set manually"
+      - "Router ID change requires BGP session restart"
+      - "Different Router IDs on same router can cause issues"
+    applicability: "BGP deployments with equal paths, full-mesh iBGP"
+
+  bgp_neighbor_address_lowest:
+    name: "BGP Lowest Neighbor Address Path Selection"
+    description: "Configure equal BGP paths where lowest neighbor IP address determines final path selection, causing suboptimal traffic pattern"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Final tie-breaking selects path based on neighbor IP"
+      - "Neighbor IP address determines preferred path"
+      - "Unpredictable path selection in equal-cost scenarios"
+      - "Router with lower loopback IP consistently preferred"
+    troubleshooting_hints:
+      - "Lowest neighbor IP is the final tie-breaker (step 13)"
+      - "All earlier steps (1-12) must be equal for this to apply"
+      - "Use weight, local-pref, MED, or AS-path to avoid tie-breaking"
+      - "Check 'show ip bgp <prefix>' for full path comparison"
+      - "Hard to debug - all attributes appear equal"
+      - "Explicitly set path attributes to break the tie"
+    applicability: "BGP deployments with completely equal paths"
+
+  # BGP/IGP Interaction Issues
+
+  bgp_igp_sync:
+    name: "BGP/IGP Synchronization Issue (Legacy)"
+    description: "Enable BGP/IGP synchronization on an iBGP router, preventing BGP routes from being used until learned via IGP"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ibgp
+      - ospf
+      - isis
+    symptoms:
+      - "BGP routes in BGP table but not in routing table"
+      - "Routes not installed until IGP learns the same prefix"
+      - "Connectivity issues across transit AS"
+      - "Routing black holes for BGP advertised prefixes"
+    troubleshooting_hints:
+      - "Check 'show ip bgp template' for synchronization status"
+      - "Synchronization is disabled by default in modern IOS"
+      - "When enabled: BGP route not installed unless IGP has route"
+      - "Use 'no synchronization' to disable"
+      - "Originally designed for non-full-mesh iBGP scenarios"
+      - "Rare in modern networks but may be encountered in legacy configs"
+    applicability: "Legacy BGP deployments with synchronization enabled"
+
+  bgp_redistribute_igp:
+    name: "BGP Redistributing IGP Routes Incorrectly"
+    description: "Configure redistribution of IGP routes (OSPF, IS-IS) into BGP, causing route table pollution or routing loops"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ospf
+      - isis
+    symptoms:
+      - "Internal IGP routes leaked to external BGP peers"
+      - "Internet routers receiving internal network routes"
+      - "Routing loops caused by IGP route redistribution"
+      - "BGP table growing with unnecessary internal routes"
+    troubleshooting_hints:
+      - "DO NOT redistribute IGP into BGP unless explicitly required"
+      - "Use 'network' statements instead to advertise specific prefixes"
+      - "If redistribution required: use route-maps to filter specific routes"
+      - "Check with 'show ip bgp' for redistributed IGP routes"
+      - "Common mistake: 'redistribute ospf <pid>' under BGP without filters"
+      - "Use 'default-information originate' instead for default route"
+    applicability: "BGP ASBRs connecting to external networks"
+
+  bgp_backdoor_route:
+    name: "BGP Backdoor Route Configuration"
+    description: "Configure BGP backdoor route incorrectly, causing IGP route to not be preferred over eBGP learned route"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "eBGP learned route preferred over IGP route to same prefix"
+      - "Traffic goes through external path instead of internal backdoor"
+      - "Suboptimal routing for dual-homed network"
+      - "Backdoor network not reachable via internal path"
+    troubleshooting_hints:
+      - "Use 'network <prefix> backdoor' to prefer IGP over eBGP"
+      - "Backdoor sets AD to 200 (same as iBGP) for that prefix"
+      - "Alternative: adjust distance using 'distance bgp'"
+      - "Check 'show ip route <prefix>' for route source and AD"
+      - "Use 'show ip bgp <prefix>' to verify backdoor configuration"
+      - "Backdoor routes do not get advertised to BGP peers"
+    applicability: "Networks with backup external links and internal paths"
+
+  # Advanced Features
+
+  bgp_dynamic_neighbor:
+    name: "BGP Dynamic Neighbor (Listen Range) Misconfiguration"
+    description: "Configure BGP dynamic neighbor listen range too broad or too narrow, causing peering failures or unexpected peers"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Expected BGP peers not establishing with dynamic range"
+      - "Unexpected BGP peers connecting to router"
+      - "Dynamic peer template not applied correctly"
+      - "BGP session flapping with dynamic neighbors"
+    troubleshooting_hints:
+      - "Use 'bgp listen range <network/len> peer-group <group>'"
+      - "Dynamic peers use peer-group template for configuration"
+      - "Verify peer-group template has all required settings"
+      - "Check 'show ip bgp summary' for dynamic peers (marked with 'D')"
+      - "Limit listen range to specific subnet to prevent unauthorized peers"
+      - "Dynamic BGP common in data center leaf-spine fabrics"
+    applicability: "Data center BGP fabrics, spine-leaf architectures"
+
+  bgp_soft_reset:
+    name: "BGP Soft Reset / Route Refresh Failure"
+    description: "Configure BGP without route refresh capability or inbound soft-reconfiguration, requiring hard reset to apply policy changes"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP policy changes require session hard reset to take effect"
+      - "'clear ip bgp * soft' not updating routes"
+      - "Route refresh capability not negotiated with peer"
+      - "Old routes remain after policy change"
+    troubleshooting_hints:
+      - "Route refresh capability negotiated in BGP OPEN message"
+      - "Use 'neighbor <ip> soft-reconfiguration inbound' to store routes"
+      - "Soft-reconfiguration stores all received routes for re-processing"
+      - "Resource-intensive: doubles BGP memory usage"
+      - "Prefer route refresh (RFC 2918) when supported"
+      - "Use 'clear ip bgp <ip> soft in' to re-process without reset"
+    applicability: "All BGP deployments where policy changes are frequent"
+
+  bgp_notification_error:
+    name: "BGP Notification Message Causing Session Reset"
+    description: "Trigger BGP notification messages (error conditions) that cause session to reset with various error codes"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session resets with notification message"
+      - "Error subcode indicating specific issue"
+      - "Session flapping with particular error pattern"
+      - "BGP logs showing notification codes"
+    troubleshooting_hints:
+      - "Check 'show ip bgp neighbor' for last notification"
+      - "Notification error codes: 1=Message Header, 2=OPEN, 3=UPDATE, 4=Hold Timer Expired"
+      - "UPDATE error (code 3) common with attribute issues"
+      - "OPEN error (code 2) common with capability mismatch"
+      - "Use 'debug ip bgp updates' carefully in maintenance window"
+      - "Common causes: malformed attribute, invalid next-hop, AS loop"
+    applicability: "BGP deployments experiencing session instability"
+
+  bgp_large_community:
+    name: "BGP Large Community Misconfiguration"
+    description: "Configure BGP large community (RFC 8092) incorrectly or fail to propagate, causing routing policy failures"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Large communities not present in received BGP updates"
+      - "Large community-based policies not working"
+      - "'send-community large' not configured"
+      - "Large community matches failing in route-maps"
+    troubleshooting_hints:
+      - "Large community format: <ASN>:<value1>:<value2>"
+      - "Use 'neighbor <ip> send-community large' to propagate"
+      - "Can combine: 'send-community std|ext|large|all'"
+      - "Match with 'match community-list <name> large'"
+      - "Set with 'set comm-list <name> delete' or 'set large-community <value>'"
+      - "Check 'show ip bgp <prefix>' for large community attribute"
+    applicability: "BGP deployments using large community for modern routing policies"
+
+  bgp_orf:
+    name: "BGP Outbound Route Filtering (ORF) Failure"
+    description: "Configure BGP ORF (prefix-based outbound filtering) inconsistently, causing route filtering to not work"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "ORF capability not negotiated between peers"
+      - "Prefix filters not applied even though ORF configured"
+      - "Unwanted prefixes still received after ORF configuration"
+      - "ORF entry mismatch between peers"
+    troubleshooting_hints:
+      - "ORF allows receiver to send prefix filters to sender"
+      - "Use 'neighbor <ip> capability orf prefix-list <name>'"
+      - "Both peers must support ORF capability"
+      - "Check 'show ip bgp neighbor <ip>' for ORF capability"
+      - "ORF receive: router receives filters from peer"
+      - "ORF send: router sends filters to peer"
+    applicability: "eBGP deployments reducing BGP update churn"
+
+  bgp_add_path_issue:
+    name: "BGP Add-Path Capability Mismatch"
+    description: "Configure BGP Add-Path (additional paths) incorrectly, preventing multiple paths from being advertised"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Only best path sent to BGP peer despite Add-Path configured"
+      - "Backup paths not available on receiving router"
+      - "Add-Path capability not negotiated in OPEN"
+      - "Fast convergence (PIC) not working as expected"
+    troubleshooting_hints:
+      - "Add-Path allows advertising multiple paths for same prefix"
+      - "Use 'neighbor <ip> advertise additional-paths all'"
+      - "Use 'neighbor <ip> additional-paths receive' to accept"
+      - "Check 'show ip bgp neighbor <ip>' for Add-Path capability"
+      - "Both peers must support Add-Path for negotiation"
+      - "Maximum-paths affects Add-Path behavior"
+    applicability: "BGP deployments requiring fast convergence or load balancing"
+
+  bgp_dmz_link_bw:
+    name: "BGP DMZ Link Bandwidth Unequal Load Balancing"
+    description: "Configure BGP DMZ link bandwidth for unequal-cost load balancing but with incorrect values causing uneven traffic distribution"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Unequal traffic distribution across eBGP links"
+      - "DMZ bandwidth not affecting load sharing"
+      - "BGP multipath not utilizing link capacities proportionally"
+      - "Higher bandwidth link not carrying proportionally more traffic"
+    troubleshooting_hints:
+      - "DMZ Link Bandwidth is a Cisco proprietary attribute"
+      - "Configured with 'neighbor <ip> dmzlink-bw' and route-map"
+      - "Used for unequal-cost load balancing across eBGP multipath"
+      - "Check 'show ip bgp <prefix>' for DMZ bandwidth value"
+      - "Both sides must support DMZ link bandwidth"
+      - "Requires 'maximum-paths' and 'bgp bestpath as-path multipath-relax'"
+    applicability: "Multi-homed eBGP deployments with unequal link capacities"
+
+  # BGP Security Issues
+
+  bgp_roa_invalid:
+    name: "BGP RPKI / ROA Validation Rejecting Valid Routes"
+    description: "Configure BGP RPKI Origin Validation with incorrect ROA data, causing legitimate prefixes to be treated as invalid and rejected"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP routes showing 'invalid' origin AS validation status"
+      - "Legitimate prefixes dropped due to ROV"
+      - "RPKI validation not matching actual prefix ownership"
+      - "ROA not found for valid prefixes"
+    troubleshooting_hints:
+      - "Check 'show ip bgp <prefix>' for ROV status (valid/notfound/invalid)"
+      - "Use 'bgp rpki server tcp <ip> port <port>' for RPKI-RTR"
+      - "ROA announces: <prefix/maxlen> <origin-AS>"
+      - "Validation states: valid (0), not found (1), invalid (2)"
+      - "Use 'bgp bestpath prefix-validate disable' to disable and test"
+      - "Invalid routes dropped by default when ROV configured"
+    applicability: "BGP deployments implementing RPKI-based origin validation"
+
+  bgp_tcp_auth:
+    name: "BGP TCP-AO Authentication Misconfiguration"
+    description: "Configure BGP with TCP-AO (TCP Authentication Option) but with mismatched keys or algorithms, preventing session establishment"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP session fails to establish"
+      - "TCP connection rejected due to authentication failure"
+      - "BGP stuck in IDLE state"
+      - "TCP-AO key mismatch errors in logs"
+    troubleshooting_hints:
+      - "TCP-AO (RFC 5925) replaces MD5 TCP authentication"
+      - "Use 'key chain <name> tcp' for TCP-AO configuration"
+      - "Use 'tcp-ao-udp-encrypt' and 'mac-secure' algorithms"
+      - "Different key IDs or algorithms prevent session establishment"
+      - "Check key send-id and accept-id must match on both sides"
+      - "Use 'neighbor <ip> tcp-ao key-chain <name>' to apply"
+      - "Pre-rollover: ensure old key works during key transition"
+    applicability: "BGP deployments requiring modern TCP authentication"
+
+  bgp_session_limit:
+    name: "BGP Session Limit / Peer Limit Exceeded"
+    description: "Configure BGP with session limits or platform limitations preventing new peer sessions from being established"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "New BGP peers cannot establish sessions"
+      - "'maximum peer limit reached' error messages"
+      - "Existing peers work but new peers fail"
+      - "Memory allocation failures for BGP process"
+    troubleshooting_hints:
+      - "Check 'show ip bgp summary' for total peer count"
+      - "Platforms have hardware/software limits on BGP peers"
+      - "Use 'neighbor <ip> shutdown' to free peer slots"
+      - "Consider peer groups to reduce resource usage"
+      - "Check 'show process memory' for BGP process memory"
+      - "Redistribute peers across multiple BGP processes if supported"
+    applicability: "Large-scale BGP deployments approaching platform limits"
+
+  # Operations and Maintenance
+
+  bgp_maintenance_window:
+    name: "BGP Maintenance Mode / Graceful Shutdown"
+    description: "Configure BGP maintenance or graceful shutdown incorrectly, causing traffic loss during planned maintenance"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Traffic loss during BGP maintenance window"
+      - "Graceful shutdown not diverting traffic as expected"
+      - "Local preference community not honored by upstream"
+      - "BGP session hard reset causing route withdrawal"
+    troubleshooting_hints:
+      - "Use graceful shutdown (RFC 8326) to signal maintenance"
+      - "Set community: well-known GRACEFUL_SHUTDOWN (65535:0)"
+      - "Set local-preference to 0 for outbound traffic diversion"
+      - "Prepend AS path to make path less attractive for inbound"
+      - "Use 'neighbor <ip> shutdown' only after traffic diverted"
+      - "Coordinate maintenance window with upstream peers"
+      - "Use route-map to apply prepend and low local-pref before shutdown"
+    applicability: "eBGP deployments requiring planned maintenance procedures"
+
+  bgp_max_med_recovery:
+    name: "BGP Max-MED / MED Recovery Issue"
+    description: "Configure BGP max-med on startup but MED fails to recover after convergence, causing suboptimal inbound routing"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "BGP paths still showing max-med value after convergence"
+      - "Inbound traffic not recovering after reboot"
+      - "MED remains at maximum value indefinitely"
+      - "Suboptimal inbound traffic after planned maintenance"
+    troubleshooting_hints:
+      - "'bgp max-med on-startup <seconds>' sends max-med after boot"
+      - "After timer expires, router sends normal MED values"
+      - "Check 'show ip bgp <prefix>' for MED value"
+      - "If MED stuck: 'clear ip bgp <neighbor>' to force update"
+      - "Use 'bgp bestpath med missing-as-worst' to handle missing MED"
+      - "Available in: 'bgp max-med on-startup <sec> <med-value>'"
+    applicability: "eBGP deployments, especially post-maintenance or reboot scenarios"
+
+  bgp_config_drift:
+    name: "BGP Configuration Drift / Template Inheritance Issue"
+    description: "Configure BGP peer with session-template or peer-group but individual overrides cause unexpected configuration drift"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "Individual neighbor configuration differs from peer-group template"
+      - "Unexpected neighbor behavior despite common template"
+      - "Configuration audit shows template/neighbor mismatch"
+      - "Some neighbors in group have different policies"
+    troubleshooting_hints:
+      - "Individual neighbor configuration overrides peer-group settings"
+      - "Use 'show ip bgp peer-group <name>' for inherited config"
+      - "Use 'show run | inc neighbor' to see individual settings"
+      - "Use 'inherit peer-session/policy' templates consistently"
+      - "Session templates handle: remote-as, update-source, password"
+      - "Policy templates handle: route-map, prefix-list, filter-list"
+    applicability: "Large BGP deployments using templates for scalability"
+
+  bgp_update_delay:
+    name: "BGP Update Delay After Restart"
+    description: "Configure BGP update delay or read-only mode incorrectly, causing slow convergence after BGP process restart"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+      - ibgp
+    symptoms:
+      - "BGP sessions established but no routes exchanged"
+      - "Slow BGP convergence after reboot"
+      - "Routes appear only after significant delay"
+      - "BGP read-only mode active preventing updates"
+    troubleshooting_hints:
+      - "Use 'bgp update-delay <seconds>' to set convergence wait time"
+      - "During update-delay, BGP establishes sessions but does not send updates"
+      - "After delay expires, BGP sends all routes at once"
+      - "Default delay varies by platform (typically 120s)"
+      - "Too short: routes advertised before all sessions established"
+      - "Too long: slow convergence after reboot"
+      - "BGP open-policy timer also affects when routes are processed"
+    applicability: "BGP deployments where convergence time after restart is critical"
+
+  bgp_confederation_warning:
+    name: "BGP Confederation AS Number Confusion"
+    description: "Configure BGP confederation with overlapping or conflicting sub-AS numbers, causing peering failures and route propagation issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Confederation sub-AS peering fails to establish"
+      - "AS path inside confederation shows conflicting AS numbers"
+      - "Routes not propagating correctly across confederation"
+      - "Local preference not preserved across confederation boundary"
+    troubleshooting_hints:
+      - "Confederation sub-AS numbers must be unique within confederation"
+      - "Use private AS range (64512-65535) for sub-AS numbers"
+      - "'show ip bgp' shows confederation AS in brackets [AS-set]"
+      - "Local preference preserved across sub-AS boundaries"
+      - "Next-hop-self not automatic for confederation peers"
+      - "Check 'bgp confederation peers' lists all sub-AS numbers"
+    applicability: "Large BGP deployments using confederation for scalability"

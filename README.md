@@ -36,6 +36,11 @@ GNS3-Skills/
 │   ├── lab_automation_assistant.md
 │   ├── teaching_assistant.md
 │   └── title.md
+├── packet_analysis/   # Packet capture analysis rules (tshark field extraction)
+│   ├── arp.yaml
+│   ├── bgp.yaml
+│   ├── icmp.yaml
+│   └── ospf.yaml
 ├── config/            # Runtime configuration
 │   └── forbidden_commands.txt
 ├── .github/           # CI/CD and validation

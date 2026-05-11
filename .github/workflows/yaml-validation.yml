@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: YAML Validation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - '.github/workflows/yaml-validation.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.yaml'
+      - '**.yml'
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Validate YAML files
+        run: |
+          python .github/scripts/validate_yaml.py
+
+      - name: Validate skill format
+        run: |
+          python .github/scripts/validate_skills.py

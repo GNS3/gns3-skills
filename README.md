@@ -89,14 +89,44 @@ Or via API:
 curl -X POST http://localhost:3080/api/skills/update
 ```
 
+## CI/CD Validation
+
+This project uses GitHub Actions to validate YAML files on every push and pull request.
+
+### Automated Checks
+
+- **YAML Syntax Validation**: Ensures all YAML files have valid syntax
+- **Skill Format Validation**: Validates skill files against the schema defined in `gns3server/agent/gns3_copilot/skills/loader.py`
+
+### Local Validation (Recommended)
+
+Install the pre-commit hook to validate files before committing:
+
+```bash
+cd .git/hooks
+ln -s ../../.github/hooks/pre-commit pre-commit
+```
+
+Or run validation manually:
+
+```bash
+# Validate YAML syntax
+python3 .github/scripts/validate_yaml.py
+
+# Validate skill format
+python3 .github/scripts/validate_skills.py
+```
+
+For detailed CI/CD documentation, see [`.github/scripts/README.md`](.github/scripts/README.md).
+
 ## Contributing
 
 To add new skills:
 
 1. Create a new YAML file in the appropriate directory (`injection/` or `device/`)
 2. Follow the skill format shown above
-3. Test your skill definition
-4. Submit a pull request
+3. Run local validation: `python3 .github/scripts/validate_skills.py`
+4. Submit a pull request (CI will automatically validate your changes)
 
 ## License
 

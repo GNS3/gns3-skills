@@ -102,3 +102,311 @@ issues:
       - "Use 'ip igmp snooping querier' to enable switch as querier"
       - "Check for 'ip igmp snooping vlan <vlan>' configuration"
     applicability: "Layer 2 switches with multicast receivers"
+
+  # PIM RP Discovery Issues
+
+  pim_auto_rp:
+    name: "PIM Auto-RP Mapping Agent / Candidate RP Issue"
+    description: "Configure PIM Auto-RP but mapping agent not discovering candidate RPs or RP-SAs not flooded correctly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Auto-RP mapping agent not learning about candidate RPs"
+      - "RP-SAs (RP Discovery messages) not reaching all PIM routers"
+      - "Multicast groups not associated with RP"
+      - "PIM routers cannot find RP for group range"
+    troubleshooting_hints:
+      - "Auto-RP: candidate RPs announce via 224.0.1.39"
+      - "Mapping agent listens on 224.0.1.39 and announces via 224.0.1.40"
+      - "Check 'show ip pim rp mapping' for Auto-RP entries"
+      - "All routers capable of routing Auto-RP multicast groups"
+      - "Use 'ip pim autorp listener' on interfaces not running PIM"
+      - "Ensure mapping agent reaches candidate RPs"
+    applicability: "PIM sparse mode with Auto-RP"
+
+  pim_bsr:
+    name: "PIM BSR (Bootstrap Router) Election / RP-Set Issue"
+    description: "Configure PIM BSR but BSR election fails or RP-set not distributed across domain"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "BSR not elected or multiple BSRs conflicting"
+      - "RP-set not received by all PIM routers"
+      - "Hash algorithm selecting wrong RP for groups"
+      - "Bootstrap messages not flooding in domain"
+    troubleshooting_hints:
+      - "BSR candidate: 'ip pim bsr-candidate <intf> <hash-mask-len>'"
+      - "RP candidate: 'ip pim rp-candidate <intf>'"
+      - "BSR with highest priority becomes active BSR"
+      - "Check 'show ip pim bsr-router' for BSR status"
+      - "Check 'show ip pim rp-hash' for RP selection by group"
+      - "BSR messages hop-by-hop using TTL 255"
+    applicability: "PIM sparse mode with BSR"
+
+  pim_register:
+    name: "PIM Register Process Failure"
+    description: "Configure PIM register process between source DR and RP but encapsulation or decapsulation fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Multicast source traffic not reaching RP"
+      - "PIM register packets not sent by source DR"
+      - "Register decapsulation failed at RP"
+      - "Source tree (SPT) switchover not occurring"
+    troubleshooting_hints:
+      - "DR encapsulates native multicast in PIM register (unicast to RP)"
+      - "Check 'show ip pim interface' for DR role on source segment"
+      - "Check 'show ip pim rp mapping' for group-to-RP mapping"
+      - "Register checksum errors at RP"
+      - "RP sends register-stop to DR after SPT established"
+      - "Register decapsulation requires route to source"
+    applicability: "PIM sparse mode with source registration"
+
+  pim_ssm:
+    name: "PIM SSM (Source-Specific Multicast) Configuration Error"
+    description: "Configure PIM SSM (232.0.0.0/8) incorrectly or IGMPv3 not supported for SSM channel subscription"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - igmp
+      - multicast
+    symptoms:
+      - "SSM groups (232/8) not forwarding traffic"
+      - "IGMPv3 report not processed for (S,G) join"
+      - "SSM range incorrectly defined"
+      - "Receivers can't subscribe to specific sources"
+    troubleshooting_hints:
+      - "SSM uses (S,G) model, no RP needed for 232.0.0.0/8"
+      - "Use 'ip pim ssm [default|range <acl>]' to configure SSM range"
+      - "SSM requires IGMPv3 on receiver-facing interfaces"
+      - "Check 'show ip igmp interface' for IGMP version"
+      - "SSM: directly joined via IGMPv3 membership reports"
+      - "No RP, no register process = simpler than ASM"
+    applicability: "PIM SSM (Source-Specific Multicast) deployments"
+
+  pim_assert:
+    name: "PIM Assert / Forwarder Election Failure"
+    description: "Configure PIM on multi-access network but assert process fails causing duplicate or lost multicast traffic"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Duplicate multicast traffic on LAN segment"
+      - "PIM assert messages not exchanged"
+      - "Assert winner/loser not correctly determined"
+      - "Wrong forwarder elected on broadcast segment"
+    troubleshooting_hints:
+      - "Assert: determines which router forwards on a shared LAN"
+      - "Assert winner = best route to source (lowest metric wins)"
+      - "Check show ip mroute <group> for assert state"
+      - "Assert loser stops forwarding, only winner forwards"
+      - "Assert metric = IGP metric to source"
+      - "Duplicate traffic = assert process not working"
+    applicability: "Multi-access LAN segments with PIM"
+
+  igmp_version_mismatch:
+    name: "IGMP Version Mismatch / Compatibility Issue"
+    description: "Configure different IGMP versions on host-facing interfaces causing membership reports to be ignored"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - igmp
+      - multicast
+    symptoms:
+      - "Hosts cannot join multicast groups"
+      - "IGMP membership reports ignored by router"
+      - "IGMPv1/v2 backward compatibility issues"
+      - "Multicast traffic not delivered to hosts"
+    troubleshooting_hints:
+      - "Check 'show ip igmp interface' for IGMP version"
+      - "Default IGMP version v2 (RFC 2236) or v3 (RFC 3376)"
+      - "IGMPv1: leave without leave-group message"
+      - "IGMPv2: includes leave-group and group-specific query"
+      - "IGMPv3: includes source-specific (S,G) membership"
+      - "Use 'ip igmp version <1|2|3>' to set per-interface"
+    applicability: "Host-facing interfaces with multicast receivers"
+
+  msdp_peer:
+    name: "MSDP Peer Session Failure"
+    description: "Configure MSDP (Multicast Source Discovery Protocol) peer between PIM domains but session not established"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - msdp
+      - multicast
+    symptoms:
+      - "Inter-domain sources not discovered"
+      - "MSDP peer session not establishing"
+      - "SA (Source-Active) messages not exchanged"
+      - "Remote RP cannot inform receivers of sources in other domain"
+    troubleshooting_hints:
+      - "MSDP peers connect via TCP (port 639)"
+      - "Check 'show ip msdp peer <ip>' for session state"
+      - "MSDP peer requires reachable IP between RPs"
+      - "Use 'ip msdp peer <rp-ip> connect-source <intf>'"
+      - "MSDP peering requires RPF check on SA messages"
+      - "Check mesh-group configuration for SA flooding"
+    applicability: "Inter-domain multicast with MSDP"
+
+  msdp_sa_cache:
+    name: "MSDP SA Cache / Source Active Flooding Issue"
+    description: "Configure MSDP but SA cache not populated or SA messages not forwarded correctly between peers"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - msdp
+      - multicast
+    symptoms:
+      - "MSDP SA messages not received or propagated"
+      - "Remote sources missing from RP SA cache"
+      - "SA request timeout without response"
+      - "Inter-domain multicast source discovery fails"
+    troubleshooting_hints:
+      - "Check 'show ip msdp sa-cache' for cached sources"
+      - "SA TTL: default 60 minutes, adjustable"
+      - "SA message rate limiting: 'ip msdp sa-limit <acl>'"
+      - "Mesh-group: SA not forwarded to peers in same group"
+      - "SA originate-count: 'show ip msdp count' for origin statistics"
+      - "RPF check: SA msg forwarded only if arrived from correct peer"
+    applicability: "Inter-domain multicast deployments"
+
+  multicast_rpf:
+    name: "Multicast RPF (Reverse Path Forwarding) Check Failure"
+    description: "Configure unicast routing path different from multicast source path causing RPF check failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - multicast
+    symptoms:
+      - "Multicast traffic received but not forwarded"
+      - "RPF check failing for source address"
+      - "Asymmetric routing causing multicast loss"
+      - "'show ip mroute' shows RPF failure"
+    troubleshooting_hints:
+      - "RPF check: interface receiving multicast must be optimal route to source"
+      - "Check 'show ip rpf <source-ip>' for best unicast route"
+      - "Asymmetric routing: use PIM, MBGP, or null routes for RPF"
+      - "Use 'ip multicast rpf <source>' for RPF override"
+      - "MPLS VPN: VRF RPF check uses VRF routing table"
+      - "RPF failure is the most common multicast forwarding issue"
+    applicability: "All multicast deployments with asymmetric routing"
+
+  pim_bfd:
+    name: "PIM BFD Integration Failure"
+    description: "Configure PIM with BFD for fast failure detection but BFD session not established or not integrated"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "PIM convergence still slow after link failure"
+      - "BFD session not established for PIM neighbor"
+      - "PIM not responding to BFD down events"
+      - "Sub-second detection not working"
+    troubleshooting_hints:
+      - "Use 'ip pim bfd' under interface for BFD integration"
+      - "BFD provides sub-second detection (< 1s vs 3.3s PIM hello)"
+      - "Check 'show bfd neighbors' for BFD session status"
+      - "PIM neighbor removed immediately on BFD failure"
+      - "Requires BFD configured on both PIM neighbors"
+      - "BFD interval default: 150ms x 3 multiplier"
+    applicability: "PIM networks requiring fast convergence"
+
+  multicast_boundary:
+    name: "Multicast Boundary / Scope Filtering Misconfiguration"
+    description: "Configure multicast boundary too restrictively blocking legitimate multicast traffic or scope leakage"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - multicast
+    symptoms:
+      - "Legitimate multicast groups blocked at boundary"
+      - "Administrative scope leaking across regions"
+      - "Multicast boundary ACL matching wrong groups"
+      - "Inter-domain multicast blocked incorrectly"
+    troubleshooting_hints:
+      - "Multicast boundary: 'ip multicast boundary <acl>'"
+      - "Check ACL entries for denied group ranges"
+      - "Administrative scoping: 239.0.0.0/8 (local scope)"
+      - "Use 'ip multicast boundary scope <scope>' for admin scoping"
+      - "Boundary filters both incoming and outgoing multicast"
+      - "Common for isolating PIM domains"
+    applicability: "Multicast deployments with boundary control"
+
+  pim_spt_switch:
+    name: "PIM SPT Switchover Threshold Issue"
+    description: "Configure PIM SPT (Shortest Path Tree) switchover threshold incorrectly, causing suboptimal multicast forwarding"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Multicast traffic always via RP (never switches to SPT)"
+      - "SPT threshold set too high or disabled"
+      - "Router never switches from RPT to SPT"
+      - "Suboptimal multicast path via RP vs directly sourced"
+    troubleshooting_hints:
+      - "SPT switchover: receiver moves from shared tree (RPT) to source tree (SPT)"
+      - "Default threshold: 0 kbps (immediate switch to SPT)"
+      - "Use 'ip pim spt-threshold <kbps>' to adjust"
+      - "Default: switch immediately for all sources (Cisco)"
+      - "Higher threshold keeps traffic on RP tree longer"
+      - "Check 'show ip mroute <group> count' for SPT status"
+    applicability: "PIM sparse mode with SPT optimization"
+
+  igmp_proxy:
+    name: "IGMP Proxy / Standby Misconfiguration"
+    description: "Configure IGMP proxy or IGMP standalone mode incorrectly, preventing upstream multicast subscription"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - igmp
+      - multicast
+    symptoms:
+      - "IGMP queries not forwarded upstream"
+      - "Membership reports not proxied to upstream"
+      - "CE router not joining multicast groups on behalf of hosts"
+      - "IGMP proxy not aggregating membership"
+    troubleshooting_hints:
+      - "IGMP proxy: router acts as host to upstream for all downstream members"
+      - "Check 'show ip igmp proxy' for proxy interface status"
+      - "Proxy aggregates all downstream subscriptions"
+      - "Use 'ip igmp proxy-service' for downstream interfaces"
+      - "Use 'ip igmp helper-address <upstream-ip>' for forwarding"
+      - "Common in MPLS VPN multicast or customer edge designs"
+    applicability: "Edge multicast, MPLS VPN multicast, CE routers"
+
+  multicast_adm_scope:
+    name: "Multicast Administrative Scoping / TTL Threshold Issue"
+    description: "Configure multicast administrative scope boundaries incorrectly limiting multicast reach or leaking scope"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - multicast
+    symptoms:
+      - "Multicast traffic not crossing configured scope boundary"
+      - "Scope leaking into other regions"
+      - "TTL threshold dropping legitimate traffic"
+      - "Administrative scope conflicts between regions"
+    troubleshooting_hints:
+      - "Admin scope ranges: 239.0.0.0/8 (RFC 2365)"
+      - "Use 'ip multicast boundary <acl>' for per-interface scoping"
+      - "TTL threshold: 'ip multicast ttl-threshold <ttl>'"
+      - "Local scope: 239.255.0.0/16 (site-local)"
+      - "Organization scope: 239.192.0.0/14 (private)"
+      - "Check 'show ip igmp boundary' for active boundaries"
+    applicability: "Multicast networks with organizational scoping"

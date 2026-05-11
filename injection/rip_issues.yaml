@@ -113,3 +113,214 @@ issues:
       - "Discontiguous networks require auto-summarization disabled"
       - "Use 'ip summary-address rip' for manual summarization"
     applicability: "RIP v2 with discontiguous network designs"
+
+  rip_timer_mismatch:
+    name: "RIP Update / Invalid / Hold Timer Mismatch"
+    description: "Configure non-standard RIP timers on different routers causing slow convergence or route expiration"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - rip
+    symptoms:
+      - "RIP routes expiring prematurely on some routers"
+      - "Slow convergence after route changes"
+      - "Route flapping due to timer mismatch"
+      - "Update timer differences causing inconsistent timing"
+    troubleshooting_hints:
+      - "RIP timers: update (30s), invalid (180s), hold (180s), flush (240s)"
+      - "Check 'show ip protocols' for current timer values"
+      - "Use 'timers basic <update> <invalid> <hold> <flush>'"
+      - "Timer mismatch does not prevent adjacency (unlike OSPF)"
+      - "Shorter update timer = faster convergence, more bandwidth"
+      - "Hold timer prevents route oscillation after withdrawal"
+    applicability: "RIP deployments needing timer tuning"
+
+  rip_redistribution:
+    name: "RIP Route Redistribution Error"
+    description: "Configure redistribution from other protocols into RIP with incorrect metric or without subnets"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "Redistributed routes missing or incorrect metric in RIP"
+      - "Routes from OSPF/static/EIGRP not appearing in RIP updates"
+      - "Redistributed routes without subnet mask (classful)"
+      - "Metric of redistributed routes too high (invalid route)"
+    troubleshooting_hints:
+      - "RIP default metric for redistributed routes: 0 (unreachable!)"
+      - "Always set metric: 'redistribute <protocol> metric <1-16>'"
+      - "Use 'default-metric <1-16>' for all redistributed routes"
+      - "RIP max hop count = 15 (16 = unreachable/infinite)"
+      - "Redistribution filters: 'redistribute <protocol> route-map <name>'"
+      - "Check 'show ip rip database' for redistributed entries"
+    applicability: "RIP routers redistributing from other routing protocols"
+
+  rip_default_route:
+    name: "RIP Default Route Distribution Issue"
+    description: "Configure RIP to advertise default route but propagation fails due to metric or redistribution issues"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - rip
+    symptoms:
+      - "Default route not propagated via RIP"
+      - "Routers have no gateway of last resort"
+      - "Static default route not redistributed correctly"
+      - "Default route metric set to 16 (unreachable)"
+    troubleshooting_hints:
+      - "Use 'default-information originate' under router rip"
+      - "Requires default route in routing table (static or other)"
+      - "Or 'redistribute static' with metric if static default exists"
+      - "Metric of default route must be <= 15"
+      - "Default route advertised to all RIP neighbors"
+      - "Check 'show ip rip database' for default route entry"
+    applicability: "RIP networks connecting to external networks"
+
+  rip_offset_list:
+    name: "RIP Offset-List Metric Manipulation"
+    description: "Configure RIP offset-list incorrectly adding unexpected metric to routes"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "Specific routes have unexpectedly higher hop count"
+      - "Offset-list matching wrong interfaces or routes"
+      - "Route metric increased beyond 15 (unreachable)"
+      - "Unexpected route selection changes"
+    troubleshooting_hints:
+      - "Offset-list adds to metric: 'offset-list <acl> {in|out} <offset>'"
+      - "Offset value 1-14 recommended (max 15 before unreachable)"
+      - "Check offset applied to correct interface and direction"
+      - "Use 'show ip rip database' to verify metric changes"
+      - "Offset per interface: 'offset-list <acl> in <offset> <intf>'"
+      - "Common for traffic engineering in RIP networks"
+    applicability: "RIP deployments with metric manipulation"
+
+  rip_triggered_extensions:
+    name: "RIP Triggered Extensions / RIPng Configuration Error"
+    description: "Configure RIP triggered extensions or RIP next generation (RIPng) for IPv6 incorrectly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+      - ipv6
+    symptoms:
+      - "RIPng (RIP for IPv6) process not running"
+      - "IPv6 routes not exchanged via RIPng"
+      - "Triggered updates not working as expected"
+      - "RIPng interface not enabled"
+    troubleshooting_hints:
+      - "RIPng: 'ipv6 router rip <tag>' and 'ipv6 rip <tag> enable' under interface"
+      - "RIPng uses UDP port 521, multicast FF02::9"
+      - "Check 'show ipv6 rip' for RIPng process and interfaces"
+      - "RIPng timer default: update 30s, timeout 180s"
+      - "RIPng supports split horizon and poison reverse"
+      - "RIPng metric same hop-count limit (15)"
+    applicability: "RIPng (RIP for IPv6) deployments"
+
+  rip_max_paths:
+    name: "RIP Maximum Paths / Load Balancing Error"
+    description: "Configure RIP with multiple equal-cost paths but load balancing limited by maximum-paths"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - rip
+    symptoms:
+      - "Only one RIP path in routing table despite multiple equal-cost routes"
+      - "Load balancing not utilizing all available equal-cost links"
+      - "Maximum-paths limit preventing path utilization"
+      - "Unequal traffic distribution"
+    troubleshooting_hints:
+      - "RIP supports up to maximum-paths (default 4, up to 16)"
+      - "Use 'maximum-paths <number>' to increase path count"
+      - "All paths must have equal metric (same hop count)"
+      - "Check 'show ip route <prefix>' for number of RIP paths"
+      - "CEF per-destination vs per-packet load balancing"
+      - "Unequal cost not possible with RIP (no variance-like feature)"
+    applicability: "RIP networks with redundant equal-cost links"
+
+  rip_metric_loop:
+    name: "RIP Hop Count Exceeded / Routing Loop"
+    description: "Configure RIP with hop count reaching 16 (infinite metric) due to routing loop or network diameter exceeding limit"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "Routes showing metric 16 (unreachable) in RIP database"
+      - "Routing loop with count-to-infinity"
+      - "Some networks unreachable via RIP"
+      - "Hold-down preventing route advertisement"
+    troubleshooting_hints:
+      - "RIP max hop count = 15, 16 = unreachable (infinite)"
+      - "Network diameter > 15 hops not supported by RIP"
+      - "Hold-down timer prevents routing loops"
+      - "Poison reverse and triggered updates mitigate loops"
+      - "Use 'show ip rip database' for metric values"
+      - "Split horizon must be enabled to prevent loops"
+    applicability: "RIP networks near the hop count limit"
+
+  rip_route_filter:
+    name: "RIP Route Filter / Distribute-List Error"
+    description: "Configure RIP distribute-list filtering incorrectly, blocking legitimate routes or allowing unwanted routes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "Expected routes not received from RIP neighbor"
+      - "Unwanted routes accepted and installed"
+      - "Distribute-list ACL matching wrong prefixes"
+      - "Inbound filters blocking specific routes"
+    troubleshooting_hints:
+      - "Use 'distribute-list <acl> in' or 'distribute-list <acl> out'"
+      - "Check 'access-list' entries for correct prefix matching"
+      - "Alternative: 'distribute-list prefix <name> in/out' for prefix-list"
+      - "Implicit deny at end of ACL blocks all non-permitted routes"
+      - "Use 'show ip protocols' for active distribute-lists"
+      - "Check interface-specific distribute-lists"
+    applicability: "RIP deployments with route filtering"
+
+  rip_route_tag:
+    name: "RIP Route Tagging / Policy Routing Error"
+    description: "Configure RIP route tag incorrectly causing redistribution policy to filter or modify routes unexpectedly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "Route tags missing or incorrect on redistributed routes"
+      - "Route-map matching tag not matching intended routes"
+      - "Tag-based redistribution filtering rejecting legitimate routes"
+      - "Route tag propagation inconsistent"
+    troubleshooting_hints:
+      - "RIP route tag: 16-bit value describing route origin"
+      - "Set tag: 'set tag <value>' in route-map during redistribution"
+      - "Match tag: 'match tag <value>' in route-map"
+      - "Check 'show ip rip database <prefix>' for tag value"
+      - "RIP does not propagate tags to other RIP neighbors by default"
+      - "Route tag used to prevent redistributed route loops"
+    applicability: "RIP with redistribution policy and route tagging"
+
+  rip_bfd:
+    name: "RIP BFD Integration / Fast Failure Detection"
+    description: "Configure RIP with BFD for fast link failure detection but BFD not integrated with RIP"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - rip
+    symptoms:
+      - "RIP convergence still slow (30s update timer based)"
+      - "BFD session not integrated with RIP neighbor tracking"
+      - "Sub-second failure detection not reducing RIP convergence"
+      - "BFD down not triggering immediate RIP neighbor removal"
+    troubleshooting_hints:
+      - "RIP default convergence: 30s update + 180s timeout"
+      - "BFD integration: some platforms support BFD for RIP"
+      - "Platform support for RIP-BFD varies widely"
+      - "Use 'bfd all-interfaces' under router rip if supported"
+      - "RIP may need workarounds: PBR + IP tracking for faster convergence"
+      - "Consider replacing RIP with EIGRP or OSPF if fast convergence needed"
+    applicability: "RIP deployments needing faster convergence"

@@ -158,3 +158,88 @@ issues:
       - "Key string is case-sensitive"
       - "GLBP MD5 auth field: 'authentication md5 key-string <key>'"
     applicability: "GLBP with authentication"
+
+  glbp_object_track:
+    name: "GLBP Object Tracking / Interface Tracking Failure"
+    description: "Configure GLBP object tracking but weight decrement not triggered or track object wrong"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "GLBP weight not decrementing when tracked object fails"
+      - "AVF role not changing after upstream link failure"
+      - "Weight tracking not reflecting object state"
+      - "GLBP not failing over when expected"
+    troubleshooting_hints:
+      - "Use 'glbp <group> weighting track <obj-id> decrement <value>'"
+      - "Check 'show track <id>' for tracking object status"
+      - "Weight decrement must bring total weight below lower threshold"
+      - "Multiple tracked objects can compound weight reduction"
+      - "Use 'glbp <group> weighting maximum <max> lower <min>'"
+      - "Verify track object references the correct IP SLA or interface"
+    applicability: "GLBP with upstream link monitoring"
+
+  glbp_forwarder_mac:
+    name: "GLBP Virtual Forwarder MAC / VMAC Conflict"
+    description: "Configure GLBP virtual MAC addresses conflicting with real MACs on network"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - glbp
+    symptoms:
+      - "GLBP virtual MAC used by another device"
+      - "ARP table shows unexpected MAC for gateway IP"
+      - "Traffic forwarded to wrong destination"
+      - "GLBP AVF MAC conflict with existing host"
+    troubleshooting_hints:
+      - "GLBP VMAC range: 0007.b400.XXYY (XX=group, YY=AVF ID)"
+      - "Up to 4 AVFs per GLBP group (AVF 1-4)"
+      - "Check 'show glbp' for assigned virtual MACs"
+      - "MAC conflicts cause intermittent forwarding failures"
+      - "Ensure VMAC doesn't overlap with statically assigned MACs"
+      - "GLBP VMAC used as source for ARP responses"
+    applicability: "GLBP in networks with static MAC assignments"
+
+  glbp_ipv6:
+    name: "GLBP for IPv6 / IPv6 Gateway Redundancy"
+    description: "Configure GLBP for IPv6 (link-local address) incorrectly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+      - ipv6
+    symptoms:
+      - "IPv6 default gateway redundancy not working"
+      - "GLBP IPv6 not establishing adjacency"
+      - "IPv6 ND RA sent from non- GLBP MAC"
+      - "Dual-stack hosts losing IPv6 connectivity on failover"
+    troubleshooting_hints:
+      - "GLBP for IPv6: 'glbp <group> ipv6 <link-local-addr>'"
+      - "GLBPv6 supports AVG/AVF model like IPv4"
+      - "Check 'show glbp <group> ipv6' for IPv6 status"
+      - "IPv6 ND uses virtual MAC for seamless failover"
+      - "Both IPv4 and IPv6 GLBP can run simultaneously"
+      - "IPv6 GLBP not available on all platforms (check support)"
+    applicability: "Dual-stack IPv4/IPv6 GLBP deployments"
+
+  glbp_split_brain:
+    name: "GLBP Split-Brain / Multiple AVG Election"
+    description: "Configure GLBP group isolation causing multiple AVGs elected"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - glbp
+    symptoms:
+      - "Multiple routers claim AVG role in same GLBP group"
+      - "Different virtual MACs advertised by different AVGs"
+      - "Hosts see different MAC addresses for same VIP"
+      - "Traffic blackholed or forwarded to wrong gateway"
+    troubleshooting_hints:
+      - "Split-brain: link between GLBP routers lost, both think they are AVG"
+      - "Check 'show glbp' for AVG state on each router"
+      - "Hello protocol: verify Layer 2 connectivity between GLBP peers"
+      - "Authentication mismatch can cause split-brain"
+      - "Timers too aggressive can cause false peer down detection"
+      - "Ensure hello packets (224.0.0.102) not blocked by VLAN/ACL"
+    applicability: "GLBP deployments with link redundancy concerns"

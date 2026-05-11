@@ -167,3 +167,66 @@ issues:
       - "Track object must be referenced by a client to have effect"
       - "Verify track state and client action match expectations"
     applicability: "Static route failover, HSRP/VRRP interface tracking"
+
+  sla_icmp_jitter:
+    name: "IP SLA ICMP Jitter / Voice Quality Monitoring Issue"
+    description: "Configure IP SLA jitter probe but statistics not collected or inaccurate"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA jitter probe returns no data"
+      - "Voice quality metrics (MOS, jitter, latency) not available"
+      - "Jitter probe target not responding"
+      - "Probe showing excessive packet loss"
+    troubleshooting_hints:
+      - "ICMP jitter: 'ip sla <id> icmp-jitter <target> interval <ms>'"
+      - "Jitter measures inter-packet delay variance"
+      - "Check 'show ip sla statistics <id>' for jitter data"
+      - "Target must respond to ICMP and the specific probe"
+      - "MOS score: 4.0+ = good, <3.6 = poor voice quality"
+      - "UDP jitter more accurate than ICMP jitter for voice metrics"
+    applicability: "Voice quality monitoring with IP SLA"
+
+  sla_multi_hop:
+    name: "IP SLA Multi-Hop / Path Monitoring Issue"
+    description: "Configure IP SLA probe for path beyond directly connected neighbor"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA multiple-hop probe timing out"
+      - "Return path not reachable from probe target"
+      - "Intermediate routers dropping SLA probe"
+      - "Path monitoring not reflecting end-to-end availability"
+    troubleshooting_hints:
+      - "Multi-hop probe requires target to be reachable (routing)"
+      - "Ensure return route to source exists on the target"
+      - "Use 'ip sla <id> icmp-echo <target> source-interface <intf>'"
+      - "Check ACL not blocking ICMP on intermediate routers"
+      - "For TCP/UDP probes: firewall must allow the probe protocol"
+      - "Use traceroute to verify path before configuring multi-hop SLA"
+    applicability: "End-to-end path availability monitoring"
+
+  sla_dns_http:
+    name: "IP SLA HTTP/DNS Application Monitoring Issue"
+    description: "Configure IP SLA application-specific probe (HTTP, DNS, FTP) but application check fails"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "HTTP SLA probe failing despite web server reachable"
+      - "DNS resolution probe timing out"
+      - "Application response slow or non-responsive"
+      - "SLA application check not reflecting true service status"
+    troubleshooting_hints:
+      - "HTTP SLA: 'ip sla <id> http get <url>'"
+      - "DNS SLA: 'ip sla <id> dns <hostname> name-server <ip>'"
+      - "Target server must respond to the specific application request"
+      - "Check 'show ip sla statistics <id>' for app-specific responses"
+      - "Application SLA probes validate end-to-end service (not just ICMP)"
+      - "Use 'timeout <ms>' to set appropriate application response time"
+    applicability: "Application-level health monitoring with IP SLA"

@@ -167,3 +167,68 @@ issues:
       - "Use 'set as-path tag' for compatibility with other protocols"
       - "Verify route-map is applied in the correct direction (in/out)"
     applicability: "BGP AS path manipulation for traffic engineering"
+
+  vrf_rt_filter:
+    name: "VRF Route-Target Filter (RTF) Misconfiguration"
+    description: "Configure VRF route-target filter incorrectly causing VPN route import issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vrf
+      - mpls-vpn
+    symptoms:
+      - "VPN routes not imported into VRF despite matching RT"
+      - "RT filter blocking legitimate routes"
+      - "PE not importing routes from specific RT"
+      - "VRF routing table incomplete"
+    troubleshooting_hints:
+      - "RT filter: PE only accepts VPN routes whose RT matches a local VRF"
+      - "Use 'no bgp default route-target filter' to accept all VPN routes"
+      - "Check with 'show ip bgp vpnv4 all' for filtered routes"
+      - "RT filter reduces BGP table but may block needed routes"
+      - "Use 'show ip bgp vpnv4 all <prefix>' to check RT attributes"
+      - "Verify send-community extended is configured on BGP sessions"
+    applicability: "MPLS L3VPN PE routers"
+
+  vrf_backdoor_rt:
+    name: "VRF Backdoor Route / Route Import Conflict"
+    description: "Configure VRF with backdoor routes overlapping with VPN-learned prefixes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+    symptoms:
+      - "Backdoor static/IGP route not installed in VRF"
+      - "VPN route preferred over backdoor route"
+      - "CE-to-CE traffic not using backdoor path"
+      - "Suboptimal routing in multi-homed CE scenario"
+    troubleshooting_hints:
+      - "Backdoor route: local VRF route preferred over VPN learned"
+      - "Use 'ip route vrf <name> <prefix> <mask> <nh>' with lower AD"
+      - "VPN routes have AD of 200 (iBGP learned)"
+      - "Check 'show ip route vrf <name>' for route preference"
+      - "Use distance command under BGP for per-VRF AD adjustment"
+      - "Alternatively: use route-map to filter unwanted VPN routes"
+    applicability: "VRF with backdoor links"
+
+  community_list_filter:
+    name: "BGP Community List ACL / Filter Misconfiguration"
+    description: "Configure community-list with wrong regex or matching causing route filtering errors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - routing-policy
+    symptoms:
+      - "Community-based route filtering not working"
+      - "Community list matching wrong communities"
+      - "Route-map with community-list not matching expected routes"
+      - "Communities not present in BGP updates"
+    troubleshooting_hints:
+      - "Check community list: 'show ip community-list <name>'"
+      - "Format: 'ip community-list <name> permit <community>'"
+      - "Community format: <high-16bits>:<low-16bits> (e.g., 100:200)"
+      - "Use regex: 'ip community-list regex <name> permit <regex>'"
+      - "Extended community list for VPN Route-Target"
+      - "Match in route-map: 'match community <list-name>'"
+    applicability: "BGP community-based routing policies"

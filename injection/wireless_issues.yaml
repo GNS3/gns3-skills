@@ -149,6 +149,111 @@ issues:
       - "Shared secret must match between WLC and RADIUS"
     applicability: "Wireless 802.1X authentication"
 
+  wlc_redundancy:
+    name: "WLC Redundancy / SSO Failover Misconfiguration"
+    description: "Configure WLC high availability (SSO / N+1) incorrectly causing AP disconnection during failover"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - wireless
+    symptoms:
+      - "APs disconnected during WLC failover"
+      - "SSO not synchronizing between active/standby WLCs"
+      - "N+1 redundancy priority not determining AP-WLC assignment"
+      - "Client sessions lost on WLC switchover"
+    troubleshooting_hints:
+      - "SSO: active/standby WLC pair with stateful failover"
+      - "Check 'show redundancy' for SSO status"
+      - "N+1: APs configured with primary/secondary/tertiary WLC"
+      - "AP failover priority: 'ap primary-base <wlc>'"
+      - "Client sessions preserved only in SSO mode"
+      - "Mobility tunnel: UDP 16666 for state sync"
+    applicability: "Cisco WLC high availability deployments"
+
+  wlan_qos_rr:
+    name: "WLAN QoS / RRM Radio Resource Management Issue"
+    description: "Configure WLAN QoS or RRM (EDCA, WMM, DCA) incorrectly causing poor wireless performance"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - wireless
+    symptoms:
+      - "WMM not enabled causing QoS for voice/video not working"
+      - "EDCA parameters causing excessive delay"
+      - "DCA (Dynamic Channel Assignment) not optimizing channels"
+      - "RRM not adjusting power or channels to RF environment"
+    troubleshooting_hints:
+      - "WMM must be enabled for QoS on WLAN (Wi-Fi Multimedia)"
+      - "Check WMM: 'config wlan wmm <id> enable'"
+      - "EDCA: access categories (voice, video, best-effort, background)"
+      - "DCA: automatic channel selection based on interference"
+      - "RRM: 'config advanced 802.11b/a channel' for auto-tuning"
+      - "Check 'show advanced 802.11a channel' for DCA status"
+    applicability: "Wireless QoS and RF optimization"
+
+  wlan_band_select:
+    name: "WLAN Band Select / Client Band Steering Issue"
+    description: "Configure band select / band steering incorrectly preventing clients from connecting to 5GHz"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - wireless
+    symptoms:
+      - "Dual-band clients stuck on 2.4GHz when 5GHz available"
+      - "Band select not steering clients to 5GHz"
+      - "2.4GHz congestion despite 5GHz capacity available"
+      - "Client connectivity issues after band steering enabled"
+    troubleshooting_hints:
+      - "Band select: probe responses on 2.4GHz delayed to encourage 5GHz"
+      - "Configure: 'config wlan band-select <id> allow'"
+      - "Check 'show wlan <id>' for band-select status"
+      - "Client must support dual-band (2.4GHz + 5GHz)"
+      - "5GHz provides more channels and less interference"
+      - "Client RSSI threshold for 5GHz determines steering success"
+    applicability: "Dual-band wireless networks"
+
+  wlan_client_limit:
+    name: "WLAN Client Limit / Association Denial"
+    description: "Configure WLAN max client limit too low or AP client limit reached"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - wireless
+    symptoms:
+      - "Wireless clients cannot associate after reaching limit"
+      - "Max client limit on AP or WLAN exceeded"
+      - "Association request rejected"
+      - "New clients cannot connect despite signal strength"
+    troubleshooting_hints:
+      - "Check 'show ap <name> client' for current client count"
+      - "Per-AP client limit: 'config ap max-clients <id>'"
+      - "Per-WLAN client limit: 'config wlan max-clients <id>'"
+      - "Default: no limit or platform-dependent maximum"
+      - "High density: consider reducing per-AP client limit"
+      - "Check 'show client summary' for total associations"
+    applicability: "Wireless network capacity planning"
+
+  wlan_rf_channel:
+    name: "WLAN RF Channel / Power Level Misconfiguration"
+    description: "Configure wireless channel or transmit power incorrectly causing interference or coverage holes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - wireless
+    symptoms:
+      - "Adjacent APs on same channel causing co-channel interference"
+      - "Overlapping channels on same AP (2.4GHz: 1,6,11 violation)"
+      - "Transmit power too high (causing client-PAP asymmetry)"
+      - "Coverage holes due to low transmit power"
+    troubleshooting_hints:
+      - "2.4GHz: use non-overlapping channels 1, 6, 11"
+      - "5GHz: 24 non-overlapping channels available"
+      - "Check 'show ap <name> rf-channel' for assigned channel"
+      - "Tx power: higher dBm = more range, more interference"
+      - "RRM auto-power: 'config advanced 802.11a tx-power'"
+      - "Client SNR: minimum 20dB for reliable connectivity"
+    applicability: "Wireless RF planning and optimization"
+
   wlan_channel:
     name: "Wireless Radio Channel / Power Misconfiguration"
     description: "Configure AP radio channel that is DFS-restricted or power that causes interference"

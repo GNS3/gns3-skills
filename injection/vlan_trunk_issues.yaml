@@ -170,4 +170,113 @@ issues:
       - "VTP v1/v2 incompatibility prevents sync"
       - "VTP v3 supports extended VLANs and private VLANs"
       - "Use VTP transparent mode if VTP is not required"
-    applicability: "VTP-managed VLAN deployments"
+    applicability: "VLAN management and design"
+
+  vtp_pruning:
+    name: "VTP Pruning Blocking VLAN Propagation"
+    description: "Configure VTP pruning incorrectly blocking necessary VLANs from trunk links"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vtp
+      - vlan
+      - trunk
+    symptoms:
+      - "VTP-pruned VLANs not available on downstream switches"
+      - "VLAN exists on VTP server but not on some client switches"
+      - "Trunk not carrying expected VLANs"
+      - "VTP pruning list inadvertently excluding required VLANs"
+    troubleshooting_hints:
+      - "VTP pruning: only forwards broadcast/multicast to switches needing the VLAN"
+      - "Check pruning status: 'show vtp status' (Pruning: Enabled/Disabled)"
+      - "Use 'vtp pruning' to enable (VTP v2 or higher)"
+      - "Pruning-eligible list: 'switchport trunk pruning vlan <vlan-list>'"
+      - "VLAN removed from pruning-eligible list is always forwarded"
+      - "VTP pruning doesn't prevent configuration of VLAN on client"
+    applicability: "Large switched networks with VTP"
+
+  vlan_private:
+    name: "Private VLAN / Community/Isolated VLAN Misconfiguration"
+    description: "Configure private VLAN with wrong community/isolated/primary mapping causing isolation failures"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vlan
+    symptoms:
+      - "Private VLAN isolation not working between ports"
+      - "Community VLAN ports cannot communicate with each other"
+      - "Promiscuous port not forwarding properly"
+      - "Isolated port still reaching other isolated ports"
+    troubleshooting_hints:
+      - "Private VLAN: primary VLAN + secondary (community/isolated) VLAN"
+      - "Check 'show vlan private-vlan' for mapping"
+      - "Use 'private-vlan primary' and 'private-vlan community/isolated'"
+      - "SVI: 'private-vlan mapping <primary> <secondary>'"
+      - "Port mode: 'switchport mode private-vlan host/promiscuous'"
+      - "Host ports: 'switchport private-vlan host-association <primary> <secondary>'"
+    applicability: "Service provider or multi-tenant switched networks"
+
+  vlan_access_trunk:
+    name: "Access / Trunk Mode Mismatch Between Switches"
+    description: "Configure port as access on one side and trunk on the other causing link issues"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - vlan
+      - trunk
+    symptoms:
+      - "Link up but traffic not passing between switches"
+      - "One side trunk, other side access"
+      - "Frame tagged by one side stripped by the other"
+      - "Intermittent connectivity for specific VLANs"
+    troubleshooting_hints:
+      - "Access port expects untagged frames only"
+      - "Trunk port sends/receives tagged frames (except native VLAN)"
+      - "Check 'show interfaces switchport' for operational mode"
+      - "Both sides should agree on trunk or access mode"
+      - "Use 'switchport mode trunk' on both sides for trunk links"
+      - "Use 'switchport mode access' on both sides for access links"
+    applicability: "Switch-to-switch connectivity"
+
+  vlan_private_vlan_edge:
+    name: "Private VLAN Promiscuous / Trunk Port Issue"
+    description: "Configure private VLAN across trunk or with promiscuous trunk port incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vlan
+    symptoms:
+      - "Private VLAN traffic not traversing trunk link"
+      - "Promiscuous trunk not carrying PVLAN traffic"
+      - "Secondary VLAN traffic blocked on trunk"
+      - "Router-on-a-stick with PVLAN not routing"
+    troubleshooting_hints:
+      - "Promiscuous trunk: carries primary + secondary VLANs"
+      - "Check 'show vlan private-vlan type' for VLAN roles"
+      - "Trunk must allow both primary and secondary VLANs"
+      - "SVI on promiscuous port: 'private-vlan mapping'"
+      - "Router sub-interface for PVLAN uses promiscuous trunk"
+      - "PVLAN trunk filtering may block secondary VLANs by default"
+    applicability: "Private VLAN across switches or to firewalls/routers"
+
+  vlan_dtp_security:
+    name: "DTP / Trunk Security Misconfiguration"
+    description: "Configure DTP dynamic desirable/auto allowing unauthorized trunk establishment (DTP attack)"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dtp
+      - trunk
+    symptoms:
+      - "Unauthorized device negotiates trunk with switch port"
+      - "Access port unexpectedly moves to trunk mode"
+      - "DTP enabled on access ports unnecessarily"
+      - "VLAN hopping attack possible"
+    troubleshooting_hints:
+      - "DTP vulnerability: attacker can negotiate trunk"
+      - "Use 'switchport mode access' + 'switchport nonegotiate' on access ports"
+      - "'switchport nonegotiate' disables DTP frames"
+      - "Check DTP mode with 'show interfaces <intf> switchport'"
+      - "Static access mode prevents DTP negotiation"
+      - "Security best practice: disable DTP on all access ports"
+    applicability: "Access port security"

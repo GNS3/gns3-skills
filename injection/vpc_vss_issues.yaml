@@ -167,3 +167,89 @@ issues:
       - "Stack cable must form a ring topology"
       - "Stack members: up to 9 (3850) or 8 (3750/9300)"
     applicability: "Cisco Catalyst switch stacking (StackWise / FlexStack)"
+
+  vpc_peer_gateway:
+    name: "vPC Peer Gateway Misconfiguration"
+    description: "Configure vPC peer-gateway incorrectly causing suboptimal forwarding or ARP issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpc
+    symptoms:
+      - "Traffic to vPC peer gateway MAC forwarded across peer-link"
+      - "Suboptimal forwarding (traffic hairpins through peer-link)"
+      - "ARP requests for gateway not answered locally"
+      - "vPC peer-gateway feature not enabled"
+    troubleshooting_hints:
+      - "Peer-gateway: vPC peer responds to ARP for each other's gateway IP"
+      - "Enable: 'vpc peer-gateway' (NX-OS)"
+      - "Without peer-gateway: traffic to peer's MAC goes across peer-link"
+      - "Peer-gateway avoids peer-link hairpinning"
+      - "Check 'show vpc' for 'peer-gateway' status"
+      - "Enable both vPC peers for peer-gateway"
+    applicability: "vPC data center with active-active default gateway"
+
+  vpc_orphan_port_recovery:
+    name: "vPC Orphan Port Recovery / Critical Port Failure"
+    description: "Configure vPC orphan ports failing when connected peer switch fails"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vpc
+    symptoms:
+      - "Orphan port traffic drops when primary vPC peer fails"
+      - "Single-homed server loses connectivity during vPC peer failure"
+      - "Orphan port not recovering after peer recovers"
+      - "No failover mechanism for orphan ports"
+    troubleshooting_hints:
+      - "Orphan ports are single-homed to one vPC peer"
+      - "If that peer fails: orphan port loses all connectivity"
+      - "Monitor with 'show vpc orphan-port' for orphan list"
+      - "Mitigation: dual-home critical devices"
+      - "Or: use 'vpc orphan-port suspend' to disable on peer-link failure"
+      - "Use VLAN mismatch to avoid orphan port issues"
+    applicability: "vPC with single-homed critical devices"
+
+  vsl_dad:
+    name: "VSS Dual-Active Detection / Recovery Failure"
+    description: "Configure VSS dual-active detection but PAgP/existing DAD fails to detect split"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - vss
+      - stackwise
+    symptoms:
+      - "VSS split-brain not detected (both actives)"
+      - "Two active VSS switches causing network instability"
+      - "Duplicate IP and MAC addresses on both sides"
+      - "Enhanced PAgP DAD not detecting the split"
+    troubleshooting_hints:
+      - "Dual-active detection: PAgP (enhanced) or fast-hello"
+      - "PAgP DAD uses downstream switches to detect dual-active"
+      - "Fast-hello: dedicated link (management or physical)"
+      - "Check 'show switch virtual dual-active detection'"
+      - "When detected: non-VSL interfaces on secondary/standby are shut"
+      - "Recovery: auto when VSL re-established"
+    applicability: "Cisco Catalyst VSS deployments"
+
+  stack_member_provision:
+    name: "Stack Member Provisioning / Switch Type Mismatch"
+    description: "Configure stack provisioning with wrong switch type causing stack boot failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - stackwise
+      - stacking
+    symptoms:
+      - "Stack member not booting or joining the stack"
+      - "Stack provisioning type mismatch"
+      - "'switch provision' model number incorrect"
+      - "Stack member stuck in boot loop"
+    troubleshooting_hints:
+      - "Use 'switch <id> provision <model>' for stack provisioning"
+      - "Model number must match the physical switch (e.g., WS-C3750X-48)"
+      - "Mismatch: member won't join the stack"
+      - "Check stack status: 'show switch' for member state"
+      - "Verify model numbers match provisioning"
+      - "Remove provision: 'no switch <id> provision' then re-add"
+    applicability: "Cisco Catalyst stack configuration and replacement"

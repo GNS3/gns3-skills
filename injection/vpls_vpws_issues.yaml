@@ -171,3 +171,71 @@ issues:
       - "Check with 'show l2vpn xconnect detail' for interworking mode"
       - "Mis-match causes traffic to be dropped at the egress PE"
     applicability: "VPWS with mixed L2 encapsulations"
+
+  vpls_signaling:
+    name: "VPLS LDP / BGP Signaling Protocol Mismatch"
+    description: "Configure VPLS with LDP signaling on one side and BGP signaling on the other"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - vpls
+      - l2vpn
+      - mpls
+    symptoms:
+      - "VPLS pseudowire not establishing between PEs"
+      - "Signaling protocol mismatch between endpoints"
+      - "LDP signaled PW cannot connect to BGP signaled PW"
+      - "VPLS service broken across different signaling domains"
+    troubleshooting_hints:
+      - "VPLS signaling: LDP (RFC 4762) or BGP (RFC 4761)"
+      - "Both PEs must use the same signaling protocol for the VPLS"
+      - "Check 'show l2vpn vc' for signaling protocol used"
+      - "LDP VPLS uses VC type + VC ID for pseudowire"
+      - "BGP VPLS uses NLRI with VE ID + VE block"
+      - "Interworking requires gateway between signaling types"
+    applicability: "VPLS deployments with mixed signaling"
+
+  vpls_redundancy:
+    name: "VPLS Pseudowire Redundancy / Backup PW Failure"
+    description: "Configure VPLS backup pseudowire but failover from primary to backup not working"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vpls
+      - l2vpn
+    symptoms:
+      - "Backup pseudowire not taking over when primary fails"
+      - "VPLS traffic blackholed after primary PW goes down"
+      - "Standby PW not operational"
+      - "Redundancy group misconfiguration"
+    troubleshooting_hints:
+      - "VPLS redundancy: 'backup peer <ip> <vc-id>'"
+      - "Primary/backup pseudowire per VPLS instance"
+      - "Check 'show l2vpn vc' for backup status"
+      - "PW preference: 'preference <value>' for priority"
+      - "MAC flush on switchover: LDP MAC withdrawal"
+      - "Use 'revertive <seconds>' to delay reversion to primary"
+    applicability: "VPLS with redundant pseudowire protection"
+
+  vpls_qos:
+    name: "VPLS QoS / EXP Bit Preservation Issue"
+    description: "Configure VPLS but MPLS EXP (QoS) bits not preserved across pseudowire"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vpls
+      - qos
+      - mpls
+    symptoms:
+      - "QoS markings not preserved across VPLS pseudowire"
+      - "EXP bits set to 0 despite QoS configuration"
+      - "Customer QoS marking lost in VPLS network"
+      - "MPLS QoS mismatch between PE routers"
+    troubleshooting_hints:
+      - "VPLS transports L2 frames, EXP bits set by ingress PE"
+      - "Use 'set mpls experimental' in QoS policy on ingress PE"
+      - "EXP bits copied from inner frame CoS if configured"
+      - "Check 'show policy-map interface' for EXP marking"
+      - "Use 'exp <value>' in pseudowire class for default EXP"
+      - "EXP preservation: qos group or explicit configuration"
+    applicability: "VPLS with customer QoS requirements"

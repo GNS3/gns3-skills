@@ -234,3 +234,48 @@ issues:
       - "MAB: port security learns authenticated MAC"
       - "Check 'show authentication sessions <intf>' for auth state"
     applicability: "Switch ports combining port security with 802.1X"
+
+  port_security_vlan_mismatch:
+    name: "Port Security Voice VLAN / MAC Limit Per VLAN"
+    description: "Configure port security on voice VLAN without accounting for phone MAC"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "IP phone fails after PC connects"
+      - "Port security violation when both phone and PC are active"
+      - "Voice VLAN traffic blocked after data VLAN passes"
+      - "Phone and PC compete for MAC address limit"
+    troubleshooting_hints:
+      - "Voice VLAN ports need separate MAC counting per VLAN"
+      - "Set 'switchport port-security maximum <count>' high enough for both VLANs"
+      - "Phone: uses voice VLAN, PC: uses data VLAN"
+      - "Check 'show port-security interface <intf>' for per-VLAN counts"
+      - "Use 'switchport port-security maximum 2' or more"
+      - "Port with IP phone typically needs 2-3 allowed MACs"
+    applicability: "Access ports with IP phones and PC passthrough"
+
+  port_security_dhcp_snooping:
+    name: "Port Security + DHCP Snooping + IP Source Guard Interop"
+    description: "Configure port security with DHCP snooping and IPSG but features conflict"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - port-security
+      - dhcp-snooping
+      - switch
+    symptoms:
+      - "Port security violation after DHCP lease obtained"
+      - "IPSG blocks traffic despite valid DHCP binding"
+      - "Sticky learning does not capture IP from DHCP snooping"
+      - "Port security and IPSG interaction causing drops"
+    troubleshooting_hooks:
+      - "Order: DHCP snooping bind -> IPSG verify -> port security check MAC"
+      - "Check 'show ip verify source' for IPSG bindings"
+      - "Port security sticky MACs are Layer 2 only (no IP binding)"
+      - "IPSG uses DHCP snooping binding (Layer 3 check)"
+      - "Combined: 'ip verify source port-security' for MAC+IP verification"
+      - "Sticky learning may conflict if source MAC changes after auth"
+    applicability: "Converged access layer with multiple security features"

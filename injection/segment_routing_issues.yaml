@@ -241,3 +241,47 @@ issues:
       - "Backup path uses alternate interface or node"
       - "Verify 'fast-reroute per-prefix' is enabled for protection"
     applicability: "SR networks with link protection requirements"
+
+  sr_isl_exclusion:
+    name: "SR Inter-Layer / ODN / On-Demand Next-Hop Config Error"
+    description: "Configure SR on-demand next-hop (ODN) but auto-path not instantiated for BGP destinations"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - bgp
+    symptoms:
+      - "ODN not creating SR path for BGP destinations"
+      - "BGP route with color not triggering SR policy creation"
+      - "ODN policy not matching BGP prefix"
+      - "SR path to BGP next-hop not available"
+    troubleshooting_hints:
+      - "ODN: BGP color community triggers SR policy creation"
+      - "Use 'segment-routing traffic-eng on-demand color <value>'"
+      - "BGP: set color community on routes needing SR transport"
+      - "Check 'show segment-routing traffic-eng policy' for ODN policies"
+      - "ODN policy = color + endpoint (destination prefix)"
+      - "Requires BGP-LS or IGP topology for path computation"
+    applicability: "SR-TE on-demand policies for BGP destinations"
+
+  sr_liveness:
+    name: "SR Liveness / BFD for SR Policy Failure"
+    description: "Configure BFD for SR-TE policy but BFD session not established"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - sr-te
+    symptoms:
+      - "BFD for SR policy not established"
+      - "SR policy not protected by BFD fast detection"
+      - "BFD session flapping for SR path"
+      - "Slow failover despite BFD configuration"
+    troubleshooting_hints:
+      - "BFD for SR: 'bfd segment-routing traffic-eng'"
+      - "BFD session tracks SR policy liveness"
+      - "Check 'show bfd segment-routing traffic-eng' for session state"
+      - "BFD provides sub-50ms failure detection"
+      - "Alternative: SR policy candidate-path validation"
+      - "If BFD down: policy marked invalid, switch to backup candidate"
+    applicability: "SR-TE with fast failure detection requirements"

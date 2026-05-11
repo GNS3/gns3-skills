@@ -232,3 +232,68 @@ issues:
       - "Extended community list for VPN Route-Target"
       - "Match in route-map: 'match community <list-name>'"
     applicability: "BGP community-based routing policies"
+
+  route_tag_filter:
+    name: "Routing Policy Tag / Match Tag Mismatch"
+    description: "Configure route-tag in redistribution but match tag condition not matching correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - routing-policy
+      - route-map
+    symptoms:
+      - "Route-map match tag not matching redistributed routes"
+      - "Tag not preserved across protocol boundaries"
+      - "Route redistribution filtering based on tag not working"
+      - "Tag value unexpected or missing"
+    troubleshooting_hints:
+      - "Set tag: 'set tag <value>' in route-map"
+      - "Match tag: 'match tag <value-list>' in route-map for filtering"
+      - "Tags are preserved across redistribution boundaries"
+      - "Check tag of route: 'show ip route <prefix>' (look for 'tag' field)"
+      - "Tag is 32-bit value (0-4294967295)"
+      - "Common use: prevent redistribution loops by tagging specific routes"
+    applicability: "Route redistribution with tag-based filtering"
+
+  route_policy_seq:
+    name: "Routing Policy Sequence Number / Continue Statement Issue"
+    description: "Configure route-map with continue statement but sequence evaluation not as expected"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - routing-policy
+      - route-map
+    symptoms:
+      - "Route-map continue statement not jumping to next sequence"
+      - "Policy evaluation order not as designed"
+      - "Continue bypassing intended matches"
+      - "Multiple set operations from different sequences overlapping"
+    troubleshooting_hints:
+      - "Continue: route-map continues to next sequence after match"
+      - "Use 'continue <seq>' in route-map entry for multi-sequence processing"
+      - "Default: route-map stops after first match"
+      - "Continue allows multiple sequences to be evaluated"
+      - "Each matched sequence can set different attributes"
+      - "Check 'show route-map <name>' for per-sequence stats (matches/mismatches)"
+    applicability: "Advanced route-map configurations with continue statements"
+
+  vrf_forwarding_tlv:
+    name: "VRF Forwarding / VRF-Aware Service Misconfiguration"
+    description: "Configure VRF-aware feature (NAT, IPsec, ZBFW) but VRF not referenced correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+    symptoms:
+      - "NAT not translating traffic within VRF"
+      - "IPsec tunnel not establishing within VRF"
+      - "Zone-based firewall not applying to VRF traffic"
+      - "VRF-aware feature configuration missing VRF keyword"
+    troubleshooting_hints:
+      - "Many features need explicit VRF keyword: 'ip nat inside source list <acl> pool <pool> vrf <name>'"
+      - "Check 'show ip nat statistics vrf <name>' for VRF NAT stats"
+      - "IPsec: 'crypto keyring <name> vrf <vrf>'"
+      - "Check feature documentation: not all features are VRF-aware"
+      - "VRF-lite: features work within VRF but may not see global routing"
+      - "Testing: 'ping vrf <name> <ip>' to verify VRF reachability"
+    applicability: "Service-aware VRF deployments (NAT, VPN, firewall)"

@@ -230,3 +230,45 @@ issues:
       - "Application SLA probes validate end-to-end service (not just ICMP)"
       - "Use 'timeout <ms>' to set appropriate application response time"
     applicability: "Application-level health monitoring with IP SLA"
+
+  sla_logging:
+    name: "IP SLA Reaction / Logging Misconfiguration"
+    description: "Configure IP SLA reaction to trigger on threshold but logging not enabled"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA threshold violation but no log or tracking change"
+      - "Reaction configuration not triggering action"
+      - "SLA probe fails silently without notification"
+      - "NMS not alerted on SLA violation"
+    troubleshooting_hints:
+      - "Use 'reaction <id> action-type trigger-only' for threshold events"
+      - "Reaction types: trigger-only, logging, trap"
+      - "Enable logging: 'ip sla reaction <id> action-type logging'"
+      - "SNMP trap: 'snmp-server enable traps ip sla'"
+      - "Check 'show ip sla reaction <id>' for reaction status"
+      - "Reaction + threshold = half-open monitor for threshold crossing"
+    applicability: "IP SLA monitoring with event notification requirements"
+
+  sla_multi_probe:
+    name: "IP SLA Multiple Probe / Scheduler Conflict"
+    description: "Configure multiple IP SLA probes with overlapping schedules or same operation ID"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA probes interfering with each other"
+      - "Operation ID conflict"
+      - "Multiple probes causing high CPU"
+      - "Probe schedule overlap causing inaccurate results"
+    troubleshooting_hints:
+      - "Each IP SLA operation needs unique ID (1-2147483647)"
+      - "Check active probes: 'show ip sla configuration'"
+      - "Schedule: 'ip sla schedule <id> life {forever|<sec>}'"
+      - "Multiple probes fine if frequency staggered"
+      - "Probes to same target: only one ICMP echo needed"
+      - "Use different types for different metrics (jitter vs latency vs availability)"
+    applicability: "Multi-metric IP SLA monitoring deployments"

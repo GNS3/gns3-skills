@@ -234,3 +234,69 @@ issues:
       - "Route Reflector passes FlowSpec without validation"
       - "Check 'show bgp ipv6 flowspec <prefix>' for validation status"
     applicability: "Inter-AS IPv6 FlowSpec DDoS mitigation"
+
+  flowspec_rate_limit:
+    name: "BGP FlowSpec Rate-Limit / Traffic-Rate Action Failure"
+    description: "Configure FlowSpec traffic-rate action but rate limiting not applied correctly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec traffic-rate action not limiting traffic"
+      - "Rate limiter value not matching configured rate"
+      - "Traffic exceeds configured rate-limit"
+      - "Policer not installed on forwarding plane"
+    troubleshooting_hints:
+      - "traffic-rate:0:0 = drop all, traffic-rate:0:<rate> = limit in bytes/sec"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for action details"
+      - "Verify rate value is in bytes-per-second (not bits)"
+      - "Platform may not support all rate values in hardware"
+      - "Rate-limit granularity: some platforms round to nearest rate"
+      - "Use multiple rules for complex rate-limiting scenarios"
+    applicability: "BGP FlowSpec rate-limiting deployments"
+
+  flowspec_redirect_next_hop:
+    name: "BGP FlowSpec Redirect-to-Next-Hop / Redirect VRF Issue"
+    description: "Configure FlowSpec redirect action but traffic not redirected to next-hop or VRF"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "FlowSpec redirect action not taking effect"
+      - "Traffic not redirected to next-hop IP"
+      - "Redirect VRF target not found"
+      - "Redirected traffic blackholed at destination VRF"
+    troubleshooting_hints:
+      - "Redirect next-hop: 'redirect-next-hop:<ip>' extended community"
+      - "Redirect VRF: 'redirect-vrf:<vrf-id>' or 'redirect:RT=<rt>'"
+      - "For VRF redirect: RT must match target VRF's import RT"
+      - "Check redirect target is reachable from the router"
+      - "Redirect to next-hop: traffic forwarded to specified IP"
+      - "Verify target VRF has correct routing for redirected traffic"
+    applicability: "BGP FlowScan-based traffic redirect and scrubbing"
+
+  flowspec_service_provider:
+    name: "BGP FlowSpec Service Provider / Customer Inter-AS Issue"
+    description: "Configure BGP FlowSpec between customer and provider AS but validation policies block rules"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - flowspec
+    symptoms:
+      - "Customer FlowSpec rules not accepted by provider"
+      - "Inter-AS FlowSpec validation failure"
+      - "Provider rejects FlowSpec from customer due to policy"
+      - "DDoS mitigation through provider not working"
+    troubleshooting_hints:
+      - "Service provider typically accepts FlowSpec from customers"
+      - "Provider uses 'bgp flowspec validation disable' for customer peers"
+      - "Or accepts with specific policies: 'neighbor <ip> flowspec'"
+      - "Customer originates FlowSpec rules for DDoS targets"
+      - "Provider propagates rules to edge routers for enforcement"
+      - "Check 'show bgp ipv4 flowspec <prefix>' for validation status"
+    applicability: "Inter-AS BGP FlowSpec DDoS mitigation"

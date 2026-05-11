@@ -2,6 +2,36 @@
 
 Thank you for contributing! This document covers the conventions and workflow for adding new fault injection scenarios.
 
+## Format Quick Reference
+
+There are two YAML formats. Which one to use depends on the **directory**:
+
+| If you put the file in... | It must follow... |
+|---------------------------|-------------------|
+| `injection/` | [Injection Format](#injection-required-fields) → `issues:` based |
+| `device/` | [Device Format](#device-fields) → `config_commands:` / `display_commands:` based |
+
+```yaml
+# injection/ospf_issues.yaml                          # device/vpcs.yaml
+name: "OSPF Issues Injection"                        name: "VPCS Virtual PC"
+category: "injection"                                device_type: "gns3_vpcs_telnet"
+protocols:                                            category: "device"
+  - ospf
+                                                      config_commands:
+issues:                                                  ip_config:
+  ospf_area_mismatch:                                       syntax: "ip <addr>/<mask> <gateway>"
+    name: "OSPF Area Mismatch"                              example: "ip 10.0.0.1/24 10.0.0.254"
+    description: "..."
+    severity: "high"                                   display_commands:
+    difficulty: "intermediate"                             ping:
+    symptoms:                                                 syntax: "ping <destination>"
+      - "..."                                                  description: "..."
+    troubleshooting_hints:
+      - "..."
+```
+
+The loader distinguishes them by directory — no `type` field is needed.
+
 ## Table of Contents
 
 - [Where to Add Files](#where-to-add-files)

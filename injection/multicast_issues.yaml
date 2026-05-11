@@ -410,3 +410,186 @@ issues:
       - "Organization scope: 239.192.0.0/14 (private)"
       - "Check 'show ip igmp boundary' for active boundaries"
     applicability: "Multicast networks with organizational scoping"
+
+  # PIM-DM (Dense Mode) Issues
+
+  pim_dm_flood:
+    name: "PIM-DM Initial Flood / Prune Overhead Issue"
+    description: "Configure PIM Dense Mode where initial flood-and-prune causes unnecessary traffic on all links"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "PIM-DM floods multicast to all PIM neighbors initially"
+      - "Prune messages sent but traffic already consumed bandwidth"
+      - "Flood-and-prune inefficient for sparse receivers"
+      - "Unnecessary multicast traffic on links with no receivers"
+    troubleshooting_hooks:
+      - "PIM-DM: assumes all interfaces have receivers (floods until pruned)"
+      - "Prune: receiver sends prune upstream to stop unwanted traffic"
+      - "State-Refresh: periodic refresh of prune state"
+      - "Use 'ip pim dense-mode' on interfaces"
+      - "Compare with PIM-SM: SM sends only where RP signals receivers"
+      - "PIM-DM suitable when most interfaces have receivers"
+    applicability: "PIM-DenseMode deployments"
+
+  pim_dm_graft:
+    name: "PIM-DM Graft / Source Activation After Prune Issue"
+    description: "Configure PIM-DM graft to re-activate pruned source but graft-ack not received"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "New receiver cannot get multicast traffic after prune"
+      - "Graft message sent but no response"
+      - "Graft-ack not received from upstream neighbor"
+      - "Pruned branch stays pruned despite new receivers"
+    troubleshooting_hooks:
+      - "Graft: sent by downstream to upstream to undo prune"
+      - "Upstream responds with Graft-Ack immediately"
+      - "If Graft-Ack not received: downstream re-sends graft"
+      - "Check 'show ip mroute <group>' for graft state"
+      - "Graft overrides previous prune (neighbor should accept)"
+      - "Missing Graft-Ack: upstream may have stale prune state"
+    applicability: "PIM-DM with dynamic receiver changes"
+
+  pim_dm_state_refresh:
+    name: "PIM-DM State-Refresh / Originator TLV Issue"
+    description: "Configure PIM-DM state-refresh but periodic refresh not reaching all routers"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "PIM-DM prune state timed out before refresh"
+      - "State-Refresh messages not propagated downstream"
+      - "Flood-prune cycle repeats periodically"
+      - "Unnecessary re-flood on stable pruned branches"
+    troubleshooting_hooks:
+      - "State-Refresh: periodic refresh of prune state from source DR"
+      - "Default refresh interval: 60 seconds"
+      - "TTL in state-refresh decrements (may not reach all branches)"
+      - "Check 'show ip pim interface' for state-refresh capability"
+      - "Without state-refresh: downstream must re-prune after timer expires"
+      - "State-refresh TTL too low: far away branches time out"
+    applicability: "PIM-DM with periodic state refresh"
+
+  # PIM-SM Extended Issues
+
+  pim_rp_redundancy:
+    name: "PIM Anycast-RP / RP Redundancy Failure"
+    description: "Configure PIM Anycast-RP but RP set not synchronized between RP routers"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "PIM register from source DR goes to wrong RP"
+      - "Anycast-RP using same IP but sources registered to only one RP"
+      - "MSDP SA not shared between RPs"
+      - "RP redundancy not working (standby RP has no source info)"
+    troubleshooting_hooks:
+      - "Anycast-RP: multiple RPs share same IP address (loopback)"
+      - "Sources register to nearest RP (IGP metric)"
+      - "RPs exchange source info via MSDP (SA messages)"
+      - "Check 'show ip pim rp mapping' for anycast-RP group"
+      - "MSDP peering between all anycast-RP routers required"
+      - "Without MSDP SA exchange: each RP only knows local sources"
+    applicability: "PIM-SM with redundant RPs"
+
+  pim_embedded_rp:
+    name: "PIM Embedded RP / IPv6 Multicast RP Discovery Issue"
+    description: "Configure PIM with embedded RP (RFC 3956) but group-to-RP mapping fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - ipv6
+      - multicast
+    symptoms:
+      - "IPv6 multicast groups using embedded RP not working"
+      - "Embedded RP address extraction failed"
+      - "Group prefix does not encode valid RP address"
+      - "PIM-SM for IPv6 cannot discover RP"
+    troubleshooting_hooks:
+      - "Embedded RP (RFC 3956): RP address encoded in IPv6 multicast group address"
+      - "Group format: ff3x:0<plen>:<rp-lower-80bits>:<group-id>"
+      - "Router extracts RP address from the group address bits"
+      - "No RP configuration needed: RP derived from group itself"
+      - "Check 'show ipv6 pim rp mapping' for embedded RP entries"
+      - "Only works within the scope defined by the group prefix"
+    applicability: "IPv6 PIM-SM with embedded RP"
+
+  pim_sparse_dense:
+    name: "PIM Sparse-Dense Mode / Hybrid Operation Issue"
+    description: "Configure PIM sparse-dense mode on an interface but group behavior unexpected"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Some groups treated as dense when sparse intended"
+      - "RP unreachable groups defaulting to dense mode"
+      - "Sparse-dense mode causing inconsistent forwarding"
+      - "Groups with RP fall back to dense operation unexpectedly"
+    troubleshooting_hooks:
+      - "Sparse-dense: groups with known RP = sparse; groups without RP = dense"
+      - "If RP fails for a group: sparse-dense interface treats it as dense"
+      - "This auto-fallback can mask RP failures"
+      - "Explicit 'ip pim sparse-mode' prevents fallback to dense"
+      - "Check 'show ip pim interface' for operational mode"
+      - "Use strict sparse-mode when fallback to dense is undesirable"
+    applicability: "PIM sparse-dense hybrid mode deployments"
+
+  # Extended Multicast Issues
+
+  pim_bidir:
+    name: "PIM Bidir (Bidirectional) / Designated Forwarder Election Issue"
+    description: "Configure PIM Bidirectional mode but DF election fails for RP-group"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pim
+      - multicast
+    symptoms:
+      - "Bidir-PIM not forwarding traffic towards RP"
+      - "DF election stalled for specific interfaces"
+      - "Multiple forwarders elected causing duplicate traffic"
+      - "Bidir-PIM group traffic not reaching all receivers"
+    troubleshooting_hooks:
+      - "Bidir-PIM: shared tree only (no SPT switchover)"
+      - "DF (Designated Forwarder) per interface towards RP"
+      - "Highest IP wins DF election per interface"
+      - "Check 'show ip pim interface' for DF role"
+      - "If no DF elected: traffic not forwarded towards RP"
+      - "Bidir-PIM suitable for many-to-many multicast applications"
+    applicability: "Bidir-PIM deployments"
+
+  multicast_vrf:
+    name: "Multicast VRF / MVPN VRF Multicast Routing Issue"
+    description: "Configure multicast routing within a VRF but RPF or forwarding fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - multicast
+      - mpls-vpn
+    symptoms:
+      - "Multicast traffic not forwarded within VRF"
+      - "VRF RPF check failing for multicast source"
+      - "PIM neighbors not established in VRF context"
+      - "Multicast state not created in VRF"
+    troubleshooting_hooks:
+      - "Multicast in VRF: 'ip multicast-routing vrf <name>'"
+      - "PIM in VRF: 'ip pim rp-address <ip>' under VRF context"
+      - "RPF check uses VRF routing table (not global)"
+      - "Check 'show ip mroute vrf <name>' for VRF mroute state"
+      - "VRF needs unique RP if global RP not reachable in VRF"
+      - "VRF RPF failure: route to source missing in VRF routing table"
+    applicability: "Multicast in MPLS VPN environments"

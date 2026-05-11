@@ -139,3 +139,109 @@ issues:
       - "Disable TLV filtering: 'no lldp tlv-select'"
       - "Check 'show lldp neighbors detail' for received TLVs"
     applicability: "Multi-vendor networks, VoIP, PoE deployments"
+
+  udld_mismatch:
+    name: "UDLD Mode/Feature Mismatch Between Peers"
+    description: "Configure UDLD on one side but not the other causing err-disable"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - udld
+    symptoms:
+      - "UDLD enabled port err-disabled when peer does not support UDLD"
+      - "One side sends UDLD probes but peer does not respond"
+      - "Link up but UDLD discovers no neighbor"
+      - "Port flaps after UDLD neighbor timeout"
+    troubleshooting_hints:
+      - "UDLD does NOT require peer to support UDLD"
+      - "If peer no UDLD: port stays up, UDLD logs 'unknown' neighbor"
+      - "Aggressive mode + no UDLD peer = err-disable"
+      - "Check 'show udld <intf>' for neighbor UDLD support"
+      - "Normal mode OK without peer UDLD"
+      - "Aggressive mode REQUIRES peer UDLD to avoid err-disable"
+    applicability: "Links where only one side supports UDLD"
+
+  udld_reset:
+    name: "UDLD Port / Global Reset After Err-Disable"
+    description: "Configure UDLD err-disabled port but recovery method not working"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - udld
+    symptoms:
+      - "Port remains err-disabled after UDLD aggressive detection"
+      - "udld reset command not clearing err-disable state"
+      - "Port not recovering after UDLD condition cleared"
+      - "Manual recovery required for UDLD-errdisabled ports"
+    troubleshooting_hints:
+      - "UDLD aggressive err-disable: 'udld reset' recovers ALL ports"
+      - "Or manual: 'shutdown' then 'no shutdown' on the port"
+      - "Auto-recovery: 'errdisable recovery cause udld'"
+      - "Recovery timer: 'errdisable recovery interval <seconds>'"
+      - "Check 'show errdisable recovery' for UDLD recovery status"
+      - "Do NOT use 'udld reset' if multiple unrelated UDLD events"
+    applicability: "UDLD aggressive mode deployments"
+
+  cdp_voip:
+    name: "CDP VoIP / Power Negotiation Failure"
+    description: "Configure CDP misconfig preventing IP phone power negotiation or voice VLAN assignment"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - cdp
+    symptoms:
+      - "IP phone not receiving power via PoE"
+      - "Phone unable to negotiate higher PoE power class"
+      - "Voice VLAN not assigned via CDP"
+      - "Phone powers but no traffic on voice VLAN"
+    troubleshooting_hints:
+      - "Cisco IP phones use CDP for PoE power negotiation"
+      - "CDP advertises available power and request power"
+      - "Check 'show cdp interface <intf>' for CDP status"
+      - "Phone needs CDP for: voice VLAN, CoS trust, inline power"
+      - "Power negotiation: CDP carries power requirements"
+      - "If CDP disabled: phone gets basic power only, no voice VLAN"
+    applicability: "Cisco IP phone deployments, PoE switch ports"
+
+  cdp_lldp_interop:
+    name: "CDP/LLDP Interworking / VoIP Dual Discovery Issue"
+    description: "Configure CDP and LLDP simultaneously with conflicting device discovery information"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - cdp
+      - lldp
+    symptoms:
+      - "IP phone receiving conflicting config from CDP and LLDP-MED"
+      - "Voice VLAN assignment conflict between CDP and LLDP"
+      - "Power negotiation mismatch between CDP and LLDP"
+      - "Multi-vendor phone not receiving expected config"
+    troubleshooting_hints:
+      - "Most IP phones support both CDP and LLDP-MED"
+      - "CDP preferred by Cisco phones, LLDP-MED by multi-vendor"
+      - "Both can run simultaneously: 'lldp run' + 'cdp run'"
+      - "Check LLDP-MED: 'show lldp neighbors detail' for MED info"
+      - "Phone typically uses CDP if both received"
+      - "For multi-vendor phones: disable CDP on phone port, use LLDP only"
+    applicability: "Multi-vendor VoIP environments"
+
+  lldp_med:
+    name: "LLDP-MED / Network Policy TLV Misconfiguration"
+    description: "Configure LLDP-MED network policy TLVs incorrectly causing VoIP service assignment failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - lldp
+    symptoms:
+      - "LLDP-MED voice VLAN not advertised correctly"
+      - "Phone not receiving VLAN assignment via LLDP-MED"
+      - "LLDP-MED network policy TLV missing"
+      - "Multi-vendor phone cannot determine voice VLAN"
+    troubleshooting_hints:
+      - "LLDP-MED TLV: network policy carries voice VLAN info"
+      - "Configure 'switchport voice vlan <vlan>' triggers LLDP-MED"
+      - "Check 'show lldp neighbors detail' for MED TLVs"
+      - "LLDP-MED capabilities: LLDP-MED devices, locations, PoE"
+      - "LLDP-MED class: endpoint class I/II/III"
+      - "Without LLDP-MED: phone must use CDP or manual VLAN config"
+    applicability: "Multi-vendor VoIP with LLDP-MED"

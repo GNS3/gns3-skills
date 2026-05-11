@@ -144,3 +144,114 @@ issues:
       - "Deny entries skip that route-map instance"
       - "Use 'sequence <number>' to control evaluation order"
     applicability: "All route-map based PBR configurations"
+
+  pbr_default_route:
+    name: "PBR Default Route / No Match Fallback"
+    description: "Configure PBR where no route-map match occurs and traffic falls to default routing"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - pbr
+      - route-map
+    symptoms:
+      - "PBR not matching expected traffic (hit count zero)"
+      - "Traffic uses regular routing table despite PBR configured"
+      - "Missing 'match ip address' causing no traffic classification"
+      - "Empty ACL in route-map permit entry"
+    troubleshooting_hints:
+      - "Check 'show route-map <name>' for match/not match counters"
+      - "Route-map permit without match = match ALL"
+      - "Route-map deny without match = skip this sequence for ALL"
+      - "If no match in any sequence: traffic follows normal routing"
+      - "Use 'match ip address <acl>' in route-map for specific traffic"
+      - "Add deny ACE at end of ACL for logging unmatched traffic"
+    applicability: "PBR with selective traffic matching"
+
+  pbr_ipv6:
+    name: "PBR for IPv6 (IPv6 PBR) Misconfiguration"
+    description: "Configure PBR for IPv6 traffic incorrectly using IPv4-based match statements"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - pbr
+      - ipv6
+      - route-map
+    symptoms:
+      - "IPv6 traffic not affected by PBR"
+      - "IPv6 ACL not matching IPv6 traffic"
+      - "Set next-hop for IPv6 using IPv4 address"
+      - "PBR only working for IPv4 traffic"
+    troubleshooting_hints:
+      - "Use 'ipv6 policy route-map <name>' for IPv6 PBR"
+      - "IPv6 PBR uses 'match ipv6 address <acl>'"
+      - "IPv6 ACL: 'ipv6 access-list <name>'"
+      - "Set actions: 'set ipv6 next-hop <ipv6>'"
+      - "Show IPv6 PBR: 'show ipv6 policy'"
+      - "IPv6 PBR works the same as IPv4 PBR, just with IPv6 addresses"
+    applicability: "IPv6 PBR deployments"
+
+  pbr_mpls:
+    name: "PBR for MPLS / PBR with MPLS Labels"
+    description: "Configure PBR that conflicts with MPLS forwarding or VPN routing"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - pbr
+      - mpls
+    symptoms:
+      - "PBR not working for MPLS encapsulated traffic"
+      - "PBR next-hop not reachable in MPLS VPN context"
+      - "PBR overriding MPLS label switching incorrectly"
+      - "Traffic policy-routed before MPLS label imposition"
+    troubleshooting_hints:
+      - "PBR processes before MPLS label push (Cisco order of ops)"
+      - "PBR can override VPN next-hop in MPLS L3VPN"
+      - "For MPLS VPN: PBR in VRF context"
+      - "Check 'show ip policy vrf <vrf>' for VRF PBR"
+      - "CE-facing PBR in VRF may alter routing behavior"
+      - "PBR with MPLS may cause unexpected label behavior"
+    applicability: "PBR in MPLS VPN environments"
+
+  pbr_redistribution:
+    name: "PBR Route-Map for Redistribution Filtering Error"
+    description: "Configure route-map used for both PBR and redistribution with unintended effects"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pbr
+      - route-map
+    symptoms:
+      - "Route-map used for redistribution affecting PBR"
+      - "Same route-map name used for different purposes"
+      - "Modifying route-map for one use breaks the other"
+      - "set commands in route-map applied to redistribution incorrectly"
+    troubleshooting_hints:
+      - "Route-maps used in PBR and redistribution are separate instances"
+      - "But changing the route-map affects ALL uses"
+      - "Use separate route-map names for PBR vs redistribution"
+      - "PBR uses set commands: set ip next-hop, set interface"
+      - "Redistribution uses: set metric, set tag, set community"
+      - "Check 'show route-map <name>' for all references"
+    applicability: "Complex route-map usage with PBR and redistribution"
+
+  pbr_set_dscp:
+    name: "PBR Set DSCP / QoS Marking via Route-Map"
+    description: "Configure PBR with set dscp but QoS marking not applied to policy-routed traffic"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - pbr
+      - qos
+    symptoms:
+      - "DSCP marking not applied to policy-routed traffic"
+      - "set dscp in PBR route-map not taking effect"
+      - "Traffic matches PBR but markings unchanged"
+      - "QoS policy not seeing expected DSCP from PBR"
+    troubleshooting_hints:
+      - "Use 'set ip dscp <value>' in PBR route-map"
+      - "PBR marking occurs before QoS policing/queuing"
+      - "Check 'show route-map <name>' for set actions"
+      - "PBR set dscp can mark traffic before routing"
+      - "Verify DSCP marking reflects in 'show policy-map interface'"
+      - "PBR marking can replace trust-based marking"
+    applicability: "PBR with QoS marking for policy-routed traffic"

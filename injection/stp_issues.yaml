@@ -125,3 +125,155 @@ issues:
       - "Use 'spanning-tree guard loop' on non-designated ports"
       - "Loop guard and UplinkFast are mutually exclusive"
     applicability: "Switched networks, especially with fiber links"
+
+  stp_tcn_flood:
+    name: "STP TCN (Topology Change Notification) Flood"
+    description: "Configure frequent STP topology changes causing TCN propagation and MAC table flushing across the network"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "MAC address tables being flushed frequently"
+      - "High CPU due to STP recalculation"
+      - "Network-wide MAC flooding after changes"
+      - "TCN storms disrupting network operations"
+    troubleshooting_hints:
+      - "Check 'show spanning-tree detail' for TC count"
+      - "TCN flushes learned MAC addresses"
+      - "Identify source of TCN: 'show spanning-tree vlan <vlan> detail'"
+      - "Use portfast on access ports to prevent TCNs from host changes"
+      - "'spanning-tree uplinkfast' reduces convergence impact"
+      - "Use 'spanning-tree bpduguard portfast' to stop unauthorized switch additions"
+    applicability: "Switched networks with frequent port state changes"
+
+  stp_mst_region:
+    name: "MSTP Region / Instance Mapping Misconfiguration"
+    description: "Configure MST region name, revision or VLAN-to-instance mapping inconsistently across switches"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - mstp
+    symptoms:
+      - "Switches not joining MST region as expected"
+      - "MST region boundary issues"
+      - "CIST (Common Internal Spanning Tree) broken"
+      - "VLAN-to-instance mapping mismatch between switches"
+    troubleshooting_hints:
+      - "Check MST config: 'show spanning-tree mst configuration'"
+      - "Region name, revision number, and VLAN map must match across all switches"
+      - "Use 'spanning-tree mst configuration' then 'instance <id> vlan <vlan-list>'"
+      - "'region <name>' and 'revision <num>' must be identical across region"
+      - "Mismatch = region boundary (CIST runs instead of MST)"
+      - "Maximum 16 MST instances (0-15), instance 0 is CIST"
+    applicability: "MSTP deployments in data center and campus networks"
+
+  stp_bpdu_filter:
+    name: "STP BPDU Filter / BPDU Ignore on Access Ports"
+    description: "Configure BPDU filter on access port ignoring incoming BPDUs, preventing loop detection"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "Port not processing received BPDUs"
+      - "STP loop formed despite BPDU sent into the network"
+      - "Access port with BPDU filter ignores all BPDUs"
+      - "BPDU filter bypassing STP protection mechanisms"
+    troubleshooting_hints:
+      - "BPDU filter prevents sending AND receiving BPDUs on port"
+      - "'spanning-tree bpdufilter enable' on interface"
+      - "BPDU filter + Portfast = immediate forwarding, no BPDU processing"
+      - "Danger: if a loop-forming cable connects two filtered ports, loop occurs"
+      - "Use BPDU guard instead of BPDU filter for better protection"
+      - "BPDU guard err-disables the port; BPDU filter allows the loop"
+    applicability: "Access ports where BPDU filter is used (not recommended)"
+
+  stp_root_guard:
+    name: "STP Root Guard Blocking Legitimate BPDU"
+    description: "Configure root guard on wrong ports preventing optimal root bridge placement"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+      - mstp
+    symptoms:
+      - "Designated port transitions to root-inconsistent state"
+      - "Port blocked despite being intended forwarding port"
+      - "Root guard triggering incorrectly on superior BPDUs"
+      - "Network segmentation due to root guard"
+    troubleshooting_hints:
+      - "Root guard on port blocks it if superior BPDU received"
+      - "Apply root guard on ports that should never become root port"
+      - "Use 'spanning-tree guard root' on root-facing ports"
+      - "Port in root-inconsistent recovers when BPDU stops"
+      - "Don't apply on ports expected to receive superior BPDUs"
+      - "Root guard is per-port, not per-VLAN"
+    applicability: "Switched networks where root bridge location is fixed"
+
+  stp_uplinkfast:
+    name: "STP UplinkFast / BackboneFast Misconfiguration"
+    description: "Configure STP acceleration features (UplinkFast, BackboneFast) incorrectly causing convergence issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+    symptoms:
+      - "UplinkFast not accelerating failover on uplink loss"
+      - "BackboneFast not expediting LSA expiry for indirect failures"
+      - "UplinkFast / BackboneFast not compatible with other features"
+      - "UplinkFast and loop guard mutually exclusive"
+    troubleshooting_hints:
+      - "UplinkFast: instant failover on root port loss, replaces 30s STP delay"
+      - "Use 'spanning-tree uplinkfast' globally"
+      - "Increases path cost by 3000 on all ports"
+      - "BackboneFast: reduces convergence after indirect link failure"
+      - "BackboneFast expires max-age quickly for inferior BPDUs"
+      - "Modern RSTP/MSTP replaces these legacy acceleration features"
+    applicability: "Legacy STP networks requiring faster convergence"
+
+  stp_vlan_mismatch:
+    name: "STP VLAN Mismatch / PVST+ Simulation Inconsistency"
+    description: "Configure PVST+ with inconsistent VLANs across trunk links causing STP per-VLAN issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+    symptoms:
+      - "PVST+ simulation inconsistency detected on trunk"
+      - "Trunk port moved to root-inconsistent state"
+      - "Some VLANs blocked while others forwarding"
+      - "VLAN pruning or allowed list mismatch"
+    troubleshooting_hints:
+      - "PVST+ simulation mismatch: Cisco PVST+ vs MST interoperability"
+      - "Check 'show spanning-tree <vlan>' per-VLAN root status"
+      - "Ensure allowed VLAN list matches on both trunk ends"
+      - "'switchport trunk allowed vlan' must match across trunk"
+      - "Native VLAN mismatch causes PVST+ simulation issues"
+      - "Use 'spanning-tree vlan <vlan> root primary/secondary' for selection"
+    applicability: "PVST+ and hybrid PVST+/MST deployments"
+
+  stp_guard_loop:
+    name: "STP Guard Loop / Unidirectional Link"
+    description: "Configure unidirectional link (fiber TX/RX issue) causing STP loop despite loop guard"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "STP loop despite all protection mechanisms"
+      - "Unidirectional link (fiber cut one direction)"
+      - "Port receives BPDUs but cannot send"
+      - "Loop guard not detecting the failure"
+    troubleshooting_hints:
+      - "Unidirectional link: BPDU sent but not received = port becomes designated"
+      - "Loop guard prevents designated transition if BPDUs stop"
+      - "UDLD (Unidirectional Link Detection) works at Layer 1/2"
+      - "Use 'udld enable' and 'udld port aggressive' for fiber links"
+      - "UDLD + loop guard together for complete protection"
+      - "Fiber links: one strand broken = perfect unidirectional failure"
+    applicability: "Fiber-based switched networks, especially single-strand failures"

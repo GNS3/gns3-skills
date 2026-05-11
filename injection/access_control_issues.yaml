@@ -121,3 +121,158 @@ issues:
       - "Review policy match statistics"
       - "Default inter-zone policy is deny (deny-all)"
     applicability: "Zone-based firewall configurations"
+
+  acl_seq_order:
+    name: "ACL Sequence Number / Rule Order Misconfiguration"
+    description: "Configure ACL entries in wrong order causing more specific rules to be bypassed by broader rules"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - acl
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Traffic matching wrong rule in ACL"
+      - "Specific permit/deny entry never matched (hit count zero)"
+      - "Broader rule before specific rule blocking intended traffic"
+      - "ACL first-match-wins behavior causing confusion"
+    troubleshooting_hints:
+      - "ACLs process sequentially: first match = action taken"
+      - "Place more specific rules before general rules"
+      - "Check hit counts: 'show access-lists <name>'"
+      - "Use sequence numbers to insert rules at specific positions"
+      - "No-match traffic hits implicit deny at end"
+      - "Re-ordering ACL may require removing and re-applying"
+    applicability: "All ACL implementations (standard, extended, named)"
+
+  acl_extended_misconfig:
+    name: "Extended ACL Protocol / Port Matching Error"
+    description: "Configure extended ACL with wrong protocol (TCP/UDP) or source/destination port causing incorrect filtering"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - tcp
+      - udp
+      - acl
+    symptoms:
+      - "Extended ACL allowing or blocking wrong type of traffic"
+      - "TCP traffic permitted but UDP blocked (or vice versa)"
+      - "Port numbers reversed (source vs destination)"
+      - "ACL 'eq' vs 'gt' vs 'lt' range comparison wrong"
+    troubleshooting_hints:
+      - "Check ACL direction: extended ACLs can distinguish TCP from UDP"
+      - "Verify source and destination port placement (TCP flags matter)"
+      - "Use 'established' keyword for TCP return traffic"
+      - "'eq =80' matches port 80; 'gt 1024' matches ports > 1024"
+      - "'range <start> <end>' for port ranges"
+      - "Check 'show access-lists <name>' for matching entries"
+    applicability: "Extended ACLs for traffic filtering"
+
+  acl_time_based:
+    name: "Time-Based ACL / Time Range Configuration Error"
+    description: "Configure time-based ACL with incorrect time range causing rules to be active when they shouldn't"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - acl
+    symptoms:
+      - "Time-based ACL active outside intended hours"
+      - "ACL not enabled during expected time window"
+      - "Time range not matching configured schedule"
+      - "Clock/calendar not synchronized for time-based rules"
+    troubleshooting_hints:
+      - "Use 'time-range <name>' to define time windows"
+      - "'periodic' for recurring schedule (weekdays, weekend)"
+      - "'absolute' for one-time window (start/end date+time)"
+      - "Apply ACL entry: 'permit/deny <proto> <src> <dst> time-range <name>'"
+      - "Ensure router clock is synchronized via NTP"
+      - "Check 'show time-range <name>' for active status"
+    applicability: "ACLs with time-based access restrictions"
+
+  acl_reflexive:
+    name: "Reflexive ACL / Session Filtering Misconfiguration"
+    description: "Configure reflexive ACL causing return traffic to be blocked due to incorrect session state management"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - acl
+      - tcp
+      - udp
+    symptoms:
+      - "Traffic can initiate session but return traffic blocked"
+      - "Reflexive ACL entries not created for outbound traffic"
+      - "Session ACL timeout too short for application"
+      - "Reflexive ACL not compatible with certain applications"
+    troubleshooting_hints:
+      - "Reflexive ACL: auto-creates permit entry for return traffic"
+      - "Use 'evaluate <name>' and 'reflect <name>' for reflexive ACL"
+      - "Reflexive entries are temporary (removed after idle timeout)"
+      - "TCP timeout default: 300 seconds"
+      - "Not suitable for applications with dynamic ports (FTP, SIP)"
+      - "Consider stateful firewall (ZB FW) instead of reflexive ACL"
+    applicability: "Basic stateful filtering with ACLs (without firewall)"
+
+  acl_logging:
+    name: "ACL Logging / Log-Update Misconfiguration"
+    description: "Configure ACL logging causing excessive log generation or missing important drops"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - acl
+    symptoms:
+      - "Excessive ACL log messages filling syslog"
+      - "High CPU from ACL logging for matched traffic"
+      - "Important drops not logged"
+      - "Log entries rate-limited making debugging incomplete"
+    troubleshooting_hints:
+      - "Add 'log' keyword to ACL entries for logging matches"
+      - "Log is rate-limited (default: first match, then every 60s)"
+      - "Use 'log-input' to include input interface in log"
+      - "Excessive logging can cause high CPU on control plane"
+      - "Use 'show logging' for ACL log entries"
+      - "Consider logging only deny entries, not permits"
+    applicability: "ACLs requiring traffic logging for monitoring"
+
+  acl_vlan_acl:
+    name: "VLAN ACL (VACL) / VLAN-Wide Filtering Issue"
+    description: "Configure VLAN ACL (VACL) incorrectly causing intra-VLAN traffic blocking or misrouting"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - acl
+      - vlan
+    symptoms:
+      - "Traffic within same VLAN being dropped"
+      - "VACL blocking legitimate inter-host traffic"
+      - "VACL capture/redirect not working"
+      - "VACL and port ACL interaction causing unexpected drops"
+    troubleshooting_hints:
+      - "VACL applies to ALL traffic within a VLAN (transit too)"
+      - "Configure 'vlan access-map <name>' and 'vlan filter <name> vlan-list <list>'"
+      - "VACL default is permit (unlike port ACL)"
+      - "VACL + PACL (Port ACL): PACL takes precedence over VACL"
+      - "Check 'show vlan access-map <name>' for map entries"
+      - "VACL can forward, drop, or redirect traffic"
+    applicability: "VLAN-wide traffic filtering in switched networks"
+
+  acl_ipv6_icmp:
+    name: "IPv6 ACL / ICMPv6 Filtering Misconfiguration"
+    description: "Configure IPv6 ACL without proper ICMPv6 handling, blocking essential IPv6 neighbor discovery"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ipv6
+      - acl
+    symptoms:
+      - "IPv6 neighbor discovery blocked by ACL"
+      - "Router advertisements / solicitations dropped"
+      - "IPv6 devices cannot discover each other"
+      - "SLAAC and DAD (Duplicate Address Detection) failing"
+    troubleshooting_hints:
+      - "ICMPv6 types: ND (133-137), DAD uses MLD (130-132)"
+      - "Essential ICMPv6 types for IPv6 operation: 133-137"
+      - "Use 'permit icmp any any nd-na' and 'permit icmp any any nd-ns'"
+      - "MLD queries/reports/replies (130-132) must be permitted"
+      - "IPv6 ACL: 'ipv6 access-list <name>' for IPv6 traffic"
+      - "Check 'show ipv6 interface <intf>' for ND status"
+    applicability: "IPv6 ACLs on routers and firewalls"

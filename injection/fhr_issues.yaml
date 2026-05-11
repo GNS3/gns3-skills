@@ -118,3 +118,136 @@ issues:
       - "Check for 'HSRP: group X authentication mismatch' in logs"
       - "HSRP version 2 uses MD5, version 1 uses plain text"
     applicability: "HSRP with authentication configured"
+
+  fhr_preempt:
+    name: "FHRP Preempt Disabling / Failback Prevention"
+    description: "Configure HSRP/VRRP without preempt on the active router preventing graceful failback after a failure recovers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Original active router does not resume active role after recovery"
+      - "Standby router remains active after primary returns"
+      - "Suboptimal first-hop routing after failback"
+      - "Active role not returning to preferred router"
+    troubleshooting_hints:
+      - "Check 'show standby' or 'show vrrp' for preempt setting"
+      - "HSRP: 'standby <group> preempt' enables automatic failback"
+      - "VRRP defaults to preempt enabled (reverse preempt semantics)"
+      - "Without preempt: once standby, always standby until next failure"
+      - "Use preempt delay: 'standby <group> preempt delay <seconds>'"
+      - "Prevent flapping: preempt with delay ensures stable failback"
+    applicability: "All HSRP/VRRP deployments needing graceful failback"
+
+  fhr_object_tracking:
+    name: "FHRP Object Tracking / Interface Tracking Failure"
+    description: "Configure HSRP/VRRP with object tracking but tracked object not triggering priority decrement"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "HSRP/VRRP not failing over when upstream link fails"
+      - "Tracked object shows down but priority not decremented"
+      - "Standby gateway stuck in standby despite losing upstream"
+      - "Track object configuration mismatch"
+    troubleshooting_hints:
+      - "HSRP: 'standby <group> track <obj-id> decrement <value>'"
+      - "VRRP: 'vrrp <group> track <obj-id> decrement <value>'"
+      - "Check 'show track <id>' for tracking object status"
+      - "Priority decrement must bring priority below standby's"
+      - "Multiple tracked objects can compound priority reduction"
+      - "Use 'track interface <intf> line-protocol' for simple tracking"
+    applicability: "HSRP/VRRP with upstream link monitoring"
+
+  fhr_version_mismatch:
+    name: "HSRP/VRRP Version Mismatch"
+    description: "Configure mismatched HSRP versions (v1 vs v2) or VRRP versions (v2 vs v3) between peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "HSRP/VRRP groups not forming between peers"
+      - "Version mismatch error messages"
+      - "Group state stuck in INIT or LISTEN"
+      - "State communication between peers fails"
+    troubleshooting_hints:
+      - "HSRP v1: group range 0-255, multicast 224.0.0.2"
+      - "HSRP v2: group range 0-4095, multicast 224.0.0.102, supports IPv6"
+      - "Use 'standby version <1|2>' to configure HSRP version"
+      - "VRRP v3 supports IPv6 and millisecond timers"
+      - "Version must match on all peer routers"
+      - "HSRP v1 and v2 are not interoperable"
+    applicability: "FHRP deployments with mixed versions"
+
+  fhrp_vip_conflict:
+    name: "FHRP Virtual IP Address Conflict"
+    description: "Configure HSRP/VRRP virtual IP that conflicts with an existing host/static IP on the network"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Duplicate IP address detected on network"
+      - "Virtual IP not reachable intermittently"
+      - "ARP resolution for VIP returning multiple MACs"
+      - "Host connectivity flapping between real and virtual IP"
+    troubleshooting_hooks:
+      - "Virtual IP should be unique and not assigned to any real host"
+      - "Check 'show ip arp <vip>' for MAC address resolution"
+      - "VIP must not conflict with router physical interface IPs"
+      - "VIP typically different from real interface IPs"
+      - "Use 'show standby' to verify VIP assignment"
+      - "Duplicate VIP causes random traffic failures"
+    applicability: "All HSRP/VRRP deployments"
+
+  fhrp_mac_conflict:
+    name: "FHRP Virtual MAC Address Conflict"
+    description: "Configure HSRP/VRRP where virtual MAC address conflicts with another device or is manually overridden incorrectly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Virtual MAC address conflicting with another device"
+      - "ARP cache showing incorrect MAC for VIP"
+      - "Traffic forwarded to wrong destination"
+      - "Manual MAC setting overriding standard protocols"
+    troubleshooting_hint:
+      - "HSRP v1 MAC: 0000.0c07.acXX (XX=group in hex)"
+      - "HSRP v2 MAC: 0000.0c9f.fXXX (XXX=group in hex)"
+      - "VRRP MAC: 0000.5e00.01XX (XX=VRID in hex)"
+      - "Use 'standby <group> mac-address <mac>' to override manually"
+      - "MAC conflict may cause silent traffic loss"
+      - "Check switch MAC table for VIP MAC location"
+    applicability: "FHRP deployments with custom MAC address requirements"
+
+  hsrp_vrf_ipv6:
+    name: "HSRP for IPv6 / VRRPv3 IPv6 Configuration Error"
+    description: "Configure HSRP for IPv6 or VRRPv3 for IPv6 incorrectly, preventing IPv6 gateway redundancy"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+      - ipv6
+    symptoms:
+      - "IPv6 default gateway not failing over"
+      - "HSRP/VRRPv3 for IPv6 not establishing"
+      - "IPv6 Neighbor Discovery RA not from virtual address"
+      - "Dual-stack hosts lose IPv6 connectivity on failover"
+    troubleshooting_hints:
+      - "HSRP for IPv6: 'standby <group> ipv6 <link-local>'"
+      - "VRRPv3 supports IPv6 natively (vrrp <group> address-family ipv6)"
+      - "IPv6 ND RA uses virtual MAC for seamless failover"
+      - "Check 'show standby ipv6' for IPv6 HSRP status"
+      - "VRRPv3: 'show vrrp ipv6' for IPv6 VRRP status"
+      - "IPv6 link-local address must match between HSRP peers"
+    applicability: "Dual-stack IPv4/IPv6 or IPv6-only networks"

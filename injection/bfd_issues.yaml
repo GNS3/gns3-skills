@@ -1,0 +1,235 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "BFD Issues Injection"
+description: "BFD (Bidirectional Forwarding Detection) session, timer, and protocol integration related faults"
+category: "injection"
+protocols:
+  - bfd
+  - ospf
+  - bgp
+  - isis
+  - eigrp
+  - pim
+  - hsrp
+  - vrrp
+
+issues:
+  bfd_not_enabled:
+    name: "BFD Not Configured on Interface"
+    description: "Disable BFD on the required interface preventing fast failure detection"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bfd
+    symptoms:
+      - "Routing protocol convergence still slow (seconds, not milliseconds)"
+      - "No BFD session for the neighbor"
+      - "BFD required by routing policy but not active"
+      - "Link failure detection stuck at routing protocol hello timers"
+    troubleshooting_hints:
+      - "Check BFD neighbors with 'show bfd neighbors'"
+      - "Enable BFD: 'bfd interval <ms> min_rx <ms> multiplier <count>' under interface"
+      - "Default BFD interval varies by platform (typically 150-1000ms)"
+      - "BFD must be enabled on BOTH sides of the link"
+      - "BFD session created after routing protocol neighbor is established"
+      - "Use 'show bfd neighbors details' for BFD session state"
+    applicability: "All BFD-capable interfaces"
+
+  bfd_timer_mismatch:
+    name: "BFD Interval / Multiplier Negotiation Issue"
+    description: "Configure mismatched BFD timers causing session rejection or asymmetric failure detection"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+    symptoms:
+      - "BFD session fails to establish due to timer mismatch"
+      - "Negotiated interval larger than expected"
+      - "One side expecting faster detection than the other"
+      - "BFD session up but detection time asymmetric"
+    troubleshooting_hints:
+      - "BFD timers: desired-tx-interval, required-min-rx-interval, detection-multiplier"
+      - "Negotiated transmit interval = MAX(peer desired-tx, local required-min-rx)"
+      - "Negotiated detection time = interval * multiplier"
+      - "Check 'show bfd neighbors details' for negotiated values"
+      - "Use 'bfd interval <ms> min_rx <ms> multiplier <count>' per platform limits"
+      - "Platform minimum interval varies: 50ms (hardware), 200ms (software)"
+    applicability: "BFD deployments with custom timer settings"
+
+  bfd_no_auth:
+    name: "BFD Authentication / MD5 SHA Key Mismatch"
+    description: "Configure BFD authentication on one side but mismatched key on the other"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+    symptoms:
+      - "BFD session fails to establish with authentication enabled"
+      - "Authentication failure counters incrementing"
+      - "BFD stuck in 'Down' or 'Init' state"
+      - "Routing protocol neighbor up but no BFD session"
+    troubleshooting_hints:
+      - "BFD auth: 'bfd authentication md5|sha-1|sha-256 keychain <name>'"
+      - "Key-chain must exist with matching key ID and key string"
+      - "Both sides must have same authentication type and key"
+      - "Check 'show bfd neighbors details' for auth status"
+      - "Check 'show key chain' for key configuration"
+      - "Disable auth on one side for testing: 'no bfd authentication'"
+    applicability: "BFD deployments requiring authentication"
+
+  bfd_protocol_not_registered:
+    name: "BFD Client Not Registered with BFD Process"
+    description: "Configure routing protocol with BFD but BFD client registration missing"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bfd
+      - ospf
+      - bgp
+    symptoms:
+      - "Routing protocol neighbor up but no BFD session"
+      - "BFD clients show none registered"
+      - "BFD session not created for the routing protocol neighbor"
+      - "Protocol fall-over BFD not configured"
+    troubleshooting_hints:
+      - "BFD requires each protocol to register as a client"
+      - "Use 'bfd all-interfaces' under OSPF process"
+      - "Use 'neighbor <ip> fall-over bfd' for BGP"
+      - "Use 'isis bfd' under IS-IS interface"
+      - "Check 'show bfd client' for registered BFD clients"
+      - "No client registration = BFD knows about the neighbor but won't create session"
+    applicability: "BFD with routing protocol integration"
+
+  bfd_echo_mode:
+    name: "BFD Echo Mode Failure"
+    description: "Configure BFD echo mode but echo packets not processed correctly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+    symptoms:
+      - "BFD echo session not established"
+      - "Echo mode disabled despite configuration"
+      - "Echo packets sent but not received back"
+      - "BFD falls back to async mode only"
+    troubleshooting_hooks:
+      - "BFD echo: sends echo packet to peer, peer loops it back (no CPU on peer)"
+      - "Echo mode reduces processing overhead on the remote"
+      - "Echo may require specific platform hardware support"
+      - "Check 'show bfd neighbors details' for echo status"
+      - "Echo failures fall back to async mode automatically"
+      - "Echo interval configured separately: 'bfd echo <ms>'"
+    applicability: "BFD deployments optimizing CPU usage"
+
+  bfd_ospf_integration:
+    name: "OSPF BFD Integration Not Working"
+    description: "Configure OSPF with BFD but OSPF does not respond to BFD down event"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+      - ospf
+    symptoms:
+      - "BFD session goes down but OSPF neighbor stays up"
+      - "OSPF not fast-failing despite BFD session loss"
+      - "OSPF and BFD session exist independently"
+      - "BFD down notification not received by OSPF"
+    troubleshooting_hooks:
+      - "Enable OSPF BFD: 'bfd all-interfaces' under router ospf"
+      - "Or per-interface: 'ip ospf bfd'"
+      - "Check 'show ip ospf' for BFD status (look for 'BFD is enabled')"
+      - "Check 'show bfd neighbors detail' for OSPF client registration"
+      - "OSPF neighbor goes DOWN when BFD session fails"
+      - "Without integration: OSPF dead timer (40s) still applies"
+    applicability: "OSPF with BFD fast convergence"
+
+  bfd_bgp_integration:
+    name: "BGP BFD Integration / Fall-Over Not Configured"
+    description: "Configure BGP with BFD but BGP fall-over BFD missing causing slow BGP convergence"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+      - bgp
+    symptoms:
+      - "BFD session down but BGP neighbor stays established"
+      - "BGP does not respond to BFD failure event"
+      - "BGP session stays up after link failure"
+      - "Slow BGP convergence despite BFD enabled"
+    troubleshooting_hooks:
+      - "Enable BGP BFD: 'neighbor <ip> fall-over bfd'"
+      - "Or: 'neighbor <ip> bfd' (on some platforms)"
+      - "Check 'show ip bgp neighbor <ip>' for BFD status"
+      - "Check 'show bfd neighbors detail' for BGP client registration"
+      - "Without fall-over: BGP relies on keepalive/hold timers"
+      - "BFD failure triggers immediate BGP session reset"
+    applicability: "BGP with BFD fast convergence"
+
+  bfd_isis_integration:
+    name: "IS-IS BFD Integration Failure"
+    description: "Configure IS-IS with BFD but adjacency per-interface BFD missing"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+      - isis
+    symptoms:
+      - "IS-IS adjacency stays up after BFD session failure"
+      - "BFD session exists but IS-IS not receiving BFD down events"
+      - "IS-IS and BFD not synchronized"
+      - "IS-IS convergence slow despite BFD"
+    troubleshooting_hooks:
+      - "IS-IS BFD: 'isis bfd' under interface"
+      - "Check 'show clns is-neighbors' for adjacency status"
+      - "Check 'show bfd neighbors detail' for IS-IS client registration"
+      - "ISIS adj down immediately on BFD failure"
+      - "Can enable globally: 'bfd all-interfaces' under router isis"
+      - "Without BFD: IS-IS uses hello timers (3.3s P2P, 10s broadcast)"
+    applicability: "IS-IS with BFD fast convergence"
+
+  bfd_session_limit:
+    name: "BFD Session Hardware / Platform Limit Exceeded"
+    description: "Configure BFD on too many neighbors exceeding platform session limit"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+    symptoms:
+      - "BFD session not created despite configuration"
+      - "BFD session limit reached on the platform"
+      - "New BFD sessions rejected"
+      - "Existing sessions work but new neighbor BFD fails"
+    troubleshooting_hooks:
+      - "Check 'show bfd summary' for BFD session count and limit"
+      - "Platform BFD limits typically 64-128 sessions (software) or 512+ (hardware)"
+      - "Session limits per: router, interface, VRFs"
+      - "If limit reached: prioritize critical peers only"
+      - "Use 'bfd map' to control BFD sessions per destination"
+      - "Increase intervals to reduce CPU usage for scaling"
+    applicability: "BFD in large-scale deployments"
+
+  bfd_static_route:
+    name: "BFD for Static Route / Track Integration"
+    description: "Configure BFD for static route tracking but static route not removed on BFD failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bfd
+    symptoms:
+      - "Static route remains in routing table after BFD down"
+      - "BFD session down but static route still active"
+      - "Traffic continues to use failed link via static route"
+      - "BFD-tracked static route not removing on failure"
+    troubleshooting_hooks:
+      - "BFD-tracked static: 'ip route <prefix> <mask> <nexthop bfd <intf>'"
+      - "Or: 'ip route <prefix> <mask> <nexthop> track <bfd-track-id>'"
+      - "Check 'show bfd neighbors' for BFD session to the next-hop"
+      - "Check 'show ip route <prefix>' for route status"
+      - "When BFD down: track object down, static route removed"
+      - "Alternative: IP SLA with BFD for more sophisticated tracking"
+    applicability: "Static route failover with BFD"

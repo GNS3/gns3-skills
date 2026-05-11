@@ -2,7 +2,7 @@
 
 Network troubleshooting skills repository for GNS3 Copilot.
 
-This repository contains **41 YAML-formatted skill definitions** with **649 fault injection scenarios** covering 50+ networking protocols and technologies — from OSPF and BGP to SRv6 and EVPN.
+This repository contains **50 YAML-formatted skill definitions** with **776 fault injection scenarios** covering 60+ networking protocols and technologies — from PPP serial links to SRv6 and EVPN.
 
 > 📊 See [SKILLS_SUMMARY.md](SKILLS_SUMMARY.md) for full statistics.
 
@@ -22,7 +22,7 @@ This repository contains **41 YAML-formatted skill definitions** with **649 faul
 
 ```
 GNS3-Skills/
-├── injection/         # 39 fault injection skill files (YAML)
+├── injection/         # 50 fault injection skill files (YAML)
 │   ├── bgp_issues.yaml
 │   ├── ospf_issues.yaml
 │   ├── srv6_issues.yaml

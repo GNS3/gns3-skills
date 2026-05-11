@@ -72,12 +72,13 @@ In `gns3server/agent/gns3_copilot/configs/skills_config.py`:
 ```python
 SKILLS_CONFIG = {
     "repo_url": "https://github.com/yueguobin/GNS3-Skills.git",
-    "local_path": "~/.gns3/skills",
     "branch": "main",
-    "auto_update": False,
+    "auto_update": True,
     "enabled": True,
 }
 ```
+
+The configuration can be overridden via `gns3_server.conf → [Server]` settings: `skills_repo_url`, `skills_repo_branch`, `skills_auto_update`.
 
 ### Manual Update
 

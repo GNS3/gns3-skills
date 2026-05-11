@@ -213,3 +213,91 @@ issues:
       - "Dual-stack clients prefer IPv6 by default (RFC 6724)"
       - "Verify firewall rules allow DNS (UDP/TCP 53) for both AF"
     applicability: "Dual-stack IPv4/IPv6 networks"
+
+  bgp_ospf_ad:
+    name: "BGP/OSPF Administrative Distance Conflict"
+    description: "Configure BGP and OSPF with overlapping prefixes causing incorrect route preference due to AD mismatch"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - bgp
+    symptoms:
+      - "BGP route preferred over OSPF (or vice versa) unexpectedly"
+      - "iBGP (AD 200) less preferred than OSPF (AD 110)"
+      - "eBGP (AD 20) more preferred than OSPF (AD 110)"
+      - "Route selection not matching routing policy intent"
+    troubleshooting_hints:
+      - "Default AD: eBGP=20, OSPF=110, iBGP=200"
+      - "Use 'distance <ext> <int> <local>' under BGP to adjust"
+      - "Use 'distance ospf <intra> <inter> <external>' under OSPF"
+      - "Check 'show ip route <prefix>' for AD of installed route"
+      - "Higher AD = less trusted (iBGP 200 vs OSPF 110)"
+      - "Careful: changing AD affects all prefixes, not specific ones"
+    applicability: "Multi-protocol routing with OSPF and BGP"
+
+  nat_dns_split:
+    name: "NAT + DNS / Split-DNS Interworking Issue"
+    description: "Configure NAT with split-DNS but internal users get wrong IP for external resources"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - nat
+      - dns
+    symptoms:
+      - "Internal users receive private IP for public resource"
+      - "Split-DNS returning wrong IP for internal query"
+      - "NAT and DNS not coordinated for internal/external resolution"
+      - "Users can't access services via hostname"
+    troubleshooting_hints:
+      - "Split-DNS: internal DNS returns private IP, external returns public"
+      - "NAT DNS doctoring (ALG) rewrites DNS response payload"
+      - "Check NAT ALG: 'ip nat service dns' (enables DNS ALG)"
+      - "Without split-DNS: internal users get public IP (NAT may not work)"
+      - "With split-DNS: users get private IP (direct access, no NAT)"
+      - "Best practice: split-DNS + no NAT for internal-to-internal access"
+    applicability: "NAT and DNS in multi-homed environments"
+
+  mpls_bgp_label:
+    name: "MPLS + BGP Label Allocation / BGP-Free Core Issue"
+    description: "Configure BGP labeled routes not being used for BGP-free core MPLS forwarding"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - mpls
+      - bgp
+    symptoms:
+      - "Core P routers running BGP despite BGP-free design"
+      - "BGP routes not labeled for MPLS transport through core"
+      - "PHP routers popping labels too early"
+      - "Label stack depth insufficient for BGP-free forwarding"
+    troubleshooting_hints:
+      - "BGP-free core: P routers only run IGP/LDP, no BGP"
+      - "Edge routers impose BGP label + transport label stack"
+      - "Use 'neighbor <ip> send-label' for BGP labeled unicast"
+      - "Check 'show mpls forwarding-table <bgp-prefix>' for label stack"
+      - "PHP pops transport label, leaving BGP label for egress PE"
+      - "Without send-label: PEs need iBGP full mesh for BGP routes"
+    applicability: "Service provider MPLS/BGP core design"
+
+  dot1x_dhcp:
+    name: "802.1X + DHCP Snooping / Authentication Interop"
+    description: "Configure 802.1X with DHCP snooping but DHCP snooping bindings not created after 802.1X auth"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - 802.1x
+      - dhcp-snooping
+    symptoms:
+      - "DHCP snooping bindings not created for authenticated clients"
+      - "IP Source Guard blocking authenticated clients"
+      - "DAI dropping ARP from authenticated devices"
+      - "Security features conflicting with NAC flow"
+    troubleshooting_hints:
+      - "802.1X authenticates, DHCP snooping learns IP binding"
+      - "Order: authenticate -> DHCP -> snooping binding -> IPSG/DAI"
+      - "Check 'show ip dhcp snooping binding' after auth"
+      - "Ensure 'ip dhcp snooping' is enabled on the authentication VLAN"
+      - "DHCP snooping trust on uplink to DHCP server"
+      - "IPSG: 'ip verify source' after DHCP snooping binding created"
+    applicability: "Campus NAC with DHCP Snooping and IP Source Guard"

@@ -185,3 +185,66 @@ issues:
       - "Layer 3 communication flows through promiscuous port"
       - "Use 'show ip interface vlan <vlan>' for SVI status"
     applicability: "Private VLAN with Layer 3 routing"
+
+  ipsg_missing:
+    name: "IP Source Guard Not Configured"
+    description: "Configure DHCP snooping but IP Source Guard not enabled on untrusted ports"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "IP spoofing possible on access ports"
+      - "Host can override assigned IP manually"
+      - "No IP source filtering on untrusted port"
+      - "DHCP snooping enabled but IPSG disabled"
+    troubleshooting_hints:
+      - "IP Source Guard: 'ip verify source' on untrusted port"
+      - "Verifies IP: check source IP against DHCP snooping bindings"
+      - "Use 'ip verify source port-security' for MAC + IP check"
+      - "Without IPSG: host can change IP after DHCP assignment"
+      - "IPSG prevents IP spoofing attacks"
+      - "Check 'show ip verify source' for active verifications"
+    applicability: "Access layer IP spoofing prevention"
+
+  dhcp_snooping_binding_db:
+    name: "DHCP Snooping Binding Database / Persistence Issue"
+    description: "Configure DHCP snooping binding database not persisted across reloads causing binding loss"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "DHCP snooping bindings lost after switch reload"
+      - "DAI/IPSG not working after reboot until DHCP renewals"
+      - "Binding database not written to persistent storage"
+      - "Traffic dropped after reload until DHCP lease renewal"
+    troubleshooting_hints:
+      - "Use 'ip dhcp snooping database <url>' for persistent storage"
+      - "URL: 'flash:dhcp-snooping-db' (local) or 'tftp://...' (remote)"
+      - "Check 'show ip dhcp snooping database' for agent status"
+      - "Write timer: 'ip dhcp snooping database write-delay <secs>'"
+      - "Timeout causes stale bindings for some time after reload"
+      - "Without persistence: all bindings lost on reboot"
+    applicability: "DHCP snooping in enterprise access switches"
+
+  dhcp_snooping_vlan_mismatch:
+    name: "DHCP Snooping VLAN / Trust Boundary Error"
+    description: "Configure DHCP snooping on wrong VLAN or trust misconfiguration causing DHCP failure for certain VLANs"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dhcp-snooping
+    symptoms:
+      - "DHCP works in some VLANs but not others"
+      - "DHCP snooping not enabled for specific client VLAN"
+      - "Server trust not configured in the server's VLAN"
+      - "Inconsistent DHCP behavior across VLANs"
+    troubleshooting_hints:
+      - "Enable per VLAN: 'ip dhcp snooping vlan <vlan-list>'"
+      - "Check DAI per VLAN: 'ip arp inspection vlan <vlan-list>'"
+      - "DHCP server port must be trusted in the server's VLAN"
+      - "Use 'show ip dhcp snooping' for active VLANs"
+      - "DHCP snooping binding stored per VLAN"
+      - "VLAN not listed = no DHCP protection for that VLAN"
+    applicability: "Multi-VLAN access layer with DHCP"

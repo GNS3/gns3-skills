@@ -187,3 +187,88 @@ issues:
       - "Destination IP: 'erspan-id <id>' and 'ip address <src> <dst>'"
       - "Verify routing between ERSPAN source and destination IPs"
     applicability: "Remote monitoring across Layer 3 boundaries"
+
+  ntp_peer_assoc:
+    name: "NTP Peer / Symmetric Association Misconfiguration"
+    description: "Configure NTP peer (symmetric active) but association not established or clock loop"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP peer association not established"
+      - "Clock selection algorithm not picking correct peer"
+      - "NTP synchronization loop between peers"
+      - "Clock stratum bouncing between peers"
+    troubleshooting_hints:
+      - "NTP peer: 'ntp peer <ip>' (symmetric active mode)"
+      - "Peers can synchronize to each other (unlike client-server)"
+      - "Check 'show ntp associations' for peer reachability"
+      - "Synchronization loop: ensure at least one peer has external ref"
+      - "Use 'ntp peer <ip> prefer' for preferred peer"
+      - "Stratum level prevents infinite loops (lower = better)"
+    applicability: "NTP with mutual peer synchronization"
+
+  ntp_broadcast:
+    name: "NTP Broadcast/Multicast Mode Misconfiguration"
+    description: "Configure NTP broadcast/multicast but clients not receiving time updates"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP broadcast clients not synchronizing"
+      - "NTP broadcast server not sending NTP broadcasts"
+      - "NTP multicast packets blocked by IGMP"
+      - "Broadcast time server not heard by clients"
+    troubleshooting_hints:
+      - "Server: 'ntp broadcast <interface>' (broadcast mode)"
+      - "Client: 'ntp broadcast client' on interface"
+      - "NTP multicast: 'ntp multicast <group>' (multicast mode)"
+      - "Client: 'ntp multicast client' on interface"
+      - "Broadcast/multicast NTP is less accurate than unicast"
+      - "Use for LAN environments with many NTP clients"
+    applicability: "NTP for LAN environments with many hosts"
+
+  span_cpu:
+    name: "SPAN CPU / RSPAN/ERSPAN Resource Exhaustion"
+    description: "Configure too many SPAN sessions causing CPU or hardware resource exhaustion"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - span
+      - mirroring
+    symptoms:
+      - "Multiple SPAN sessions consuming hardware resources"
+      - "SPAN session not created due to resource limit"
+      - "Monitoring impact on switch forwarding performance"
+      - "SPAN packet drops due to monitoring capacity"
+    troubleshooting_hints:
+      - "Platform SPAN session limit: check with 'show monitor capacity'"
+      - "Resource limits: number of sessions, source interfaces, VLANs"
+      - "Reduce SPAN sources: mirror only needed ports, not entire VLANs"
+      - "Consider using netFlow instead of SPAN for traffic analytics"
+      - "ERSPAN adds CPU overhead due to GRE encapsulation"
+      - "Check 'show monitor session <id>' for operational status"
+    applicability: "Monitoring deployments with resource constraints"
+
+  ntp_access_group:
+    name: "NTP Access Group / ACL Restriction Misconfiguration"
+    description: "Configure NTP access group too restrictively blocking legitimate NTP peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP server rejecting valid clients"
+      - "NTP synchronization failing despite reachable server"
+      - "Access group filtering legitimate NTP associations"
+      - "NTP packets blocked by ACL"
+    troubleshooting_hints:
+      - "NTP access group: 'ntp access-group peer|serve|serve-only|query-only <acl>'"
+      - "Peer: full access (can synchronize and be synchronized)"
+      - "Serve: can synchronize to server but not vice versa"
+      - "Serve-only: can only synchronize (no configuration queries)"
+      - "Query-only: only allow NTP status queries"
+      - "Check ACL entries: ensure source IP of peer is permitted"
+    applicability: "NTP with access control requirements"

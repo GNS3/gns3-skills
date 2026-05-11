@@ -175,3 +175,69 @@ issues:
       - "IGP LDP sync still needed during migration"
       - "Both SR and LDP can coexist on the same router"
     applicability: "SR-MPLS migration from LDP-based networks"
+
+  sr_anycast_sid:
+    name: "SR Anycast-SID / Redundancy SID Conflict"
+    description: "Configure SR anycast-SID for multi-homed prefix but SID index or routing causing suboptimal forwarding"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - isis
+    symptoms:
+      - "ECMP not working correctly for anycast prefix"
+      - "Anycast SID index conflict between redundant routers"
+      - "Traffic not load balancing across anycast nodes"
+      - "Suboptimal anycast forwarding path"
+    troubleshooting_hints:
+      - "Anycast-SID: same SID index on multiple routers for the same prefix"
+      - "Traffic forwarded via ECMP to the closest anycast node"
+      - "Check anycast SID: 'show isis prefix-sid <prefix>'"
+      - "Both routers must use the same SID index"
+      - "Anycast prefix advertised from both routers with same SID"
+      - "Use for multi-homed services and seamless redundancy"
+    applicability: "SR networks with multi-homed services"
+
+  sr_ospf_sr:
+    name: "OSPF Segment Routing (OSPF-SR) Extension Issue"
+    description: "Configure OSPF with SR extension incorrectly causing prefix-SID not generated in OSPF LSAs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - segment-routing
+      - ospf
+    symptoms:
+      - "OSPF SR prefix-SIDs not generated"
+      - "OSPF opaque LSA (Type 9/10) not carrying SR info"
+      - "Other routers not learning prefix-SID via OSPF"
+      - "SR not operational in OSPF areas"
+    troubleshooting_hints:
+      - "OSPF SR: uses Opaque LSA Type 10 (area) or Type 9 (link)"
+      - "Check 'show ip ospf database opaque-area' for SR info"
+      - "Use 'segment-routing mpls' under router ospf"
+      - "Prefix-SID: 'prefix-sid <index>' under network command"
+      - "OSPF SRB: 'segment-routing global-block <start> <end>'"
+      - "Requires 'capability opaque' on all OSPF routers"
+    applicability: "OSPF-based SR deployments"
+
+  sr_adj_protection:
+    name: "Adjacency-SID Protection / FRR Backup Failure"
+    description: "Configure SR adjacency-SID protection (FRR) but backup path not available"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - isis
+    symptoms:
+      - "Adjacency-SID lost when link fails"
+      - "No backup path for adjacency-SID protected prefix"
+      - "Adjacency-SID forwarding interrupted on link failure"
+      - "FRR not protecting adjacency-SID path"
+    troubleshooting_hints:
+      - "Adjacency-SID protection: 'adjacency-sid protect' under IGP"
+      - "TI-LFA or IP-FRR provides backup paths"
+      - "Check 'show isis adjacency-sid <intf>' for backup info"
+      - "FRR protection requires precomputed backup path"
+      - "Backup path uses alternate interface or node"
+      - "Verify 'fast-reroute per-prefix' is enabled for protection"
+    applicability: "SR networks with link protection requirements"

@@ -1368,3 +1368,173 @@ issues:
       - "Next-hop-self not automatic for confederation peers"
       - "Check 'bgp confederation peers' lists all sub-AS numbers"
     applicability: "Large BGP deployments using confederation for scalability"
+
+  bgp_nlri_filter:
+    name: "BGP NLRI Filter / Prefix Advertisement Control"
+    description: "Configure BGP NLRI filter that blocks legitimate prefixes at the NLRI level"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "Specific prefixes not advertised despite no explicit prefix-list"
+      - "NLRI filtering blocking legitimate network advertisements"
+      - "Network statement present but BGP not generating NLRI"
+      - "Route in routing table but not in BGP table"
+    troubleshooting_hints:
+      - "NLRI = the prefix + length in BGP UPDATE message"
+      - "BGP generates NLRI from 'network' statements or redistribution"
+      - "NLRI filtering happens before community or AS-path processing"
+      - "Wrong 'network mask <mask>' causes NLRI mismatch"
+      - "Check 'show ip bgp <prefix>' for NLRI generation status"
+    applicability: "BGP prefix advertisement and NLRI generation"
+
+  bgp_as_path_regex:
+    name: "BGP AS-Path Regular Expression / Regex Pattern Mismatch"
+    description: "Configure AS-path ACL with incorrect regex pattern matching wrong AS numbers"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "AS-path ACL matching unexpected routes"
+      - "Expected routes not matched by regex"
+      - "Regex pattern too broad or too narrow"
+      - "BGP route filter based on AS-path not working"
+    troubleshooting_hints:
+      - "AS-path regex: 'ip as-path access-list <num> permit|deny <regex>'"
+      - "_ASN_ matches exact AS number (underscores = whitespace or boundary)"
+      - "^$ matches locally originated routes (empty AS-path)"
+      - ".* matches any AS path"
+      - "Use 'show ip bgp regexp <pattern>' to test regex against BGP table"
+    applicability: "BGP AS-path based route filtering"
+
+  bgp_policy_list:
+    name: "BGP Policy-List / Route Policy Match Block"
+    description: "Configure BGP policy-list with inconsistent match clauses causing policy not applied"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+      - routing-policy
+    symptoms:
+      - "Policy-list conditions not matching intended routes"
+      - "Route-map referencing policy-list not evaluating correctly"
+      - "Multiple match clauses in policy-list not AND/OR as expected"
+      - "Prefix-set or community-set in policy-list not matching"
+    troubleshooting_hints:
+      - "Policy-list: reusable match condition block, referenced by route-map"
+      - "Use 'bgp policy-list <name> match|set <conditions>'"
+      - "Conditions support: prefix-set, community-set, as-path-set"
+      - "Match type: match-all (AND) or match-any (OR)"
+      - "Route-map permit references policy-list conditions"
+      - "Check 'show route-map' for policy-list match statistics"
+    applicability: "BGP route policy with policy-list"
+
+  bgp_nht:
+    name: "BGP Next-Hop Tracking (NHT) Convergence Delay"
+    description: "Configure BGP NHT scan interval too slow causing delayed next-hop validation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+    symptoms:
+      - "BGP convergence slow after IGP route change"
+      - "NHT scan interval too long causing delayed next-hop validation"
+      - "BGP routes remain installed after next-hop unreachable"
+      - "NHT processing delay for BGP prefixes"
+    troubleshooting_hints:
+      - "NHT: BGP monitors next-hop reachability via IGP"
+      - "If next-hop unreachable: BGP removes affected prefixes from RIB"
+      - "NHT scan interval: 'bgp nexthop trigger enable <seconds>'"
+      - "Default scan: every 60s (may be slow for fast convergence)"
+      - "Use 'bgp nexthop trigger delay <critical> <non-critical>'"
+      - "Check 'show ip bgp nexthop' for next-hop tracking status"
+    applicability: "BGP convergence tuning"
+
+  bgp_fast_external:
+    name: "BGP Fast External Fallover / eBGP Link Detection"
+    description: "Configure BGP fast external fallover disabled causing slow eBGP session reset on link failure"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "eBGP session stays up after directly connected link failure"
+      - "Slow BGP convergence on interface down event"
+      - "BGP fast external fallover disabled"
+      - "Interface down but BGP hold timers still running"
+    troubleshooting_hints:
+      - "Fast external fallover: immediately resets eBGP session when interface goes down"
+      - "Use 'bgp fast-external-fallover' (enabled by default)"
+      - "If disabled: eBGP relies on hold timer (180s default) for failure detection"
+      - "Check 'show ip bgp' for 'Fast external fallover: enabled' status"
+      - "Disable only if eBGP multihop with loopback peering"
+    applicability: "Directly connected eBGP deployments"
+
+  bgp_pic:
+    name: "BGP PIC (Prefix Independent Convergence) Misconfiguration"
+    description: "Configure BGP PIC for edge but backup path not pre-installed or convergence not improved"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - bgp
+    symptoms:
+      - "BGP convergence still slow despite PIC configured"
+      - "Backup path not pre-installed in RIB/FIB"
+      - "PIC edge not reducing failover time"
+      - "BGP PIC not working as expected"
+    troubleshooting_hints:
+      - "BGP PIC: pre-installs backup path in forwarding (FIB)"
+      - "On failure: switch to backup immediately (no CPU recomputation)"
+      - "Use 'bgp additional-paths install' and 'bgp recursion host'"
+      - "PIC Edge: for prefixes with backup path"
+      - "PIC Core: for BGP-free core with labeled routes"
+      - "Check 'show ip bgp <prefix>' for backup path status"
+    applicability: "BGP fast convergence with PIC"
+
+  bgp_4byte_as:
+    name: "BGP 4-Octet AS Number / ASN Format Capability Mismatch"
+    description: "Configure 4-byte AS number but peer does not support or format incompatible"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - ebgp
+    symptoms:
+      - "eBGP session not establishing with 4-byte AS number"
+      - "Peer does not support 4-byte AS capability"
+      - "AS number represented as '23456' in old format"
+      - "4-byte AS path attribute not correctly propagated"
+    troubleshooting_hints:
+      - "4-byte AS: range 1-4294967295 (RFC 6793)"
+      - "2-byte only peers see 4-byte AS as reserved 23456 (AS_TRANS)"
+      - "Check 'show ip bgp summary' for AS number format"
+      - "Use 'bgp asnotation dot' for dotted notation (1.0 = 65536)"
+      - "Capability negotiation: OPEN message includes 4-byte AS capability"
+      - "If peer does not support: 4-byte AS mapped to AS_TRANS in AS4_PATH"
+    applicability: "Multi-AS BGP with mixed 2-byte/4-byte AS numbers"
+
+  bgp_transport_opt:
+    name: "BGP Transport Optimization / TCP Session Tuning"
+    description: "Configure BGP with suboptimal TCP parameters causing session instability over long-distance links"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+    symptoms:
+      - "BGP TCP session reset under load"
+      - "Slow BGP update delivery over high-latency links"
+      - "BGP TCP window size too small"
+      - "BGP session flapping due to TCP retransmission timeout"
+    troubleshooting_hints:
+      - "BGP uses dynamic TCP window (scale factor)"
+      - "Use 'ip tcp window-size <bytes>' for send buffer"
+      - "Use 'ip tcp path-mtu-discovery' for optimal MSS"
+      - "For high-latency: increase TCP queue length"
+      - "BGP update delay: 'bgp update-delay <seconds>' after session up"
+      - "Check 'show tcp brief' for BGP TCP connection details"
+    applicability: "BGP over long-distance or high-latency links"

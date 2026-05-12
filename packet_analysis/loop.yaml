@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for LOOP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "LOOP Packet Analysis"
+description: "Cisco Loopback Detection protocol packet analysis for physical loop detection"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "loop"
+
+# tshark display filter - used for -Y parameter
+display_filter: "loop"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Function"
+    tshark_field: "loop.function"
+    description: "Loop function code"
+
+  - label: "Relevant Function"
+    tshark_field: "loop.relevant_function"
+    description: "Relevant function code"
+
+  - label: "Skip Count"
+    tshark_field: "loop.skipcount"
+    description: "Skip count (number of hops)"
+
+  - label: "Receipt Number"
+    tshark_field: "loop.receipt_number"
+    description: "Receipt sequence number"
+
+  - label: "Forwarding Address"
+    tshark_field: "loop.forwarding_address"
+    description: "Forwarding MAC address"
+
+filter_examples:
+  - name: "Loop Detection"
+    filter: "loop"
+    description: "Filter for Cisco loop detection packets"
+
+  - name: "Forwarding Loop"
+    filter: "loop.forwarding_address"
+    description: "Filter for loops with forwarding address"
+
+checks:
+  - name: "loop_detected"
+    severity: critical
+    message: "Physical loop detected: {loop.forwarding_address}"
+    condition: "loop.forwarding_address matches local MAC"
+
+  - name: "loop_forwarding_address_mismatch"
+    severity: minor
+    message: "Loop forwarding address mismatch: expected path issue"
+    condition: "Relevant function and forwarding address mismatch"

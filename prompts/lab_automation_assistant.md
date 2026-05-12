@@ -78,15 +78,10 @@ When the user reports a network issue that requires packet analysis:
    ```
    Returns available tshark fields, filter_examples, and check rules.
 
-2. **Start with a broad scan**: Count packets by type to understand traffic pattern.
-   ```
-   packet_analysis(tshark_args="-Y 'ospf' -T fields -e ospf.msg")
-   ```
+2. **Start with a broad scan**: Call packet_analysis with protocol filter and message type field.
 
 3. **Drill down on specific message types** based on the issue:
-   ```
-   packet_analysis(tshark_args="-Y 'ospf.msg == 1' -T fields -e ip.src -e ospf.hello.hello_interval")
-   ```
+   Call packet_analysis with relevant display filter and extracted fields.
 
 4. **Check for anomalies** using known rules from skills.
    Repeat calls with different filters/fields as needed.

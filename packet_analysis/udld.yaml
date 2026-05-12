@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for UDLD
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "UDLD Packet Analysis"
+description: "UDLD (UniDirectional Link Detection) packet analysis for link troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "udld"
+
+# tshark display filter - used for -Y parameter
+display_filter: "udld"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "UDLD Version"
+    tshark_field: "udld.version"
+    description: "UDLD protocol version"
+
+  - label: "Opcode"
+    tshark_field: "udld.opcode"
+    description: "UDLD message opcode: 1=Probe, 2=Echo, 3=Flushing"
+
+  - label: "Flags"
+    tshark_field: "udld.flags"
+    description: "UDLD flags"
+
+  - label: "Recommended Timeout"
+    tshark_field: "udld.flags.rt"
+    description: "Recommended timeout flag"
+
+  - label: "Resynchronize"
+    tshark_field: "udld.flags.rsy"
+    description: "Resynchronize flag"
+
+  - label: "Checksum"
+    tshark_field: "udld.checksum"
+    description: "UDLD checksum"
+
+  - label: "TLV Type"
+    tshark_field: "udld.tlv.type"
+    description: "TLV type"
+
+  - label: "TLV Length"
+    tshark_field: "udld.tlv.len"
+    description: "TLV length"
+
+  - label: "Device ID"
+    tshark_field: "udld.device_id"
+    description: "Device identifier (usually MAC address)"
+
+  - label: "Interface Name"
+    tshark_field: "udld.sent_through_interface"
+    description: "Interface name that sent the packet"
+
+  - label: "Message Interval"
+    tshark_field: "udld.message_interval"
+    description: "Message interval in seconds"
+
+  - label: "Device ID TLV"
+    tshark_field: "udld.device_id_tlv"
+    description: "Device ID TLV"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "UDLD Probe"
+    filter: "udld.opcode == 1"
+    description: "Filter for UDLD Probe messages"
+
+  - name: "UDLD Echo"
+    filter: "udld.opcode == 2"
+    description: "Filter for UDLD Echo messages"
+
+  - name: "UDLD Flushing"
+    filter: "udld.opcode == 3"
+    description: "Filter for UDLD Flushing messages"
+
+checks:
+  - name: "udld_link_unidirectional"
+    severity: critical
+    message: "UDLD unidirectional link detected: neighbor {udld.device_id} not responding"
+    condition: "No UDLD Echo response from neighbor within timeout"
+
+  - name: "udld_loop_detected"
+    severity: critical
+    message: "UDLD loop detected: self device ID seen from {eth.src}"
+    condition: "udld.device_id matches local device MAC"
+
+  - name: "udld_neighbor_mismatch"
+    severity: major
+    message: "UDLD neighbor mismatch: device ID changed on {eth.src}"
+    condition: "Different udld.device_id from same source MAC"

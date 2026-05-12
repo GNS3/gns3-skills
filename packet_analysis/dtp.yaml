@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for DTP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DTP Packet Analysis"
+description: "DTP (Dynamic Trunking Protocol) packet analysis for Cisco dynamic trunk negotiation"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "dtp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "dtp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "DTP Version"
+    tshark_field: "dtp.version"
+    description: "DTP version"
+
+  - label: "Domain"
+    tshark_field: "dtp.domain"
+    description: "DTP domain name"
+
+  - label: "TLV Type"
+    tshark_field: "dtp.tlv_type"
+    description: "TLV type"
+
+  - label: "TLV Length"
+    tshark_field: "dtp.tlv_len"
+    description: "TLV length"
+
+  - label: "Trunk Operating Status"
+    tshark_field: "dtp.tos"
+    description: "Current trunk status"
+
+  - label: "Trunk Administrative Status"
+    tshark_field: "dtp.tas"
+    description: "Configured trunk status"
+
+  - label: "Trunk Operating Type"
+    tshark_field: "dtp.tot"
+    description: "Current trunk encapsulation type"
+
+  - label: "Trunk Administrative Type"
+    tshark_field: "dtp.tat"
+    description: "Configured trunk encapsulation type"
+
+  - label: "Sender ID"
+    tshark_field: "dtp.senderid"
+    description: "Neighbor MAC address"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "DTP Trunk"
+    filter: "dtp.tos & 0x80"
+    description: "Filter for DTP indicating trunk operational"
+
+  - name: "DTP Access"
+    filter: "dtp.tos & 0x80 == 0"
+    description: "Filter for DTP indicating access operational"
+
+  - name: "DTP desirable"
+    filter: "dtp.tas == 1"
+    description: "Filter for DTP desirable mode"
+
+  - name: "DTP auto"
+    filter: "dtp.tas == 2"
+    description: "Filter for DTP auto mode"
+
+  - name: "DTP on"
+    filter: "dtp.tas == 3"
+    description: "Filter for DTP on mode"
+
+  - name: "DTP nonegotiate"
+    filter: "dtp.tas == 0"
+    description: "Filter for DTP nonegotiate mode"
+
+checks:
+  - name: "dtp_mode_mismatch"
+    severity: major
+    message: "DTP mode mismatch: local mode differs from neighbor {dtp.senderid}"
+    condition: "dtp.tas and dtp.tos values indicate incompatible trunk modes"
+
+  - name: "dtp_native_vlan_mismatch"
+    severity: major
+    message: "DTP native VLAN mismatch detected"
+    condition: "DTP indicates different native VLAN from neighbor"
+
+  - name: "dtp_encapsulation_mismatch"
+    severity: major
+    message: "DTP encapsulation mismatch: {dtp.tot} vs {dtp.tat}"
+    condition: "dtp.tot and dtp.tat indicate incompatible encapsulation (ISL vs 802.1Q)"

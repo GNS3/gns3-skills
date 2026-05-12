@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for HDLC
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "HDLC Packet Analysis"
+description: "HDLC/ Cisco HDLC packet analysis for WAN serial link troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "hdlc"
+
+# tshark display filter - used for -Y parameter
+display_filter: "chdlc or slhc"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Address"
+    tshark_field: "chdlc.address"
+    description: "HDLC address (unicast/multicast)"
+
+  - label: "Control"
+    tshark_field: "chdlc.control"
+    description: "HDLC control byte"
+
+  - label: "Cisco HDLC Protocol"
+    tshark_field: "chdlc.code"
+    description: "Protocol in Cisco HDLC frame"
+
+  - label: "Frame Type"
+    tshark_field: "chdlc.ptype"
+    description: "Cisco HDLC frame type"
+
+  - label: "CHAP Code"
+    tshark_field: "chdlc.chap.code"
+    description: "CHAP message code in HDLC"
+
+  - label: "CHAP Identifier"
+    tshark_field: "chdlc.chap.identifier"
+    description: "CHAP identifier in HDLC"
+
+filter_examples:
+  - name: "Cisco HDLC"
+    filter: "chdlc"
+    description: "Filter for Cisco HDLC frames"
+
+  - name: "HDLC keepalive"
+    filter: "chdlc.ptype == 2"
+    description: "Filter for HDLC keepalive messages"
+
+  - name: "HDLC encapsulated IP"
+    filter: "chdlc.code == 0x0800"
+    description: "Filter for HDLC carrying IPv4"
+
+checks:
+  - name: "hdlc_keepalive_timeout"
+    severity: major
+    message: "HDLC keepalive timeout: no keepalive from serial link"
+    condition: "No HDLC keepalive received within expected interval"
+
+  - name: "hdlc_wrap"
+    severity: minor
+    message: "HDLC wrap detected: receiving own keepalive"
+    condition: "HDLC keepalive with local identifier seen from remote"

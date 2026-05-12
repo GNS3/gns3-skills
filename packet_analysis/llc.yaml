@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for LLC
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "LLC Packet Analysis"
+description: "LLC (Logical Link Control) packet analysis for IEEE 802.2 network layer interfacing"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "llc"
+
+# tshark display filter - used for -Y parameter
+display_filter: "llc"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "DSAP"
+    tshark_field: "llc.dsap"
+    description: "Destination Service Access Point"
+
+  - label: "DSAP IG"
+    tshark_field: "llc.dsap.ig"
+    description: "DSAP Individual/Group flag"
+
+  - label: "SSAP"
+    tshark_field: "llc.ssap"
+    description: "Source Service Access Point"
+
+  - label: "SSAP CR"
+    tshark_field: "llc.ssap.cr"
+    description: "SSAP Command/Response flag"
+
+  - label: "Control Field"
+    tshark_field: "llc.control"
+    description: "LLC control field"
+
+  - label: "Frame Type"
+    tshark_field: "llc.control.ftype"
+    description: "Frame type: 1=I (Information), 2=S (Supervisory), 3=U (Unnumbered)"
+
+  - label: "N(R)"
+    tshark_field: "llc.control.n_r"
+    description: "Receive sequence number"
+
+  - label: "N(S)"
+    tshark_field: "llc.control.n_s"
+    description: "Send sequence number"
+
+  - label: "Poll/Final"
+    tshark_field: "llc.control.p"
+    description: "Poll/Final bit"
+
+filter_examples:
+  - name: "SNAP Protocol"
+    filter: "llc.dsap == 0xAA and llc.ssap == 0xAA"
+    description: "Filter for SNAP (Subnetwork Access Protocol)"
+
+  - name: "STP (spanning tree)"
+    filter: "llc.dsap == 0x42"
+    description: "Filter for STP BPDUs via DSAP 0x42"
+
+  - name: "I-frame"
+    filter: "llc.control.ftype == 1"
+    description: "Filter for LLC I-frames (information)"
+
+  - name: "S-frame"
+    filter: "llc.control.ftype == 2"
+    description: "Filter for LLC S-frames (supervisory)"
+
+  - name: "U-frame"
+    filter: "llc.control.ftype == 3"
+    description: "Filter for LLC U-frames (unnumbered)"

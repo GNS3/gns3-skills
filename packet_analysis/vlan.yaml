@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for VLAN
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VLAN Packet Analysis"
+description: "IEEE 802.1Q VLAN tagging packet analysis for trunking and segmentation troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "vlan"
+
+# tshark display filter - used for -Y parameter
+display_filter: "vlan"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "VLAN ID"
+    tshark_field: "vlan.id"
+    description: "VLAN identifier (1-4094)"
+
+  - label: "VLAN Name"
+    tshark_field: "vlan.id_name"
+    description: "VLAN name (if configured in Wireshark)"
+
+  - label: "Priority (PCP)"
+    tshark_field: "vlan.priority"
+    description: "Priority Code Point (0-7) for QoS"
+
+  - label: "Drop Eligible"
+    tshark_field: "vlan.dei"
+    description: "Drop Eligible Indicator (formerly CFI)"
+
+  - label: "CFI"
+    tshark_field: "vlan.cfi"
+    description: "Canonical Format Indicator (legacy)"
+
+  - label: "EtherType"
+    tshark_field: "vlan.etype"
+    description: "Encapsulated protocol EtherType"
+
+  - label: "VLAN Count"
+    tshark_field: "frame.vlan_count"
+    description: "Number of VLAN tags in frame"
+
+  - label: "Source MAC"
+    tshark_field: "eth.src"
+    description: "Source MAC address"
+
+  - label: "Destination MAC"
+    tshark_field: "eth.dst"
+    description: "Destination MAC address"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "Native VLAN (untagged)"
+    filter: "not vlan"
+    description: "Filter for untagged frames (native VLAN)"
+
+  - name: "Specific VLAN"
+    filter: "vlan.id == 10"
+    description: "Filter for specific VLAN ID"
+
+  - name: "Voice VLAN (priority 5)"
+    filter: "vlan.priority == 5"
+    description: "Filter for voice VLAN traffic"
+
+  - name: "QoS tagged frames"
+    filter: "vlan.priority > 0"
+    description: "Filter for frames with QoS priority"
+
+  - name: "Double-tagged (Q-in-Q)"
+    filter: "frame.vlan_count == 2"
+    description: "Filter for double-tagged frames"
+
+  - name: "Voice VLAN range"
+    filter: "vlan.id >= 100 and vlan.id <= 199"
+    description: "Filter for common voice VLAN range"
+
+checks:
+  - name: "vlan_mismatch"
+    severity: major
+    message: "VLAN mismatch: expected VLAN {expected_vlan}, got {vlan.id} on {eth.src}"
+    condition: "VLAN ID differs from expected for port or MAC address"
+
+  - name: "vlan_native_mismatch"
+    severity: minor
+    message: "Native VLAN mismatch: untagged frame on trunk expecting VLAN {expected_native_vlan}"
+    condition: "Untagged frame received on trunk port"
+
+  - name: "vlan_storm"
+    severity: major
+    message: "VLAN storm detected: {count} frames in VLAN {vlan.id} within 1 second"
+    condition: "More than 1000 frames with same vlan.id within 1 second"
+
+  - name: "vlan_hop"
+    severity: critical
+    message: "VLAN hopping attempt: double-tagged frame with different outer VLAN {vlan.id}"
+    condition: "frame.vlan_count == 2 with mismatched inner VLAN tags"

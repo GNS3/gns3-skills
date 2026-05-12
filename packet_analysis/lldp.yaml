@@ -1,0 +1,132 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for LLDP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "LLDP Packet Analysis"
+description: "LLDP (Link Layer Discovery Protocol) packet analysis for neighbor discovery and topology mapping"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "lldp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "lldp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Chassis ID Subtype"
+    tshark_field: "lldp.chassis.subtype"
+    description: "Chassis ID subtype: 1=MAC, 2=Network Address, 3=Interface Name, etc."
+
+  - label: "Chassis ID"
+    tshark_field: "lldp.chassis.id"
+    description: "Chassis identifier (usually MAC address)"
+
+  - label: "Port ID Subtype"
+    tshark_field: "lldp.port.subtype"
+    description: "Port ID subtype: 1=Interface Alias, 2=Port Component, 3=MAC, 5=Interface Name, etc."
+
+  - label: "Port ID"
+    tshark_field: "lldp.port.id"
+    description: "Port identifier"
+
+  - label: "Time to Live"
+    tshark_field: "lldp.ttl"
+    description: "Time to live in seconds (usually 120)"
+
+  - label: "System Name"
+    tshark_field: "lldp.tlv.system.name"
+    description: "System hostname"
+
+  - label: "System Description"
+    tshark_field: "lldp.tlv.system.desc"
+    description: "System description"
+
+  - label: "System Capabilities"
+    tshark_field: "lldp.tlv.system_cap"
+    description: "Supported system capabilities"
+
+  - label: "Enabled Capabilities"
+    tshark_field: "lldp.tlv.enable_system_cap"
+    description: "Enabled system capabilities"
+
+  - label: "Management Address"
+    tshark_field: "lldp.mgmt.addr"
+    description: "Management IP address"
+
+  - label: "Port Description"
+    tshark_field: "lldp.tlv.port_desc"
+    description: "Port description"
+
+  - label: "Port VLAN ID"
+    tshark_field: "lldp.tlv.port_vlan_id"
+    description: "Port VLAN ID (PVID)"
+
+  - label: "VLAN Name"
+    tshark_field: "lldp.tlv.vlan_name"
+    description: "VLAN name"
+
+  - label: "Link Aggregation"
+    tshark_field: "lldp.tlv.lag"
+    description: "Link aggregation status"
+
+  - label: "LLDP-MED Capabilities"
+    tshark_field: "lldp.tlv.med_cap"
+    description: "LLDP-MED capabilities"
+
+  - label: "TLV Type"
+    tshark_field: "lldp.tlv.type"
+    description: "TLV type: 0=End, 1=Chassis, 2=Port, 3=TTL, 4=System Name, 5=System Desc, etc."
+
+  - label: "TLV Length"
+    tshark_field: "lldp.tlv.len"
+    description: "TLV length"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "LLDP from specific chassis"
+    filter: "lldp.chassis.id == 00:11:22:33:44:55"
+    description: "Filter for LLDP from specific chassis MAC"
+
+  - name: "LLDP with system name"
+    filter: "lldp.tlv.system.name"
+    description: "Filter for LLDP frames with system name"
+
+  - label: "LLDP from router"
+    filter: "lldp.tlv.enable_system_cap.router == 1"
+    description: "Filter for LLDP from routers"
+
+  - name: "LLDP from switch"
+    filter: "lldp.tlv.enable_system_cap.bridge == 1"
+    description: "Filter for LLDP from switches"
+
+  - name: "LLDP-MED"
+    filter: "lldp.tlv.type == 127"
+    description: "Filter for LLDP-MED frames"
+
+checks:
+  - name: "lldp_neighbor_timeout"
+    severity: minor
+    message: "LLDP neighbor timeout: no LLDP from {lldp.tlv.system.name} within TTL"
+    condition: "No LLDP frames from neighbor within lldp.ttl seconds"
+
+  - name: "lldp_capability_mismatch"
+    severity: minor
+    message: "LLDP capability mismatch: advertised {lldp.tlv.system_cap} but enabled {lldp.tlv.enable_system_cap}"
+    condition: "lldp.tlv.system_cap != lldp.tlv.enable_system_cap"
+
+  - name: "lldp_loop_detected"
+    severity: critical
+    message: "LLDP loop detected: same chassis {lldp.chassis.id} seen on multiple ports"
+    condition: "Same lldp.chassis.id from different source ports"
+
+  - name: "lldp_vlan_mismatch"
+    severity: major
+    message: "LLDP VLAN mismatch: port VLAN {lldp.tlv.port_vlan_id} differs from local configuration"
+    condition: "lldp.tlv.port_vlan_id differs from expected native VLAN"

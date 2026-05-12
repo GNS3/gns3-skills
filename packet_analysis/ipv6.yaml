@@ -1,0 +1,146 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for IPv6
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IPv6 Packet Analysis"
+description: "IPv6 (Internet Protocol version 6) packet analysis for next-generation IP troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "ipv6"
+
+# tshark display filter - used for -Y parameter
+display_filter: "ipv6"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Version"
+    tshark_field: "ipv6.version"
+    description: "IP version (should be 6)"
+
+  - label: "Traffic Class"
+    tshark_field: "ipv6.tclass"
+    description: "Traffic class (equivalent to IPv4 ToS/DSCP)"
+
+  - label: "Flow Label"
+    tshark_field: "ipv6.flow"
+    description: "Flow label for QoS"
+
+  - label: "Payload Length"
+    tshark_field: "ipv6.plen"
+    description: "IPv6 payload length"
+
+  - label: "Next Header"
+    tshark_field: "ipv6.nxt"
+    description: "Next header protocol (6=TCP, 17=UDP, 58=ICMPv6, etc.)"
+
+  - label: "Hop Limit"
+    tshark_field: "ipv6.hlim"
+    description: "Hop limit (equivalent to IPv4 TTL)"
+
+  - label: "Source Address"
+    tshark_field: "ipv6.src"
+    description: "IPv6 source address"
+
+  - label: "Destination Address"
+    tshark_field: "ipv6.dst"
+    description: "IPv6 destination address"
+
+  - label: "Fragment Offset"
+    tshark_field: "ipv6.frag.offset"
+    description: "Fragment offset (if fragmented)"
+
+  - label: "Fragment More"
+    tshark_field: "ipv6.frag.mf"
+    description: "More fragments flag"
+
+  - label: "Fragment ID"
+    tshark_field: "ipv6.frag.id"
+    description: "Fragment identification"
+
+  - label: "Extension Header Count"
+    tshark_field: "ipv6.ext.fn"
+    description: "Number of extension headers"
+
+  - label: "Destination Options"
+    tshark_field: "ipv6.dstopts"
+    description: "Destination options header"
+
+  - label: "Routing Header"
+    tshark_field: "ipv6.routing"
+    description: "Routing header for source routing"
+
+  - label: "Hop-by-Hop Options"
+    tshark_field: "ipv6.hbhopts"
+    description: "Hop-by-hop options header"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "IPv6 TCP"
+    filter: "ipv6 and ipv6.nxt == 6"
+    description: "Filter for IPv6 TCP packets"
+
+  - name: "IPv6 UDP"
+    filter: "ipv6 and ipv6.nxt == 17"
+    description: "Filter for IPv6 UDP packets"
+
+  - name: "IPv6 ICMPv6"
+    filter: "ipv6 and ipv6.nxt == 58"
+    description: "Filter for IPv6 ICMPv6 packets"
+
+  - name: "IPv6 Fragmented"
+    filter: "ipv6.frag.offset"
+    description: "Filter for fragmented IPv6 packets"
+
+  - name: "IPv6 Link-local"
+    filter: "ipv6.src starts with fe80::"
+    description: "Filter for IPv6 link-local addresses"
+
+  - label: "IPv6 Unique Local"
+    filter: "ipv6.src starts with fd00::"
+    description: "Filter for IPv6 unique local addresses (ULA)"
+
+  - name: "IPv6 Multicast"
+    filter: "ipv6.dst starts with ff00::"
+    description: "Filter for IPv6 multicast addresses"
+
+  - name: "IPv6 Hop Limit Exceeded"
+    filter: "ipv6.hlim == 0 or ipv6.hlim == 1"
+    description: "Filter for packets with low hop limit"
+
+checks:
+  - name: "ipv6_hop_limit_exceeded"
+    severity: minor
+    message: "IPv6 hop limit exceeded: packet from {ipv6.src} to {ipv6.dst} with hop limit {ipv6.hlim}"
+    condition: "ipv6.hlim == 0 or icmpv6.type == 3"
+
+  - name: "ipv6_fragmentation"
+    severity: minor
+    message: "IPv6 fragmentation detected: ID {ipv6.frag.id}"
+    condition: "ipv6.frag.offset is set"
+
+  - name: "ipv6_unreachable"
+    severity: major
+    message: "IPv6 destination unreachable: {ipv6.dst} from {ipv6.src}"
+    condition: "icmpv6.type == 1"
+
+  - name: "ipv6_packet_too_big"
+    severity: major
+    message: "IPv6 packet too big: MTU {icmpv6.mtu} for path {ipv6.src} to {ipv6.dst}"
+    condition: "icmpv6.type == 2"
+
+  - name: "ipv6_extension_header_chain"
+    severity: minor
+    message: "IPv6 long extension header chain: {ipv6.ext.fn} headers"
+    condition: "ipv6.ext.fn > 3"
+
+  - name: "ipv6_address_format_error"
+    severity: major
+    message: "IPv6 address format error: {ipv6.src} or {ipv6.dst}"
+    condition: "Invalid IPv6 address format detected"

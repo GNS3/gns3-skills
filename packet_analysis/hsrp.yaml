@@ -1,0 +1,134 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for HSRP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "HSRP Packet Analysis"
+description: "HSRP (Hot Standby Router Protocol) packet analysis for Cisco FHR troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "hsrp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "hsrp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "HSRP Version"
+    tshark_field: "hsrp.version"
+    description: "HSRP version: 0=HSRPv1, 1=HSRPv2"
+
+  - label: "Opcode"
+    tshark_field: "hsrp.opcode"
+    description: "HSRP opcode: 0=Hello, 1=Coup, 2=Resign"
+
+  - label: "State"
+    tshark_field: "hsrp.state"
+    description: "HSRP state: 0=Initial, 1=Learn, 2=Listen, 3=Speak, 4=Standby, 6=Active"
+
+  - label: "Group"
+    tshark_field: "hsrp.group"
+    description: "HSRP group number"
+
+  - label: "Priority"
+    tshark_field: "hsrp.priority"
+    description: "HSRP priority (0-255, 100=default)"
+
+  - label: "Hello Time"
+    tshark_field: "hsrp.hellotime"
+    description: "Hello interval in seconds (default 3)"
+
+  - label: "Hold Time"
+    tshark_field: "hsrp.holdtime"
+    description: "Hold time in seconds (default 10)"
+
+  - label: "Virtual IP Address"
+    tshark_field: "hsrp.virt_ip"
+    description: "Virtual IP address"
+
+  - label: "Authentication Data"
+    tshark_field: "hsrp.auth_data"
+    description: "HSRP authentication string"
+
+  - label: "MD5 IP Address"
+    tshark_field: "hsrp.md5_ip_address"
+    description: "Sender IP address for MD5 authentication"
+
+  - label: "Advertisement Type"
+    tshark_field: "hsrp.adv.tlvtype"
+    description: "HSRPv2 advertisement TLV type"
+
+  - label: "Advertisement State"
+    tshark_field: "hsrp.adv.state"
+    description: "HSRPv2 advertisement state"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "HSRPv1"
+    filter: "hsrp.version == 0"
+    description: "Filter for HSRPv1"
+
+  - name: "HSRPv2"
+    filter: "hsrp.version == 1"
+    description: "Filter for HSRPv2"
+
+  - name: "HSRP Hello"
+    filter: "hsrp.opcode == 0"
+    description: "Filter for HSRP Hello"
+
+  - name: "HSRP Coup"
+    filter: "hsrp.opcode == 1"
+    description: "Filter for HSRP Coup (takeover)"
+
+  - name: "HSRP Resign"
+    filter: "hsrp.opcode == 2"
+    description: "Filter for HSRP Resign"
+
+  - name: "HSRP Active"
+    filter: "hsrp.state == 6"
+    description: "Filter for HSRP Active state"
+
+  - name: "HSRP Standby"
+    filter: "hsrp.state == 4"
+    description: "Filter for HSRP Standby state"
+
+  - name: "Specific Group"
+    filter: "hsrp.group == 10"
+    description: "Filter for specific HSRP group"
+
+checks:
+  - name: "hsrp_state_change"
+    severity: major
+    message: "HSRP state change: group {hsrp.group} moved to state {hsrp.state}"
+    condition: "hsrp.state changes for same hsrp.group from same source"
+
+  - name: "hsrp_active_duplicate"
+    severity: critical
+    message: "HSRP duplicate active: multiple routers in Active state for group {hsrp.group}"
+    condition: "Multiple HSRP advertisements with hsrp.state == 6 for same hsrp.group"
+
+  - name: "hsrp_coup_detected"
+    severity: major
+    message: "HSRP coup detected: {ip.src} taking over as Active for group {hsrp.group}"
+    condition: "hsrp.opcode == 1"
+
+  - name: "hsrp_resign_detected"
+    severity: major
+    message: "HSRP resign: {ip.src} resigning as Active for group {hsrp.group}"
+    condition: "hsrp.opcode == 2"
+
+  - name: "hsrp_priority_preempt"
+    severity: minor
+    message: "HSRP priority higher: {hsrp.priority} from {ip.src} should preempt"
+    condition: "hsrp.priority > current_active_priority and hsrp.state != 6"
+
+  - name: "hsrp_auth_mismatch"
+    severity: major
+    message: "HSRP authentication mismatch for group {hsrp.group}"
+    condition: "HSRP authentication failure detected"

@@ -1,0 +1,190 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for HTTP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "HTTP Packet Analysis"
+description: "HTTP (Hypertext Transfer Protocol) packet analysis for web traffic troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "http"
+
+# tshark display filter - used for -Y parameter
+display_filter: "http"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Request/Response"
+    tshark_field: "http.request"
+    description: "HTTP request message"
+
+  - label: "Response"
+    tshark_field: "http.response"
+    description: "HTTP response message"
+
+  - label: "Request Method"
+    tshark_field: "http.request.method"
+    description: "HTTP request method: GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH, etc."
+
+  - label: "Request URI"
+    tshark_field: "http.request.uri"
+    description: "HTTP request URI"
+
+  - label: "Request URI Path"
+    tshark_field: "http.request.uri.path"
+    description: "HTTP request URI path component"
+
+  - label: "Request URI Query"
+    tshark_field: "http.request.uri.query"
+    description: "HTTP request URI query component"
+
+  - label: "Full Request URI"
+    tshark_field: "http.request.full_uri"
+    description: "Full HTTP request URI including host"
+
+  - label: "Request Version"
+    tshark_field: "http.request.version"
+    description: "HTTP request version (e.g., HTTP/1.1, HTTP/2)"
+
+  - label: "Response Version"
+    tshark_field: "http.response.version"
+    description: "HTTP response version"
+
+  - label: "Status Code"
+    tshark_field: "http.response.code"
+    description: "HTTP response status code (200=OK, 301=Redirect, 404=Not Found, 500=Server Error, etc.)"
+
+  - label: "Status Code Description"
+    tshark_field: "http.response.code.desc"
+    description: "HTTP response status code description"
+
+  - label: "Response Phrase"
+    tshark_field: "http.response.phrase"
+    description: "HTTP response reason phrase"
+
+  - label: "Host Header"
+    tshark_field: "http.host"
+    description: "HTTP Host header"
+
+  - label: "User-Agent"
+    tshark_field: "http.user_agent"
+    description: "HTTP User-Agent header"
+
+  - label: "Content-Type"
+    tshark_field: "http.content_type"
+    description: "HTTP Content-Type header"
+
+  - label: "Content-Length"
+    tshark_field: "http.content_length"
+    description: "HTTP Content-Length header"
+
+  - label: "Transfer-Encoding"
+    tshark_field: "http.transfer_encoding"
+    description: "HTTP Transfer-Encoding header (e.g., chunked)"
+
+  - label: "Connection"
+    tshark_field: "http.connection"
+    description: "HTTP Connection header (e.g., keep-alive, close)"
+
+  - label: "Authorization"
+    tshark_field: "http.authorization"
+    description: "HTTP Authorization header"
+
+  - label: "Cookie"
+    tshark_field: "http.cookie"
+    description: "HTTP Cookie header"
+
+  - label: "Location"
+    tshark_field: "http.location"
+    description: "HTTP Location header (redirect target)"
+
+  - label: "Server"
+    tshark_field: "http.server"
+    description: "HTTP Server header"
+
+  - label: "Referer"
+    tshark_field: "http.referer"
+    description: "HTTP Referer header"
+
+  - label: "Time Delta"
+    tshark_field: "frame.time_delta"
+    description: "Time delta from previous frame"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "HTTP Requests only"
+    filter: "http.request"
+    description: "Filter for HTTP request messages"
+
+  - name: "HTTP Responses only"
+    filter: "http.response"
+    description: "Filter for HTTP response messages"
+
+  - name: "HTTP GET requests"
+    filter: "http.request.method == \"GET\""
+    description: "Filter for HTTP GET requests"
+
+  - name: "HTTP POST requests"
+    filter: "http.request.method == \"POST\""
+    description: "Filter for HTTP POST requests"
+
+  - name: "HTTP 200 OK responses"
+    filter: "http.response.code == 200"
+    description: "Filter for successful HTTP responses"
+
+  - name: "HTTP 4xx errors"
+    filter: "http.response.code >= 400 and http.response.code < 500"
+    description: "Filter for HTTP client error responses"
+
+  - name: "HTTP 5xx errors"
+    filter: "http.response.code >= 500 and http.response.code < 600"
+    description: "Filter for HTTP server error responses"
+
+  - name: "HTTP redirects"
+    filter: "http.response.code >= 300 and http.response.code < 400"
+    description: "Filter for HTTP redirect responses"
+
+  - name: "HTTP to specific host"
+    filter: "http.host == \"example.com\""
+    description: "Filter for HTTP traffic to specific host"
+
+  - name: "HTTP with Keep-Alive"
+    filter: "http.connection == \"keep-alive\""
+    description: "Filter for HTTP with persistent connections"
+
+checks:
+  - name: "http_4xx_error"
+    severity: minor
+    message: "HTTP client error: {http.request.method} {http.request.uri} returned {http.response.code} {http.response.code.desc}"
+    condition: "http.response and http.response.code >= 400 and http.response.code < 500"
+
+  - name: "http_5xx_error"
+    severity: major
+    message: "HTTP server error: {http.request.method} {http.request.uri} returned {http.response.code} {http.response.code.desc}"
+    condition: "http.response and http.response.code >= 500 and http.response.code < 600"
+
+  - name: "http_no_response"
+    severity: major
+    message: "HTTP request without response: {http.request.method} {http.request.uri}"
+    condition: "http.request and no matching http.response within expected time"
+
+  - name: "http_slow_response"
+    severity: minor
+    message: "HTTP slow response: {http.request.method} {http.request.uri} took {frame.time_delta} seconds"
+    condition: "http.response and frame.time_delta > 3"
+
+  - name: "http_redirect_chain"
+    severity: minor
+    message: "HTTP redirect: {http.response.code} to {http.location}"
+    condition: "http.response and http.response.code >= 300 and http.response.code < 400"
+
+  - name: "http_large_response"
+    severity: minor
+    message: "HTTP large response: {http.content_length} bytes for {http.request.uri}"
+    condition: "http.response and http.content_length > 1000000"

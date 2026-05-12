@@ -1,0 +1,166 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for SSL/TLS
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "SSL/TLS Packet Analysis"
+description: "SSL/TLS (Secure Sockets Layer/Transport Layer Security) packet analysis for encrypted traffic troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "ssl"
+
+# tshark display filter - used for -Y parameter
+display_filter: "ssl or tls"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "TLS Stream"
+    tshark_field: "tls.stream"
+    description: "TLS stream identifier for grouping related packets"
+
+  - label: "Record Layer Content Type"
+    tshark_field: "tls.record.content_type"
+    description: "TLS record content type: 20=Change Cipher Spec, 21=Alert, 22=Handshake, 23=Application Data"
+
+  - label: "Record Version"
+    tshark_field: "tls.record.version"
+    description: "TLS record version (0x0301=TLS 1.0, 0x0302=TLS 1.1, 0x0303=TLS 1.2, 0x0304=TLS 1.3)"
+
+  - label: "Record Length"
+    tshark_field: "tls.record.length"
+    description: "TLS record length"
+
+  - label: "Handshake Type"
+    tshark_field: "tls.handshake.type"
+    description: "TLS handshake type: 1=ClientHello, 2=ServerHello, 11=Certificate, 14=ServerHelloDone, 16=ClientKeyExchange"
+
+  - label: "Client Hello Version"
+    tshark_field: "tls.handshake.version"
+    description: "TLS version offered in ClientHello"
+
+  - label: "Server Hello Version"
+    tshark_field: "tls.handshake.server_version"
+    description: "TLS version selected in ServerHello"
+
+  - label: "Cipher Suite"
+    tshark_field: "tls.handshake.ciphersuite"
+    description: "Selected cipher suite"
+
+  - label: "Session ID"
+    tshark_field: "tls.handshake.session_id"
+    description: "TLS session ID"
+
+  - label: "Session Ticket"
+    tshark_field: "tls.handshake.session_ticket"
+    description: "TLS session ticket for session resumption"
+
+  - label: "Compression Method"
+    tshark_field: "tls.handshake.compression_method"
+    description: "Compression method (usually null)"
+
+  - label: "Server Certificate"
+    tshark_field: "tls.handshake.certificate"
+    description: "Server certificate"
+
+  - label: "Alert Level"
+    tshark_field: "tls.alert.level"
+    description: "TLS alert level: 1=Warning, 2=Fatal"
+
+  - label: "Alert Description"
+    tshark_field: "tls.alert.desc"
+    description: "TLS alert description (e.g., close_notify, handshake_failure, bad_certificate)"
+
+  - label: "Application Data Protocol"
+    tshark_field: "tls.app_data_proto"
+    description: "Protocol encapsulated in TLS (e.g., http, smtp)"
+
+  - label: "Encrypted Application Data"
+    tshark_field: "tls.app_data"
+    description: "Encrypted application data"
+
+  - label: "SNI Extension"
+    tshark_field: "tls.handshake.extensions_server_name"
+    description: "Server Name Indication extension"
+
+  - label: "ALPN Protocol"
+    tshark_field: "tls.handshake.extensions_alpn_str"
+    description: "Application-Layer Protocol Negotiation protocol"
+
+  - label: "Heartbeat Type"
+    tshark_field: "tls.heartbeat_message.type"
+    description: "Heartbeat message type (1=request, 2=response)"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "TLS ClientHello"
+    filter: "tls.handshake.type == 1"
+    description: "Filter for TLS ClientHello messages"
+
+  - name: "TLS ServerHello"
+    filter: "tls.handshake.type == 2"
+    description: "Filter for TLS ServerHello messages"
+
+  - name: "TLS Certificate"
+    filter: "tls.handshake.type == 11"
+    description: "Filter for TLS Certificate messages"
+
+  - name: "TLS Alert"
+    filter: "tls.record.content_type == 21"
+    description: "Filter for TLS Alert messages"
+
+  - name: "TLS Fatal Alert"
+    filter: "tls.alert.level == 2"
+    description: "Filter for TLS fatal alerts"
+
+  - name: "TLS Application Data"
+    filter: "tls.record.content_type == 23"
+    description: "Filter for TLS application data"
+
+  - name: "TLS Change Cipher Spec"
+    filter: "tls.record.content_type == 20"
+    description: "Filter for TLS Change Cipher Spec messages"
+
+  - name: "TLS 1.2 or lower"
+    filter: "tls.record.version == 0x0303 or tls.record.version == 0x0302 or tls.record.version == 0x0301"
+    description: "Filter for TLS 1.2 or lower versions"
+
+  - name: "TLS 1.3"
+    filter: "tls.record.version == 0x0304"
+    description: "Filter for TLS 1.3"
+
+checks:
+  - name: "tls_handshake_failure"
+    severity: major
+    message: "TLS handshake failure: {tls.alert.desc} from {ip.src}"
+    condition: "tls.alert.level == 2"
+
+  - name: "tls_version_mismatch"
+    severity: minor
+    message: "TLS version downgrade: client offered {tls.handshake.version}, server selected {tls.handshake.server_version}"
+    condition: "tls.handshake.version > tls.handshake.server_version"
+
+  - label: "tls_certificate_error"
+    severity: major
+    message: "TLS certificate error: {tls.alert.desc}"
+    condition: "tls.alert.desc contains 'certificate'"
+
+  - name: "tls_incomplete_handshake"
+    severity: major
+    message: "TLS incomplete handshake: ClientHello from {ip.src} without ServerHello"
+    condition: "tls.handshake.type == 1 and no matching tls.handshake.type == 2 within expected time"
+
+  - name: "tls_weak_cipher"
+    severity: minor
+    message: "TLS weak cipher suite: {tls.handshake.ciphersuite}"
+    condition: "tls.handshake.ciphersuite contains 'RC4' or tls.handshake.ciphersuite contains 'DES' or tls.handshake.ciphersuite contains '3DES'"
+
+  - name: "tls_renegotiation"
+    severity: minor
+    message: "TLS renegotiation detected in stream {tls.stream}"
+    condition: "Multiple ClientHello in same stream after establishment"

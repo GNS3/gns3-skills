@@ -1,0 +1,141 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for PIM
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "PIM Packet Analysis"
+description: "PIM (Protocol Independent Multicast) packet analysis for multicast routing troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "pim"
+
+# tshark display filter - used for -Y parameter
+display_filter: "pim"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "PIM Version"
+    tshark_field: "pim.version"
+    description: "PIM version (usually 2)"
+
+  - label: "PIM Type"
+    tshark_field: "pim.type"
+    description: "PIM message type: 0=Hello, 1=Register, 2=Register-Stop, 3=Join/Prune, 4=Bootstrap, 5=Assert, 6=Graft, 7=Graft-Ack, 8=Candidate RP Advertisement"
+
+  - label: "Checksum"
+    tshark_field: "pim.cksum"
+    description: "PIM checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "pim.cksum.status"
+    description: "Checksum verification status"
+
+  - label: "Holdtime"
+    tshark_field: "pim.holdtime"
+    description: "Hello holdtime in seconds"
+
+  - label: "DR Priority"
+    tshark_field: "pim.dr_priority"
+    description: "DR election priority"
+
+  - label: "Generation ID"
+    tshark_field: "pim.generation_id"
+    description: "Generation ID for restart detection"
+
+  - label: "LAN Prune Delay"
+    tshark_field: "pim.propagation_delay"
+    description: "Propagation delay in milliseconds"
+
+  - label: "Override Interval"
+    tshark_field: "pim.override_interval"
+    description: "Override interval in milliseconds"
+
+  - label: "Number of Groups"
+    tshark_field: "pim.numgroups"
+    description: "Number of multicast group sets"
+
+  - label: "Number of Joins"
+    tshark_field: "pim.numjoins"
+    description: "Number of joined sources"
+
+  - label: "Number of Prunes"
+    tshark_field: "pim.numprunes"
+    description: "Number of pruned sources"
+
+  - label: "Group Address"
+    tshark_field: "pim.group_addr"
+    description: "Multicast group address"
+
+  - label: "Source Address"
+    tshark_field: "pim.source_addr"
+    description: "Multicast source address"
+
+  - label: "Register Flag (Border)"
+    tshark_field: "pim.register_flag.border"
+    description: "Border router flag in Register messages"
+
+  - label: "Register Flag (Null)"
+    tshark_field: "pim.register_flag.null_register"
+    description: "Null-Register flag"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "PIM Hello"
+    filter: "pim.type == 0"
+    description: "Filter for PIM Hello messages"
+
+  - name: "PIM Register"
+    filter: "pim.type == 1"
+    description: "Filter for PIM Register messages"
+
+  - name: "PIM Register-Stop"
+    filter: "pim.type == 2"
+    description: "Filter for PIM Register-Stop messages"
+
+  - name: "PIM Join/Prune"
+    filter: "pim.type == 3"
+    description: "Filter for PIM Join/Prune messages"
+
+  - name: "PIM Assert"
+    filter: "pim.type == 5"
+    description: "Filter for PIM Assert messages"
+
+  - name: "PIM Bootstrap"
+    filter: "pim.type == 4"
+    description: "Filter for PIM Bootstrap messages"
+
+  - name: "PIM to specific group"
+    filter: "pim.group_addr == 239.1.1.1"
+    description: "Filter for PIM messages to specific multicast group"
+
+checks:
+  - name: "pim_neighbor_timeout"
+    severity: major
+    message: "PIM neighbor timeout: no Hello from {ip.src} within holdtime"
+    condition: "pim.type == 0 and subsequent packets from same source missing within holdtime"
+
+  - name: "pim_dr_change"
+    severity: minor
+    message: "PIM DR change: new DR priority {pim.dr_priority} from {ip.src}"
+    condition: "Different pim.dr_priority values from same LAN segment"
+
+  - name: "pim_assert_winner"
+    severity: minor
+    message: "PIM Assert winner: {ip.src} won assert for group {pim.group_addr}"
+    condition: "pim.type == 5"
+
+  - name: "pim_register_stop"
+    severity: minor
+    message: "PIM Register-Stop: {ip.dst} rejecting registers from {ip.src}"
+    condition: "pim.type == 2"
+
+  - name: "pim_rp_mapping_change"
+    severity: minor
+    message: "PIM RP mapping change detected"
+    condition: "Different RP mappings in Bootstrap messages"

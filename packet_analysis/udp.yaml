@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for UDP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "UDP Packet Analysis"
+description: "UDP (User Datagram Protocol) packet analysis for connectionless traffic analysis"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "udp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "udp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Source Port"
+    tshark_field: "udp.srcport"
+    description: "UDP source port"
+
+  - label: "Destination Port"
+    tshark_field: "udp.dstport"
+    description: "UDP destination port"
+
+  - label: "Stream Index"
+    tshark_field: "udp.stream"
+    description: "UDP stream identifier for grouping related packets"
+
+  - label: "Length"
+    tshark_field: "udp.length"
+    description: "UDP packet length including header and data"
+
+  - label: "Checksum"
+    tshark_field: "udp.checksum"
+    description: "UDP checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "udp.checksum.status"
+    description: "Checksum verification status"
+
+  - label: "Time Delta"
+    tshark_field: "frame.time_delta"
+    description: "Time delta from previous frame"
+
+  - label: "Relative Time"
+    tshark_field: "frame.time_relative"
+    description: "Time relative to first packet in capture"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "Specific UDP port"
+    filter: "udp.port == 53"
+    description: "Filter for DNS traffic (port 53)"
+
+  - name: "DHCP traffic"
+    filter: "udp.port == 67 or udp.port == 68"
+    description: "Filter for DHCP traffic"
+
+  - name: "Syslog traffic"
+    filter: "udp.port == 514"
+    description: "Filter for syslog traffic"
+
+  - name: "NTP traffic"
+    filter: "udp.port == 123"
+    description: "Filter for NTP traffic"
+
+  - name: "SNMP traffic"
+    filter: "udp.port == 161 or udp.port == 162"
+    description: "Filter for SNMP traffic"
+
+  - name: "UDP stream"
+    filter: "udp.stream == 0"
+    description: "Filter for specific UDP stream"
+
+  - name: "Large UDP packets"
+    filter: "udp.length > 1472"
+    description: "Filter for UDP packets that may fragment (MTU 1500 - IP 20 - UDP 8 = 1472)"
+
+checks:
+  - name: "udp_checksum_error"
+    severity: major
+    message: "UDP checksum error in packet from {ip.src} to {ip.dst}"
+    condition: "udp.checksum.status != 0"
+
+  - name: "udp_packet_too_large"
+    severity: minor
+    message: "UDP packet may fragment: length {udp.length} exceeds safe MTU"
+    condition: "udp.length > 1472 and ip.frag_offset == 0"
+
+  - name: "udp_port_unreachable"
+    severity: major
+    message: "UDP port unreachable: ICMP from {ip.src} indicating {ip.dst} port closed"
+    condition: "icmp.type == 3 and icmp.code == 3 and previous packet was UDP to same destination"
+
+  - name: "udp_high_packet_rate"
+    severity: minor
+    message: "High UDP packet rate from {ip.src} to {ip.dst}: {count} packets in short interval"
+    condition: "More than 100 UDP packets between same endpoints within 1 second"

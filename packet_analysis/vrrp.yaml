@@ -1,0 +1,129 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for VRRP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VRRP Packet Analysis"
+description: "VRRP (Virtual Router Redundancy Protocol) packet analysis for FHR troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "vrrp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "vrrp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "VRRP Version"
+    tshark_field: "vrrp.version"
+    description: "VRRP version: 2 or 3"
+
+  - label: "VRRP Type"
+    tshark_field: "vrrp.type"
+    description: "VRRP packet type: 1=Advertisement"
+
+  - label: "Virtual Router ID"
+    tshark_field: "vrrp.virt_rtr_id"
+    description: "Virtual router identifier (VRID)"
+
+  - label: "Priority"
+    tshark_field: "vrrp.prio"
+    description: "VRRP priority (0-255, 100=default, 255=owner, 0=stop participating)"
+
+  - label: "Address Count"
+    tshark_field: "vrrp.addr_count"
+    description: "Number of IP addresses in advertisement"
+
+  - label: "Advertisement Interval"
+    tshark_field: "vrrp.adver_int"
+    description: "Advertisement interval in seconds (VRRPv2)"
+
+  - label: "Short Advertisement Interval"
+    tshark_field: "vrrp.short_adver_int"
+    description: "Advertisement interval in centiseconds (VRRPv3)"
+
+  - label: "Checksum"
+    tshark_field: "vrrp.checksum"
+    description: "VRRP checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "vrrp.checksum.status"
+    description: "Checksum verification status"
+
+  - label: "Authentication Type"
+    tshark_field: "vrrp.auth_type"
+    description: "Authentication type: 0=None, 1=Simple, 2=IP Authentication Header"
+
+  - label: "Virtual IP Address"
+    tshark_field: "vrrp.ip_addr"
+    description: "Virtual IPv4 address"
+
+  - label: "Virtual IPv6 Address"
+    tshark_field: "vrrp.ipv6_addr"
+    description: "Virtual IPv6 address"
+
+  - label: "Authentication String"
+    tshark_field: "vrrp.auth_string"
+    description: "Simple password authentication string"
+
+  - label: "MD5 Authentication Data"
+    tshark_field: "vrrp.md5_auth_data"
+    description: "MD5 authentication digest"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "VRRPv2"
+    filter: "vrrp.version == 2"
+    description: "Filter for VRRP version 2"
+
+  - name: "VRRPv3"
+    filter: "vrrp.version == 3"
+    description: "Filter for VRRP version 3"
+
+  - name: "VRRP Master"
+    filter: "vrrp.prio > 100"
+    description: "Filter for VRRP master advertisements"
+
+  - name: "VRRP Backup"
+    filter: "vrrp.prio < 100"
+    description: "Filter for VRRP backup advertisements"
+
+  - name: "VRRP IP Address Owner"
+    filter: "vrrp.prio == 255"
+    description: "Filter for VRRP IP address owner (priority 255)"
+
+  - name: "Specific VRID"
+    filter: "vrrp.virt_rtr_id == 10"
+    description: "Filter for specific virtual router ID"
+
+checks:
+  - name: "vrrp_master_down"
+    severity: critical
+    message: "VRRP master down: no advertisements from VRID {vrrp.virt_rtr_id} within master_down_interval"
+    condition: "No VRRP advertisements from current master within 3 * vrrp.adver_int"
+
+  - name: "vrrp_priority_change"
+    severity: minor
+    message: "VRRP priority change: VRID {vrrp.virt_rtr_id} priority changed to {vrrp.prio}"
+    condition: "Different vrrp.prio values for same vrrp.virt_rtr_id from same source"
+
+  - name: "vrrp_master_transition"
+    severity: major
+    message: "VRRP master transition: {ip.src} became master for VRID {vrrp.virt_rtr_id}"
+    condition: "vrrp.prio > current_master_priority"
+
+  - name: "vrrp_checksum_error"
+    severity: major
+    message: "VRRP checksum error from {ip.src}"
+    condition: "vrrp.checksum.status != 0"
+
+  - name: "vrrp_duplicate_master"
+    severity: critical
+    message: "VRRP duplicate master detected: multiple routers advertising as master for VRID {vrrp.virt_rtr_id}"
+    condition: "Multiple VRRP advertisements with vrrp.prio >= 100 for same vrrp.virt_rtr_id from different sources"

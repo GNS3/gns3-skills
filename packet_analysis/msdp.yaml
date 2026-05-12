@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for MSDP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "MSDP Packet Analysis"
+description: "MSDP (Multicast Source Discovery Protocol) packet analysis for inter-domain multicast"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "msdp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "msdp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "MSDP Type"
+    tshark_field: "msdp.type"
+    description: "MSDP message type: 1=SA, 2=SA-Request, 3=SA-Response, 4=Keepalive, 5=Notification, 6=Peer-Failure"
+
+  - label: "Length"
+    tshark_field: "msdp.length"
+    description: "MSDP message length"
+
+  - label: "Entry Count"
+    tshark_field: "msdp.sa.entry_count"
+    description: "Number of SA entries"
+
+  - label: "RP Address"
+    tshark_field: "msdp.sa.rp_addr"
+    description: "RP address for the active source"
+
+  - label: "Group Address"
+    tshark_field: "msdp.sa.group_addr"
+    description: "Multicast group address"
+
+  - label: "Source Address"
+    tshark_field: "msdp.sa.src_addr"
+    description: "Active source IP address"
+
+  - label: "Error Code"
+    tshark_field: "msdp.not.error"
+    description: "Notification error code"
+
+  - label: "Error Subcode"
+    tshark_field: "msdp.not.error_sub"
+    description: "Notification error subcode"
+
+filter_examples:
+  - name: "MSDP SA"
+    filter: "msdp.type == 1"
+    description: "Filter for MSDP Source-Active"
+
+  - name: "MSDP SA-Request"
+    filter: "msdp.type == 2"
+    description: "Filter for MSDP SA-Request"
+
+  - name: "MSDP SA-Response"
+    filter: "msdp.type == 3"
+    description: "Filter for MSDP SA-Response"
+
+  - name: "MSDP Keepalive"
+    filter: "msdp.type == 4"
+    description: "Filter for MSDP Keepalive"
+
+  - name: "MSDP Notification"
+    filter: "msdp.type == 5"
+    description: "Filter for MSDP Notification"
+
+  - name: "Specific RP"
+    filter: "msdp.sa.rp_addr == 10.1.1.1"
+    description: "Filter for specific RP address"
+
+checks:
+  - name: "msdp_peer_down"
+    severity: major
+    message: "MSDP peer down: notification from {ip.src}: {msdp.not.error}/{msdp.not.error_sub}"
+    condition: "msdp.type == 5"
+
+  - name: "msdp_no_keepalive"
+    severity: major
+    message: "MSDP keepalive timeout: no message from {ip.src}"
+    condition: "No MSDP messages from peer within holdtime"
+
+  - name: "msdp_sa_count_high"
+    severity: minor
+    message: "MSDP high SA count: {msdp.sa.entry_count} sources from {ip.src}"
+    condition: "msdp.sa.entry_count > 100"
+
+  - name: "msdp_peer_dead"
+    severity: critical
+    message: "MSDP peer-failure: {ip.src} declared peer down"
+    condition: "msdp.type == 6 or TCP connection reset"

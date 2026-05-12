@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for BOOTP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "BOOTP Packet Analysis"
+description: "BOOTP (Bootstrap Protocol) packet analysis for legacy IP assignment and PXE boot"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "bootp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "bootp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Message Type"
+    tshark_field: "bootp.type"
+    description: "BOOTP message type: 1=Request, 2=Reply"
+
+  - label: "Hardware Type"
+    tshark_field: "bootp.hw.type"
+    description: "Hardware type (1=Ethernet)"
+
+  - label: "Hardware Address Length"
+    tshark_field: "bootp.hw.len"
+    description: "Hardware address length (6 for MAC)"
+
+  - label: "Hops"
+    tshark_field: "bootp.hops"
+    description: "Hop count (relay agents)"
+
+  - label: "Transaction ID"
+    tshark_field: "bootp.id"
+    description: "BOOTP transaction ID"
+
+  - label: "Seconds Elapsed"
+    tshark_field: "bootp.secs"
+    description: "Seconds since client started"
+
+  - label: "Broadcast Flag"
+    tshark_field: "bootp.flags.bc"
+    description: "Broadcast reply requested"
+
+  - label: "Client IP Address"
+    tshark_field: "bootp.ip.client"
+    description: "Client IP (ciaddr)"
+
+  - label: "Your IP Address"
+    tshark_field: "bootp.ip.your"
+    description: "Assigned IP (yiaddr)"
+
+  - label: "Server IP Address"
+    tshark_field: "bootp.ip.server"
+    description: "Next server IP (siaddr)"
+
+  - label: "Relay IP Address"
+    tshark_field: "bootp.ip.relay"
+    description: "Relay agent IP (giaddr)"
+
+  - label: "Client MAC"
+    tshark_field: "bootp.hw.mac_addr"
+    description: "Client MAC address"
+
+  - label: "Server Hostname"
+    tshark_field: "bootp.server"
+    description: "Server hostname (sname)"
+
+  - label: "Boot Filename"
+    tshark_field: "bootp.file"
+    description: "Boot file name"
+
+filter_examples:
+  - name: "BOOTP Request"
+    filter: "bootp.type == 1"
+    description: "Filter for BOOTP requests"
+
+  - name: "BOOTP Reply"
+    filter: "bootp.type == 2"
+    description: "Filter for BOOTP replies"
+
+  - name: "BOOTP via relay"
+    filter: "bootp.ip.relay != 0.0.0.0"
+    description: "Filter for BOOTP relayed"
+
+  - name: "Specific MAC"
+    filter: "bootp.hw.mac_addr == 00:11:22:33:44:55"
+    description: "Filter for specific client MAC"
+
+checks:
+  - name: "bootp_no_reply"
+    severity: major
+    message: "BOOTP request without reply: XID {bootp.id}"
+    condition: "bootp.type == 1 and no matching bootp.type == 2 within timeout"
+
+  - name: "bootp_relay_mismatch"
+    severity: minor
+    message: "BOOTP relay mismatch: giaddr {bootp.ip.relay} different from source"
+    condition: "bootp.ip.relay is set and doesn't match client subnet"

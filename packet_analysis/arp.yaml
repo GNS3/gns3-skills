@@ -91,12 +91,12 @@ checks:
   condition: arp.opcode == 2 AND arp.src.proto_ipv4 == arp.dst.proto_ipv4
 - name: ndp_no_neighbor_advertisement
   severity: major
-  message: No NA reply for NS targeting {icmpv6.target_address} from {ipv6.src}
+  message: No NA reply for NS targeting {icmpv6.nd.ns.target_address} from {ipv6.src}
   condition: icmpv6.type == 135 and no matching icmpv6.type == 136 within expected
     window
 - name: ndp_duplicate_address
   severity: critical
-  message: DAD (Duplicate Address Detection) indicates {icmpv6.target_address} may
+  message: DAD (Duplicate Address Detection) indicates {icmpv6.nd.ns.target_address} may
     be in use
   condition: icmpv6.type == 135 and icmpv6.target_address matches solicited-node multicast
     and NA received in response

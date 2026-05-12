@@ -93,11 +93,11 @@ checks:
   condition: icmpv6.type == 134 and multiple sources
 - name: icmpv6_dad_failure
   severity: major
-  message: 'ICMPv6 DAD failure: {icmpv6.target_address} may be in use'
+  message: 'ICMPv6 DAD failure: {icmpv6.nd.ns.target_address} may be in use'
   condition: icmpv6.type == 135 (NS with unspecified source) and matching NA received
 - name: icmpv6_ns_flood
   severity: minor
-  message: 'ICMPv6 NS flood: {icmpv6.target_address} targeted multiple times'
+  message: 'ICMPv6 NS flood: {icmpv6.nd.ns.target_address} targeted multiple times'
   condition: More than 20 NS for same target within 1 second
 - name: icmpv6_redirect_attack
   severity: major

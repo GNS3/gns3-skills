@@ -94,7 +94,7 @@ filter_examples:
 checks:
 - name: snmp_no_response
   severity: major
-  message: 'SNMP request timeout: no response for request ID {snmp.reqid}'
+  message: 'SNMP request timeout: no response for request ID {frame.number}'
   condition: snmp.pdu_type != 2 and no matching snmp.response_in within timeout
 - name: snmp_error
   severity: major
@@ -106,7 +106,7 @@ checks:
   condition: SNMP packet with authentication error
 - name: snmp_slow_response
   severity: minor
-  message: 'SNMP slow response: {snmp.time} seconds for request ID {snmp.reqid}'
+  message: 'SNMP slow response: {snmp.time} seconds for request ID {frame.number}'
   condition: snmp.time > 5
 - name: snmp_community_mismatch
   severity: minor

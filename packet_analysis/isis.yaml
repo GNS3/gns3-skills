@@ -98,5 +98,5 @@ checks:
   condition: Multiple different IS-IS area addresses in hello packets from same source
 - name: isis_dis_change
   severity: minor
-  message: 'IS-IS DIS change: new LAN ID {isis.lan_hello.lan_id}'
+  message: 'IS-IS DIS change: new LAN ID {isis.hello.lan_id}'
   condition: Different isis.lan_hello.lan_id from same LAN segment

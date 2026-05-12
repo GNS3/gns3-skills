@@ -27,9 +27,9 @@ filter_examples:
 checks:
 - name: autor_rp_spoof
   severity: major
-  message: 'Auto-RP spoofing: unauthorized RP {autorp.rp_addr} announced'
+  message: 'Auto-RP spoofing: unauthorized RP {ip.src} announced'
   condition: Auto-RP announcement from unexpected source
 - name: autor_same_rp_announce
   severity: minor
-  message: 'Auto-RP duplicate RP: {autorp.rp_addr} announced by multiple sources'
+  message: 'Auto-RP duplicate RP: {ip.src} announced by multiple sources'
   condition: Same autorp.rp_addr from different sources

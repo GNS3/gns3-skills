@@ -74,7 +74,7 @@ checks:
   condition: ipv6.hlim == 0 or icmpv6.type == 3
 - name: ipv6_fragmentation
   severity: minor
-  message: 'IPv6 fragmentation detected: ID {ipv6.frag.id}'
+  message: 'IPv6 fragmentation detected: ID {ip.id}'
   condition: ipv6.frag.offset is set
 - name: ipv6_unreachable
   severity: major
@@ -86,7 +86,7 @@ checks:
   condition: icmpv6.type == 2
 - name: ipv6_extension_header_chain
   severity: minor
-  message: 'IPv6 long extension header chain: {ipv6.ext.fn} headers'
+  message: 'IPv6 long extension header chain: hop count headers'
   condition: ipv6.ext.fn > 3
 - name: ipv6_address_format_error
   severity: major

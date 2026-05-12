@@ -87,6 +87,6 @@ checks:
   condition: Same lldp.chassis.id from different source ports
 - name: lldp_vlan_mismatch
   severity: major
-  message: 'LLDP VLAN mismatch: port VLAN {lldp.tlv.port_vlan_id} differs from local
+  message: 'LLDP VLAN mismatch: port VLAN {lldp.ieee.802_1.port_vlan.id} differs from local
     configuration'
   condition: lldp.tlv.port_vlan_id differs from expected native VLAN

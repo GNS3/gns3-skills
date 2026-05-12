@@ -72,9 +72,9 @@ filter_examples:
 checks:
 - name: bootp_no_reply
   severity: major
-  message: 'BOOTP request without reply: XID {bootp.id}'
+  message: 'BOOTP request without reply: XID {dhcp.id}'
   condition: bootp.type == 1 and no matching bootp.type == 2 within timeout
 - name: bootp_relay_mismatch
   severity: minor
-  message: 'BOOTP relay mismatch: giaddr {bootp.ip.relay} different from source'
+  message: 'BOOTP relay mismatch: giaddr {dhcp.ip.relay} different from source'
   condition: bootp.ip.relay is set and doesn't match client subnet

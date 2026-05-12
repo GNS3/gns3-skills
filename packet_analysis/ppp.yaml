@@ -68,7 +68,7 @@ checks:
   condition: ppp.magic_number in received packet matches transmitted magic_number
 - name: ppp_auth_failure
   severity: major
-  message: 'PPP authentication failure: {ppp.chap.code} for user {ppp.auth.name}'
+  message: 'PPP authentication failure: {ppp.code} for user {ppp.protocol}'
   condition: ppp.chap.code == 4
 - name: ppp_lcp_negotiation_failure
   severity: major

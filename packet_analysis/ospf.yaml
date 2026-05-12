@@ -45,7 +45,7 @@ fields:
   tshark_field: ospf.db.interface_mtu
   description: Interface MTU advertised in DBD packet
 - label: DBD Sequence
-  tshark_field: ospf.lsa.seqnum
+  tshark_field: ospf.db.dd_sequence
   description: DBD sequence number for master/slave negotiation
 - label: LSA ID
   tshark_field: ospf.lsa.id
@@ -57,7 +57,7 @@ fields:
   tshark_field: ospf.lsa.age
   description: LSA age in seconds (max 3600)
 - label: LSA Sequence
-  tshark_field: ospf.lsa.seqnum
+  tshark_field: ospf.db.dd_sequence
   description: LSA sequence number (higher = newer)
 - label: LSA Options
   tshark_field: ospf.v2.options
@@ -96,8 +96,8 @@ checks:
   condition: Same ospf.srcrouter from different ip.src addresses
 - name: mtu_mismatch_dbd
   severity: major
-  message: 'MTU mismatch: router {ip.src} advertises MTU {ospf.dbdescr.mtu} in DBD'
-  condition: ospf.msg == 2 and ospf.dbdescr.mtu differs between neighbors (ospf.dbdescr.mtu
+  message: 'MTU mismatch: router {ip.src} advertises MTU {ospf.db.interface_mtu} in DBD'
+  condition: ospf.msg == 2 and ospf.db.interface_mtu differs between neighbors (ospf.db.interface_mtu
     shows different values)
 - name: dbd_stuck_exstart
   severity: major
@@ -113,7 +113,7 @@ checks:
     neighbor router-id
 - name: lsa_aged_out
   severity: minor
-  message: 'LSA approaching max age: type {ospf.lsa.type}, ID {ospf.lsa.id}, age {ospf.lsa.age}'
+  message: 'LSA approaching max age: ID {ospf.lsa.id}, age {ospf.lsa.age}'
   condition: ospf.lsa.age > 3500
 - name: lsa_flooding_high_rate
   severity: minor

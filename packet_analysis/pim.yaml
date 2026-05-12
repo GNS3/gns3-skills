@@ -94,7 +94,7 @@ checks:
   condition: Different pim.dr_priority values from same LAN segment
 - name: pim_assert_winner
   severity: minor
-  message: 'PIM Assert winner: {ip.src} won assert for group {pim.group_addr}'
+  message: 'PIM Assert winner: {ip.src} won assert for group {pim.group_address}'
   condition: pim.type == 5
 - name: pim_register_stop
   severity: minor

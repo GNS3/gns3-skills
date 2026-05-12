@@ -38,5 +38,5 @@ filter_examples:
 checks:
 - name: isl_vlan_mismatch
   severity: major
-  message: 'ISL VLAN mismatch: expected VLAN {expected}, got {isl.vlan}'
+  message: 'ISL VLAN mismatch: expected VLAN {expected}, got {isl.vlan_id}'
   condition: Different isl.vlan than expected for the trunk

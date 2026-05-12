@@ -55,7 +55,7 @@ checks:
   condition: mpls.ttl == 0
 - name: mpls_label_stack_deep
   severity: minor
-  message: 'MPLS deep label stack: {frame.label_stack_depth} labels'
+  message: 'MPLS deep label stack: unknown labels'
   condition: frame.label_stack_depth > 3
 - name: mpls_exp_mismatch
   severity: minor

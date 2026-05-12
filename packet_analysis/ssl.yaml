@@ -97,16 +97,16 @@ filter_examples:
 checks:
 - name: tls_handshake_failure
   severity: major
-  message: 'TLS handshake failure: {tls.alert.desc} from {ip.src}'
+  message: 'TLS handshake failure: {tls.alert_message.desc} from {ip.src}'
   condition: tls.alert.level == 2
 - name: tls_version_mismatch
   severity: minor
   message: 'TLS version downgrade: client offered {tls.handshake.version}, server
-    selected {tls.handshake.server_version}'
-  condition: tls.handshake.version > tls.handshake.server_version
+    selected {tls.handshake.version}'
+  condition: tls.handshake.version > tls.handshake.version
 - label: tls_certificate_error
   severity: major
-  message: 'TLS certificate error: {tls.alert.desc}'
+  message: 'TLS certificate error: {tls.alert_message.desc}'
   condition: tls.alert.desc contains 'certificate'
 - name: tls_incomplete_handshake
   severity: major

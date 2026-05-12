@@ -197,9 +197,19 @@ troubleshooting_hints:
 - A short statement about which environments or topologies this applies to
 - Examples: `"All OSPF configurations"`, `"Hub-and-spoke EIGRP designs"`
 
+## Pre-commit Hooks
+
+Enable automatic validation before every commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook validates YAML syntax, skill format, and tshark fields on changed `packet_analysis/` files.
+
 ## Validation
 
-Before submitting, run the validation scripts:
+Before submitting, run all validation scripts:
 
 ```bash
 # Validate YAML syntax
@@ -207,6 +217,16 @@ python3 .github/scripts/validate_yaml.py
 
 # Validate skill format (required fields, enums, types)
 python3 .github/scripts/validate_skills.py
+
+# Validate tshark fields in packet_analysis/
+python3 .github/scripts/validate_tshark_fields.py
+```
+
+The tshark field validator ensures all `tshark_field` values in `packet_analysis/*.yaml` exist in the installed tshark:
+
+```bash
+# Must have tshark installed
+sudo apt install tshark
 ```
 
 Common validation failures and fixes:

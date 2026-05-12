@@ -49,3 +49,12 @@ jobs:
       - name: Validate skill format
         run: |
           python .github/scripts/validate_skills.py
+
+      - name: Install tshark
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tshark
+
+      - name: Validate tshark fields in packet_analysis
+        run: |
+          python .github/scripts/validate_tshark_fields.py

@@ -41,15 +41,15 @@ fields:
     description: "BGP marker (all 0xFF for IPv4, used for synchronization)"
 
   - label: "Open - BGP Identifier"
-    tshark_field: "bgp.router_id"
+    tshark_field: "bgp.open.identifier"
     description: "BGP Router-ID (advertised in OPEN message)"
 
   - label: "Open - AS Number"
-    tshark_field: "bgp.as_path"
+    tshark_field: "bgp.open.myas"
     description: "AS number from OPEN message (2-byte or 4-byte)"
 
   - label: "Open - Hold Time"
-    tshark_field: "bgp.hold_time"
+    tshark_field: "bgp.open.holdtime"
     description: "Hold time advertised in OPEN (negotiated to lower of the two)"
 
   - label: "Open - Optional Parameters"
@@ -65,44 +65,32 @@ fields:
     description: "Prefixes being advertised in UPDATE message"
 
   - label: "Update - Next Hop"
-    tshark_field: "bgp.next_hop"
+    tshark_field: "bgp.update.path_attribute.next_hop"
     description: "Next-hop IP address in UPDATE path attributes"
 
   - label: "Update - AS Path"
-    tshark_field: "bgp.as_path"
-    description: "AS path attribute (AS sequence or AS set)"
+    tshark_field: "bgp.update.path_attribute.as_path_segment"
+    description: "AS path attribute (use .as2 or .as4 for AS numbers)"
 
   - label: "Update - Origin"
-    tshark_field: "bgp.origin"
+    tshark_field: "bgp.update.path_attribute.origin"
     description: "Origin attribute: 0=IGP, 1=EGP, 2=Incomplete"
 
   - label: "Update - Local Preference"
-    tshark_field: "bgp.local_pref"
+    tshark_field: "bgp.update.path_attribute.local_pref"
     description: "Local preference attribute (only within AS)"
 
   - label: "Update - Multi-Exit Discriminator"
-    tshark_field: "bgp.med"
+    tshark_field: "bgp.update.path_attribute.multi_exit_disc"
     description: "MED attribute for inbound path selection"
 
-  - label: "Update - Communities"
-    tshark_field: "bgp.community"
-    description: "BGP community attribute"
-
   - label: "Notification - Error Code"
-    tshark_field: "bgp.notification.code"
+    tshark_field: "bgp.notify.major_error"
     description: "Notification error code: 1=MsgHeader, 2=Open, 3=Update, 4=HoldTimer, 5=FSM, 6=Cease"
 
   - label: "Notification - Error Subcode"
-    tshark_field: "bgp.notification.subcode"
+    tshark_field: "bgp.notify.minor_error"
     description: "Notification error subcode (specific reason)"
-
-  - label: "Notification - Data"
-    tshark_field: "bgp.notification.data"
-    description: "Notification data (hex dump of offending data)"
-
-  - label: "Keepalive Interval"
-    tshark_field: "bgp.keepalive"
-    description: "Keepalive interval derived from negotiated hold time"
 
   - label: "Route Refresh - AFI"
     tshark_field: "bgp.route_refresh.afi"
@@ -121,6 +109,7 @@ filter_examples:
   - name: "BGP Update messages"
     filter: "bgp.type == 2"
     description: "Filter for BGP UPDATE messages for route exchange analysis"
+    note: "Use -e bgp.update.path_attribute.* for specific attributes"
 
   - name: "BGP Notification messages"
     filter: "bgp.type == 3"
@@ -131,52 +120,12 @@ filter_examples:
     description: "Filter for BGP KEEPALIVE messages"
 
 checks:
-  - name: "bgp_open_error"
+  - name: "bgp_notification_cease"
     severity: critical
-    message: "BGP OPEN error from {ip.src} to {ip.dst}: code {bgp.notification.code}, subcode {bgp.notification.subcode}"
-    condition: "bgp.type == 1 and followed by bgp.type == 3 (Notification)"
+    message: "BGP session terminated: Cease notification from {ip.src}"
+    condition: "bgp.notify.major_error == 6"
 
   - name: "bgp_hold_timer_expired"
     severity: critical
-    message: "BGP hold timer expired for session {ip.src}<->{ip.dst}, session reset"
-    condition: "bgp.notification.code == 4 (Hold Timer Expired)"
-
-  - name: "bgp_update_error"
-    severity: critical
-    message: "BGP UPDATE error from {ip.src}: code {bgp.notification.code}, subcode {bgp.notification.subcode}"
-    condition: "bgp.type == 2 and followed by bgp.type == 3 with notification.code == 3"
-
-  - name: "bgp_as_path_loop"
-    severity: critical
-    message: "AS path loop detected: AS_PATH {bgp.as_path} from {ip.src}"
-    condition: "bgp.type == 2 and AS path repeated across multiple UPDATEs (route withdrawn after previous advertisement)"
-
-  - name: "bgp_nexthop_unreachable"
-    severity: major
-    message: "BGP next-hop {bgp.next_hop} from {ip.src} may not be reachable via IGP"
-    condition: "bgp.type == 2 and subsequent routing table state shows NHL not resolved in RIB"
-
-  - name: "bgp_route_flap"
-    severity: minor
-    message: "BGP route flapping: prefix {bgp.nlri_prefix} withdrawn and re-advertised repeatedly by {ip.src}"
-    condition: "Same bgp.nlri_prefix appears in both withdrawn_prefix and nlri_prefix from same source in short interval"
-
-  - name: "bgp_notification_cease"
-    severity: critical
-    message: "BGP session terminated: Cease notification from {ip.src} (subcode {bgp.notification.subcode})"
-    condition: "bgp.notification.code == 6"
-
-  - name: "bgp_admin_reset"
-    severity: major
-    message: "BGP session administratively reset from {ip.src} to {ip.dst} (Cease subcode 2)"
-    condition: "bgp.notification.code == 6 and bgp.notification.subcode == 2"
-
-  - name: "bgp_max_prefix_exceeded"
-    severity: major
-    message: "BGP maximum prefix limit exceeded, session reset from {ip.src}"
-    condition: "bgp.notification.code == 6 and bgp.notification.subcode == 3 (max prefix reached)"
-
-  - name: "bgp_capability_mismatch"
-    severity: major
-    message: "BGP capability mismatch between {ip.src} and {ip.dst}: MISSING capability {bgp.optional_parameter.type}"
-    condition: "bgp.type == 1 and capabilities advertised differ between peers"
+    message: "BGP hold timer expired for session {ip.src}<->{ip.dst}"
+    condition: "bgp.notify.major_error == 4"

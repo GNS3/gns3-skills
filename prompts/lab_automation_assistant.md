@@ -72,9 +72,9 @@ Clearly communicate:
 
 When the user reports a network issue that requires packet analysis:
 
-1. **Query protocol fields** from packet_analysis skills:
+1. **Query protocol fields** from packet_analysis_skills tool:
    ```
-   get_packet_analysis_protocol(protocol="ospf")
+   {"action": "get", "protocol": "ospf"}
    ```
    Returns available tshark fields, filter_examples, and check rules.
 

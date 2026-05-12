@@ -15,6 +15,9 @@ protocol_key: "icmp"
 display_filter: "icmp or icmpv6"
 
 # tshark fields that LLM can use for analysis
+# To find available tshark fields, use:
+#   tshark -G fields | grep <protocol>     # List all fields for a protocol
+#   tshark -r <pcap> -T fields -e <field>  # Test field extraction on actual data
 fields:
   - label: "Frame Number"
     tshark_field: "frame.number"
@@ -60,17 +63,17 @@ fields:
     tshark_field: "icmpv6.seq"
     description: "ICMPv6 echo request/reply sequence number"
 
-  - label: "Unreachable Port (v4)"
-    tshark_field: "icmp.dstport.unreachable"
-    description: "Destination port in ICMPv4 unreachable message"
-
   - label: "PMTU Value (v6)"
     tshark_field: "icmpv6.mtu"
     description: "Path MTU value in ICMPv6 Packet Too Big message"
 
-  - label: "Redirect Gateway"
-    tshark_field: "icmp.redirect.gateway"
-    description: "ICMP redirect: suggested alternative gateway address"
+  - label: "Redirect Gateway (v4)"
+    tshark_field: "icmp.redir_gw"
+    description: "ICMPv4 redirect: suggested alternative gateway address"
+
+  - label: "ICMP Data"
+    tshark_field: "icmp.data"
+    description: "Raw ICMP data (contains original packet header for unreachable messages)"
 
 # Common filter examples to help LLM construct tshark commands
 filter_examples:
@@ -121,7 +124,7 @@ checks:
 
   - name: "icmp_unreachable_port"
     severity: major
-    message: "Port unreachable: port {icmp.dstport.unreachable} on {ip.dst} not reachable from {ip.src}"
+    message: "Port unreachable: port on {ip.dst} not reachable from {ip.src}"
     condition: "icmp.type == 3 and icmp.code == 3"
 
   - name: "icmp_frag_needed"
@@ -131,7 +134,7 @@ checks:
 
   - name: "icmp_redirect"
     severity: minor
-    message: "ICMP redirect from {ip.src}: use {icmp.redirect.gateway} instead of current gateway"
+    message: "ICMP redirect from {ip.src}: use {icmp.redir_gw} instead of current gateway"
     condition: "icmp.type == 5"
 
   - name: "icmp_ttl_exceeded"

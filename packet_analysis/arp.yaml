@@ -15,6 +15,9 @@ protocol_key: "arp"
 display_filter: "arp or icmpv6.ns or icmpv6.na or icmpv6.rs or icmpv6.ra"
 
 # tshark fields that LLM can use for analysis
+# To find available tshark fields, use:
+#   tshark -G fields | grep <protocol>     # List all fields for a protocol
+#   tshark -r <pcap> -T fields -e <field>  # Test field extraction on actual data
 fields:
   - label: "Frame Number"
     tshark_field: "frame.number"

@@ -51,4 +51,6 @@ These capture files can be opened with Wireshark or compatible network analysis 
 
 ## License
 
-Please refer to the original source repository for licensing information.
+**IMPORTANT**: These packet capture files are intended for learning and research purposes only. Please do NOT use them for commercial purposes.
+
+Please refer to the original source repository for detailed licensing information.

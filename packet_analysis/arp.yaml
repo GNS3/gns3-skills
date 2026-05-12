@@ -7,61 +7,92 @@
 
 name: "ARP / NDP Packet Analysis"
 description: "ARP (Address Resolution Protocol) and IPv6 NDP (Neighbor Discovery Protocol) packet analysis rules"
-protocol: "arp or icmpv6.type == 135 or icmpv6.type == 136 or icmpv6.type == 133 or icmpv6.type == 134"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "arp"
+
+# tshark display filter - used for -Y parameter
 display_filter: "arp or icmpv6.ns or icmpv6.na or icmpv6.rs or icmpv6.ra"
 
+# tshark fields that LLM can use for analysis
 fields:
   - label: "Frame Number"
-    field: "frame.number"
+    tshark_field: "frame.number"
     description: "Packet sequence number in capture"
 
   - label: "Source IP"
-    field: "arp.src.proto_ipv4"
+    tshark_field: "arp.src.proto_ipv4"
     description: "Sender protocol address (IPv4)"
 
   - label: "Target IP"
-    field: "arp.dst.proto_ipv4"
+    tshark_field: "arp.dst.proto_ipv4"
     description: "Target protocol address (IPv4)"
 
   - label: "Source MAC"
-    field: "arp.src.hw_mac"
+    tshark_field: "arp.src.hw_mac"
     description: "Sender hardware address (MAC)"
 
   - label: "Target MAC"
-    field: "arp.dst.hw_mac"
+    tshark_field: "arp.dst.hw_mac"
     description: "Target hardware address (MAC, zero in requests)"
 
   - label: "Opcode"
-    field: "arp.opcode"
+    tshark_field: "arp.opcode"
     description: "ARP operation code: 1=request, 2=reply, 3=reverse-request, 4=reverse-reply"
 
   - label: "Duplicate Detected"
-    field: "arp.duplicate-address-detected"
+    tshark_field: "arp.duplicate-address-detected"
     description: "Duplicate IP address detection flag"
 
   - label: "IPv6 Source"
-    field: "ipv6.src"
+    tshark_field: "ipv6.src"
     description: "IPv6 source address (for NDP)"
 
   - label: "IPv6 Destination"
-    field: "ipv6.dst"
+    tshark_field: "ipv6.dst"
     description: "IPv6 destination address (for NDP)"
 
   - label: "ICMPv6 Type"
-    field: "icmpv6.type"
+    tshark_field: "icmpv6.type"
     description: "ICMPv6 type: 133=RS, 134=RA, 135=NS, 136=NA, 137=Redirect"
 
   - label: "ICMPv6 Target"
-    field: "icmpv6.target_address"
+    tshark_field: "icmpv6.target_address"
     description: "NDP target address (NS/NA target)"
 
   - label: "ICMPv6 Option Type"
-    field: "icmpv6.option.type"
+    tshark_field: "icmpv6.option.type"
     description: "NDP option type: 1=Source Link-Layer, 2=Target Link-Layer, 3=Prefix Info, 5=MTU"
 
   - label: "ICMPv6 Option MAC"
-    field: "icmpv6.option.lladdr"
+    tshark_field: "icmpv6.option.lladdr"
     description: "NDP link-layer address from option field"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "ARP requests only"
+    filter: "arp.opcode == 1"
+    description: "Filter for ARP requests"
+
+  - name: "ARP replies only"
+    filter: "arp.opcode == 2"
+    description: "Filter for ARP replies"
+
+  - name: "ARP for specific IP"
+    filter: "arp.src.proto_ipv4 == 192.168.1.1"
+    description: "Filter ARP packets for specific IP address"
+
+  - name: "NDP Neighbor Solicitation"
+    filter: "icmpv6.type == 135"
+    description: "Filter for ICMPv6 Neighbor Solicitation messages"
+
+  - name: "NDP Neighbor Advertisement"
+    filter: "icmpv6.type == 136"
+    description: "Filter for ICMPv6 Neighbor Advertisement messages"
+
+  - name: "NDP Router Advertisement"
+    filter: "icmpv6.type == 134"
+    description: "Filter for ICMPv6 Router Advertisement messages"
 
 checks:
   - name: "duplicate_ip"

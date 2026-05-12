@@ -7,105 +7,128 @@
 
 name: "OSPF / OSPFv3 Packet Analysis"
 description: "OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange, and routing issues"
-protocol: "ospf or ospfv3"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "ospf"
+
+# tshark display filter - used for -Y parameter
 display_filter: "ospf or ospfv3"
 
+# tshark fields that LLM can use for analysis
 fields:
   - label: "Frame Number"
-    field: "frame.number"
+    tshark_field: "frame.number"
     description: "Packet sequence number in capture"
 
   - label: "Source IP"
-    field: "ip.src"
+    tshark_field: "ip.src"
     description: "IPv4 source address"
 
   - label: "Destination IP"
-    field: "ip.dst"
+    tshark_field: "ip.dst"
     description: "IPv4 destination address (224.0.0.5=allSPF, 224.0.0.6=allDR)"
 
   - label: "OSPF Message Type"
-    field: "ospf.msg"
+    tshark_field: "ospf.msg"
     description: "OSPF message type: 1=Hello, 2=DBD, 3=LSR, 4=LSU, 5=LSACK"
 
   - label: "OSPF Router ID"
-    field: "ospf.router.id"
+    tshark_field: "ospf.router.id"
     description: "Originating router ID"
 
   - label: "OSPF Area ID"
-    field: "ospf.area.id"
+    tshark_field: "ospf.area.id"
     description: "Area ID of the originating interface"
 
   - label: "OSPF Auth Type"
-    field: "ospf.auth.type"
+    tshark_field: "ospf.auth.type"
     description: "Authentication type: 0=None, 1=Simple, 2=MD5/Cryptographic"
 
   - label: "OSPF Auth Key ID"
-    field: "ospf.auth.key_id"
+    tshark_field: "ospf.auth.key_id"
     description: "MD5 authentication key ID"
 
   - label: "Hello Interval"
-    field: "ospf.hello.interval"
+    tshark_field: "ospf.hello.interval"
     description: "Hello interval in seconds"
 
   - label: "Dead Interval"
-    field: "ospf.dead.interval"
+    tshark_field: "ospf.dead.interval"
     description: "Dead interval (hello multiplier) in seconds"
 
   - label: "OSPF Neighbor"
-    field: "ospf.neighbor"
+    tshark_field: "ospf.neighbor"
     description: "Router ID of neighbors seen in Hello"
 
   - label: "OSPF Options"
-    field: "ospf.options"
+    tshark_field: "ospf.options"
     description: "OSPF options flags (E=external, MC=multicast, N=NSSA, DC=demand)"
 
   - label: "DBD MTU"
-    field: "ospf.dbdescr.mtu"
+    tshark_field: "ospf.dbdescr.mtu"
     description: "Interface MTU advertised in DBD packet"
 
   - label: "DBD Flags"
-    field: "ospf.dbdescr.flags"
+    tshark_field: "ospf.dbdescr.flags"
     description: "DBD flags: I=Init, M=More, MS=Master/Slave"
 
   - label: "DBD Sequence"
-    field: "ospf.dbdescr.seq"
+    tshark_field: "ospf.dbdescr.seq"
     description: "DBD sequence number for master/slave negotiation"
 
   - label: "LSA Type"
-    field: "ospf.lsa.type"
+    tshark_field: "ospf.lsa.type"
     description: "LSA type: 1=Router, 2=Network, 3=Summary(IP), 4=Summary(ASBR), 5=External, 7=NSSA"
 
   - label: "LSA ID"
-    field: "ospf.lsa.id"
+    tshark_field: "ospf.lsa.id"
     description: "Link-State ID (varies by LSA type)"
 
   - label: "LSA Advertising Router"
-    field: "ospf.lsa.advrouter"
+    tshark_field: "ospf.lsa.advrouter"
     description: "Router that originated the LSA"
 
   - label: "LSA Age"
-    field: "ospf.lsa.age"
+    tshark_field: "ospf.lsa.age"
     description: "LSA age in seconds (max 3600)"
 
   - label: "LSA Sequence"
-    field: "ospf.lsa.seq"
+    tshark_field: "ospf.lsa.seq"
     description: "LSA sequence number (higher = newer)"
 
   - label: "LSA Options"
-    field: "ospf.lsa.options"
+    tshark_field: "ospf.lsa.options"
     description: "LSA options flags"
 
   - label: "OSPFv3 Source"
-    field: "ipv6.src"
+    tshark_field: "ipv6.src"
     description: "IPv6 source address (for OSPFv3)"
 
   - label: "OSPFv3 Instance ID"
-    field: "ospfv3.instance"
+    tshark_field: "ospfv3.instance"
     description: "OSPFv3 instance ID (must match on both sides)"
 
   - label: "OSPFv3 Area ID"
-    field: "ospfv3.area.id"
+    tshark_field: "ospfv3.area.id"
     description: "OSPFv3 area ID"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "Hello packets only"
+    filter: "ospf.msg == 1"
+    description: "Filter for OSPF Hello packets to analyze neighbor establishment"
+
+  - name: "DBD packets"
+    filter: "ospf.msg == 2"
+    description: "Database Description packets for LSDB exchange"
+
+  - name: "LSU packets"
+    filter: "ospf.msg == 4"
+    description: "Link State Update packets for LSA flooding"
+
+  - name: "From specific router"
+    filter: "ospf.router.id == 1.1.1.1"
+    description: "Filter packets from a specific router ID"
 
 checks:
   - name: "hello_dead_mismatch"

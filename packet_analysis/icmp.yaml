@@ -7,65 +7,96 @@
 
 name: "ICMP / ICMPv6 Packet Analysis"
 description: "ICMP (Internet Control Message Protocol) v4 and v6 packet analysis for connectivity and PMTUD troubleshooting"
-protocol: "icmp or icmpv6"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "icmp"
+
+# tshark display filter - used for -Y parameter
 display_filter: "icmp or icmpv6"
 
+# tshark fields that LLM can use for analysis
 fields:
   - label: "Frame Number"
-    field: "frame.number"
+    tshark_field: "frame.number"
     description: "Packet sequence number in capture"
 
   - label: "Source IP"
-    field: "ip.src"
+    tshark_field: "ip.src"
     description: "IPv4 source address (present for IPv4 packets)"
 
   - label: "Destination IP"
-    field: "ip.dst"
+    tshark_field: "ip.dst"
     description: "IPv4 destination address"
 
   - label: "IPv6 Source"
-    field: "ipv6.src"
+    tshark_field: "ipv6.src"
     description: "IPv6 source address (present for IPv6 packets)"
 
   - label: "IPv6 Destination"
-    field: "ipv6.dst"
+    tshark_field: "ipv6.dst"
     description: "IPv6 destination address"
 
   - label: "ICMP Type (v4)"
-    field: "icmp.type"
+    tshark_field: "icmp.type"
     description: "ICMPv4 type: 0=Echo Reply, 3=Dest Unreachable, 8=Echo, 11=TTL Exceeded, 5=Redirect"
 
   - label: "ICMP Code (v4)"
-    field: "icmp.code"
+    tshark_field: "icmp.code"
     description: "ICMPv4 code (sub-type for each type)"
 
   - label: "ICMP Sequence (v4)"
-    field: "icmp.seq"
+    tshark_field: "icmp.seq"
     description: "ICMPv4 echo request/reply sequence number"
 
   - label: "ICMPv6 Type"
-    field: "icmpv6.type"
+    tshark_field: "icmpv6.type"
     description: "ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 128=EchoReq, 129=EchoRep"
 
   - label: "ICMPv6 Code"
-    field: "icmpv6.code"
+    tshark_field: "icmpv6.code"
     description: "ICMPv6 code (sub-type for each type)"
 
   - label: "ICMPv6 Sequence"
-    field: "icmpv6.seq"
+    tshark_field: "icmpv6.seq"
     description: "ICMPv6 echo request/reply sequence number"
 
   - label: "Unreachable Port (v4)"
-    field: "icmp.dstport.unreachable"
+    tshark_field: "icmp.dstport.unreachable"
     description: "Destination port in ICMPv4 unreachable message"
 
   - label: "PMTU Value (v6)"
-    field: "icmpv6.mtu"
+    tshark_field: "icmpv6.mtu"
     description: "Path MTU value in ICMPv6 Packet Too Big message"
 
   - label: "Redirect Gateway"
-    field: "icmp.redirect.gateway"
+    tshark_field: "icmp.redirect.gateway"
     description: "ICMP redirect: suggested alternative gateway address"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "ICMP Echo requests (ping)"
+    filter: "icmp.type == 8"
+    description: "Filter for ICMP echo requests"
+
+  - name: "ICMP Echo replies"
+    filter: "icmp.type == 0"
+    description: "Filter for ICMP echo replies"
+
+  - name: "ICMP Unreachable"
+    filter: "icmp.type == 3"
+    description: "Filter for ICMP destination unreachable messages"
+
+  - name: "ICMP TTL Exceeded"
+    filter: "icmp.type == 11"
+    description: "Filter for ICMP time exceeded messages (traceroute)"
+
+  - name: "ICMPv6 Echo requests"
+    filter: "icmpv6.type == 128"
+    description: "Filter for ICMPv6 echo requests"
+
+  - name: "ICMPv6 Packet Too Big (PMTUD)"
+    filter: "icmpv6.type == 2"
+    description: "Filter for ICMPv6 packet too big messages (PMTU discovery)"
 
 checks:
   - name: "ping_timeout"

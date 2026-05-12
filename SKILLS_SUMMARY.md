@@ -117,4 +117,24 @@
 
 ---
 
+## 📦 Packet Analysis (tshark Field Rules)
+
+**Validated**: TShark 4.6.4 | **Total Protocols**: 60 | **Total Fields**: 814
+
+| Category | Protocols |
+|----------|-----------|
+| **Core** | TCP, UDP, IP, IPv6, ICMP, ICMPv6, Ethernet, LLC |
+| **Routing** | BGP, OSPF, EIGRP, RIP, IS-IS, PIM, DVMRP, MSDP, Auto-RP |
+| **FHR/Redundancy** | HSRP, VRRP, GLBP |
+| **L2/Switching** | STP, VLAN, LLDP, CDP, DTP, ISL, VTP, UDLD, LACP, PAgP |
+| **WAN/Tunnel** | PPP, HDLC, Frame Relay, SLARP, L2TP, GRE, MPLS, LDP, NHRP |
+| **Security** | SSL/TLS, SSH, Telnet, AH, ESP, ISAKMP, RADIUS, TACACS+, EAPoL, OCSP |
+| **Services** | DNS, DHCP/BOOTP, HTTP, SNMP, NBNS, WCCP |
+| **Address Resolution** | ARP |
+| **Other** | DEC DNA, LOOP |
+
+All field names are verified against `tshark -G fields` via CI/CD. Run `python .github/scripts/validate_tshark_fields.py` (tshark required).
+
+---
+
 **Repository**: https://github.com/yueguobin/GNS3-Skills

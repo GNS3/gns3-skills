@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for MPLS
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "MPLS Packet Analysis"
+description: "MPLS (Multiprotocol Label Switching) packet analysis for label-switched traffic troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "mpls"
+
+# tshark display filter - used for -Y parameter
+display_filter: "mpls"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "MPLS Label"
+    tshark_field: "mpls.label"
+    description: "MPLS label value (0-1048575)"
+
+  - label: "MPLS EXP"
+    tshark_field: "mpls.exp"
+    description: "MPLS experimental bits (QoS/Class of Service)"
+
+  - label: "MPLS Bottom of Stack"
+    tshark_field: "mpls.bottom"
+    description: "Bottom of label stack flag (1=last label)"
+
+  - label: "MPLS TTL"
+    tshark_field: "mpls.ttl"
+    description: "MPLS Time To Live"
+
+  - label: "Label Stack Depth"
+    tshark_field: "frame.label_stack_depth"
+    description: "Number of labels in stack"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "MPLS single label"
+    filter: "mpls.bottom == 1"
+    description: "Filter for packets with single MPLS label"
+
+  - name: "MPLS label stack"
+    filter: "mpls.bottom == 0"
+    description: "Filter for packets with multiple MPLS labels"
+
+  - label: "Specific MPLS label"
+    filter: "mpls.label == 16000"
+    description: "Filter for specific MPLS label value"
+
+  - name: "MPLS EXP value"
+    filter: "mpls.exp == 5"
+    description: "Filter for MPLS packets with specific EXP value"
+
+  - name: "MPLS TTL exceeded"
+    filter: "mpls.ttl == 0 or mpls.ttl == 1"
+    description: "Filter for MPLS packets with low TTL"
+
+  - name: "MPLS labeled IPv4"
+    filter: "mpls and ip"
+    description: "Filter for MPLS encapsulated IPv4"
+
+  - name: "MPLS labeled IPv6"
+    filter: "mpls and ipv6"
+    description: "Filter for MPLS encapsulated IPv6"
+
+checks:
+  - name: "mpls_ttl_exceeded"
+    severity: major
+    message: "MPLS TTL exceeded: label {mpls.label} with TTL {mpls.ttl}"
+    condition: "mpls.ttl == 0"
+
+  - name: "mpls_label_stack_deep"
+    severity: minor
+    message: "MPLS deep label stack: {frame.label_stack_depth} labels"
+    condition: "frame.label_stack_depth > 3"
+
+  - name: "mpls_exp_mismatch"
+    severity: minor
+    message: "MPLS EXP mismatch: expected {expected_exp}, got {mpls.exp}"
+    condition: "mpls.exp differs from expected QoS marking"
+
+  - name: "mpls_invalid_label"
+    severity: major
+    message: "MPLS invalid label: {mpls.label}"
+    condition: "mpls.label == 0 or mpls.label == 1 or mpls.label > 1048575"

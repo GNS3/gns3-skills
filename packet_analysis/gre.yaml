@@ -1,0 +1,120 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for GRE
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "GRE Packet Analysis"
+description: "GRE (Generic Routing Encapsulation) packet analysis for tunnel troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "gre"
+
+# tshark display filter - used for -Y parameter
+display_filter: "gre"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Flags and Version"
+    tshark_field: "gre.flags_and_version"
+    description: "GRE flags and version"
+
+  - label: "Version"
+    tshark_field: "gre.flags.version"
+    description: "GRE version: 0=GRE, 1=ERIS"
+
+  - label: "Protocol"
+    tshark_field: "gre.proto"
+    description: "Encapsulated protocol: 0x0800=IPv4, 0x86DD=IPv6, 0x6558=GRE PPTP"
+
+  - label: "Checksum Bit"
+    tshark_field: "gre.flags.checksum"
+    description: "Checksum present flag"
+
+  - label: "Routing Bit"
+    tshark_field: "gre.flags.routing"
+    description: "Routing present flag"
+
+  - label: "Key Bit"
+    tshark_field: "gre.flags.key"
+    description: "Key present flag"
+
+  - label: "Sequence Number Bit"
+    tshark_field: "gre.flags.sequence_number"
+    description: "Sequence number present flag"
+
+  - label: "Acknowledgment Number Bit"
+    tshark_field: "gre.flags.ack"
+    description: "Acknowledgment present flag"
+
+  - label: "Checksum"
+    tshark_field: "gre.checksum"
+    description: "GRE checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "gre.checksum.status"
+    description: "Checksum verification status"
+
+  - label: "Offset"
+    tshark_field: "gre.offset"
+    description: "Routing offset"
+
+  - label: "Key"
+    tshark_field: "gre.key"
+    description: "GRE key field"
+
+  - label: "Sequence Number"
+    tshark_field: "gre.sequence_number"
+    description: "GRE sequence number"
+
+  - label: "Acknowledgment Number"
+    tshark_field: "gre.ack_number"
+    description: "GRE acknowledgment number"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "GRE with IPv4"
+    filter: "gre.proto == 0x0800"
+    description: "Filter for GRE encapsulating IPv4"
+
+  - name: "GRE with IPv6"
+    filter: "gre.proto == 0x86DD"
+    description: "Filter for GRE encapsulating IPv6"
+
+  - name: "GRE with key"
+    filter: "gre.flags.key == 1"
+    description: "Filter for GRE packets with key"
+
+  - name: "GRE with sequence"
+    filter: "gre.flags.sequence_number == 1"
+    description: "Filter for GRE packets with sequence number"
+
+  - name: "GRE PPTP"
+    filter: "gre.proto == 0x6558"
+    description: "Filter for GRE PPTP encapsulation"
+
+checks:
+  - name: "gre_checksum_error"
+    severity: major
+    message: "GRE checksum error from {ip.src}"
+    condition: "gre.checksum.status != 0"
+
+  - name: "gre_mismatch"
+    severity: minor
+    message: "GRE key mismatch: expected {expected_key}, got {gre.key}"
+    condition: "gre.key differs from expected tunnel key"
+
+  - name: "gre_sequence_gap"
+    severity: minor
+    message: "GRE sequence number gap: possible packet loss in tunnel"
+    condition: "gre.sequence_number jumps by more than 1"
+
+  - name: "gre_unexpected_protocol"
+    severity: major
+    message: "GRE unexpected protocol: {gre.proto} in tunnel"
+    condition: "gre.proto not in expected list"

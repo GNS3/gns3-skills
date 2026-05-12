@@ -1,0 +1,174 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for DHCP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DHCP Packet Analysis"
+description: "DHCP (Dynamic Host Configuration Protocol) packet analysis for IP assignment troubleshooting"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "dhcp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "bootp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Message Type"
+    tshark_field: "dhcp.type"
+    description: "DHCP message type: 1=Discover, 2=Offer, 3=Request, 4=Decline, 5=ACK, 6=NAK, 7=Release, 8=Inform"
+
+  - label: "Hardware Type"
+    tshark_field: "dhcp.hw.type"
+    description: "Hardware type: 1=Ethernet"
+
+  - label: "Hardware Address Length"
+    tshark_field: "dhcp.hw.len"
+    description: "Hardware address length"
+
+  - label: "Hops"
+    tshark_field: "dhcp.hops"
+    description: "Hop count (relay agent hops)"
+
+  - label: "Transaction ID"
+    tshark_field: "dhcp.id"
+    description: "DHCP transaction ID (XID)"
+
+  - label: "Seconds Elapsed"
+    tshark_field: "dhcp.secs"
+    description: "Seconds elapsed since client started trying"
+
+  - label: "Broadcast Flag"
+    tshark_field: "dhcp.flags.bc"
+    description: "Broadcast flag (client wants broadcast response)"
+
+  - label: "Client IP Address"
+    tshark_field: "dhcp.ip.client"
+    description: "Client IP address (ciaddr)"
+
+  - label: "Your IP Address"
+    tshark_field: "dhcp.ip.your"
+    description: "Your IP address (yiaddr) - assigned IP"
+
+  - label: "Server IP Address"
+    tshark_field: "dhcp.ip.server"
+    description: "Server IP address (siaddr)"
+
+  - label: "Relay Agent IP Address"
+    tshark_field: "dhcp.ip.relay"
+    description: "Relay agent IP address (giaddr)"
+
+  - label: "Client MAC Address"
+    tshark_field: "dhcp.hw.mac_addr"
+    description: "Client hardware (MAC) address"
+
+  - label: "Server Host Name"
+    tshark_field: "dhcp.server"
+    description: "Server host name option"
+
+  - label: "Boot File Name"
+    tshark_field: "dhcp.file"
+    description: "Boot file name option"
+
+  - label: "Subnet Mask"
+    tshark_field: "dhcp.option.subnet_mask"
+    description: "Subnet mask option"
+
+  - label: "Router"
+    tshark_field: "dhcp.option.router"
+    description: "Default gateway option"
+
+  - label: "DNS Server"
+    tshark_field: "dhcp.option.domain_name_server"
+    description: "DNS server option"
+
+  - label: "Domain Name"
+    tshark_field: "dhcp.option.domain_name"
+    description: "Domain name option"
+
+  - label: "IP Address Lease Time"
+    tshark_field: "dhcp.option.ip_address_lease_time"
+    description: "Lease time option"
+
+  - label: "DHCP Server Identifier"
+    tshark_field: "dhcp.option.dhcp_server"
+    description: "DHCP server identifier option"
+
+  - label: "Requested IP Address"
+    tshark_field: "dhcp.option.requested_ip_address"
+    description: "Requested IP address option"
+
+  - label: "Message Type"
+    tshark_field: "dhcp.option.message_type"
+    description: "DHCP message type option"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "DHCP Discover"
+    filter: "dhcp.option.message_type == 1"
+    description: "Filter for DHCP Discover messages"
+
+  - name: "DHCP Offer"
+    filter: "dhcp.option.message_type == 2"
+    description: "Filter for DHCP Offer messages"
+
+  - name: "DHCP Request"
+    filter: "dhcp.option.message_type == 3"
+    description: "Filter for DHCP Request messages"
+
+  - name: "DHCP ACK"
+    filter: "dhcp.option.message_type == 5"
+    description: "Filter for DHCP ACK messages"
+
+  - name: "DHCP NAK"
+    filter: "dhcp.option.message_type == 6"
+    description: "Filter for DHCP NAK messages"
+
+  - name: "DHCP Release"
+    filter: "dhcp.option.message_type == 7"
+    description: "Filter for DHCP Release messages"
+
+  - name: "Specific Client MAC"
+    filter: "dhcp.hw.mac_addr == 00:11:22:33:44:55"
+    description: "Filter for DHCP from specific MAC"
+
+  - name: "DHCP Proxy/Relay"
+    filter: "dhcp.ip.relay"
+    description: "Filter for DHCP through relay agent"
+
+checks:
+  - name: "dhcp_no_offer"
+    severity: major
+    message: "DHCP Discover without Offer: client {dhcp.hw.mac_addr} (XID: {dhcp.id})"
+    condition: "dhcp.option.message_type == 1 and no matching dhcp.option.message_type == 2 with same dhcp.id"
+
+  - name: "dhcp_nak"
+    severity: major
+    message: "DHCP NAK: server rejected request for {dhcp.option.requested_ip_address}"
+    condition: "dhcp.option.message_type == 6"
+
+  - name: "dhcp_lease_short"
+    severity: minor
+    message: "DHCP lease time short: {dhcp.option.ip_address_lease_time} seconds"
+    condition: "dhcp.option.ip_address_lease_time < 3600"
+
+  - name: "dhcp_relay_issue"
+    severity: minor
+    message: "DHCP relay issue: giaddr {dhcp.ip.relay} but no response"
+    condition: "dhcp.ip.relay is set and no matching response"
+
+  - name: "dhcp_duplicate_ip"
+    severity: critical
+    message: "DHCP duplicate IP detected: {dhcp.ip.your} already assigned"
+    condition: "dhcp.option.message_type == 4 (Decline)"
+
+  - name: "dhcp_server_unresponsive"
+    severity: major
+    message: "DHCP server unresponsive: {count} timeouts for client {dhcp.hw.mac_addr}"
+    condition: "Multiple DHCP requests without response from same server"

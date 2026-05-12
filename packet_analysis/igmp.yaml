@@ -1,0 +1,125 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for IGMP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IGMP Packet Analysis"
+description: "IGMP (Internet Group Management Protocol) packet analysis for multicast group membership"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "igmp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "igmp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "IGMP Type"
+    tshark_field: "igmp.type"
+    description: "IGMP message type"
+
+  - label: "IGMP Version"
+    tshark_field: "igmp.version"
+    description: "IGMP version: 1, 2, or 3"
+
+  - label: "Max Response Time"
+    tshark_field: "igmp.max_resp"
+    description: "Maximum response time in 1/10 second"
+
+  - label: "Checksum"
+    tshark_field: "igmp.checksum"
+    description: "IGMP checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "igmp.checksum.status"
+    description: "Checksum verification status"
+
+  - label: "Multicast Address"
+    tshark_field: "igmp.maddr"
+    description: "Multicast group address"
+
+  - label: "Group Record Type"
+    tshark_field: "igmp.record_type"
+    description: "IGMPv3 record type: 1=Include, 2=Exclude, etc."
+
+  - label: "Number of Sources"
+    tshark_field: "igmp.num_src"
+    description: "Number of source addresses"
+
+  - label: "Source Address"
+    tshark_field: "igmp.saddr"
+    description: "Source address"
+
+  - label: "Number of Group Records"
+    tshark_field: "igmp.num_grp_recs"
+    description: "Number of group records (v3)"
+
+  - label: "S Flag"
+    tshark_field: "igmp.s"
+    description: "Suppress router-side processing"
+
+  - label: "QRV"
+    tshark_field: "igmp.qrv"
+    description: "Querier's robustness value"
+
+  - label: "QQIC"
+    tshark_field: "igmp.qqic"
+    description: "Querier's query interval code"
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "IGMP Query"
+    filter: "igmp.type == 0x11"
+    description: "Filter for IGMP Membership Query"
+
+  - name: "IGMPv1 Report"
+    filter: "igmp.type == 0x12"
+    description: "Filter for IGMPv1 Membership Report"
+
+  - name: "IGMPv2 Report"
+    filter: "igmp.type == 0x16"
+    description: "Filter for IGMPv2 Membership Report"
+
+  - name: "IGMPv2 Leave"
+    filter: "igmp.type == 0x17"
+    description: "Filter for IGMPv2 Leave Group"
+
+  - name: "IGMPv3 Report"
+    filter: "igmp.type == 0x22"
+    description: "Filter for IGMPv3 Membership Report"
+
+  - name: "Specific multicast group"
+    filter: "igmp.maddr == 239.1.1.1"
+    description: "Filter for specific multicast group"
+
+checks:
+  - name: "igmp_leave_without_members"
+    severity: minor
+    message: "IGMP leave without members: group {igmp.maddr}"
+    condition: "igmp.type == 0x17 and no prior IGMP reports for same group"
+
+  - name: "igmp_query_timeout"
+    severity: minor
+    message: "IGMP querier timeout: no queries received within expected interval"
+    condition: "No IGMP queries within 2 * query interval"
+
+  - name: "igmp_version_mismatch"
+    severity: minor
+    message: "IGMP version mismatch: IGMPv{igmp.version} detected on segment"
+    condition: "Different igmp.version values from same segment"
+
+  - name: "igmp_checksum_error"
+    severity: major
+    message: "IGMP checksum error from {ip.src}"
+    condition: "igmp.checksum.status != 0"
+
+  - name: "igmp_group_snooping_fail"
+    severity: minor
+    message: "IGMP snooping may fail: IGMPv3 report with multiple sources"
+    condition: "igmp.type == 0x22 and igmp.num_src > 10"

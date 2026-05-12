@@ -52,9 +52,9 @@ fields:
 - label: Redirect Gateway (v4)
   tshark_field: icmp.redir_gw
   description: 'ICMPv4 redirect: suggested alternative gateway address'
-- label: ICMP Data
-  tshark_field: icmp.data
-  description: Raw ICMP data (contains original packet header for unreachable messages)
+- label: ICMP Data Length
+  tshark_field: icmp.length
+  description: Length of original datagram in ICMP unreachable/time-exceeded messages
 filter_examples:
 - name: ICMP Echo requests (ping)
   filter: icmp.type == 8

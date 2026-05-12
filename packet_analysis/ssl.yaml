@@ -14,9 +14,6 @@ fields:
 - label: Frame Number
   tshark_field: frame.number
   description: Packet sequence number in capture
-- label: TLS Stream
-  tshark_field: tls.stream
-  description: TLS stream identifier for grouping related packets
 - label: Record Layer Content Type
   tshark_field: tls.record.content_type
   description: 'TLS record content type: 20=Change Cipher Spec, 21=Alert, 22=Handshake,
@@ -123,5 +120,5 @@ checks:
     contains 'DES' or tls.handshake.ciphersuite contains '3DES'
 - name: tls_renegotiation
   severity: minor
-  message: TLS renegotiation detected in stream {tls.stream}
+  message: TLS renegotiation detected
   condition: Multiple ClientHello in same stream after establishment

@@ -33,31 +33,23 @@ fields:
     description: "OSPF message type: 1=Hello, 2=DBD, 3=LSR, 4=LSU, 5=LSACK"
 
   - label: "OSPF Router ID"
-    tshark_field: "ospf.router.id"
+    tshark_field: "ospf.srcrouter"
     description: "Originating router ID"
 
   - label: "OSPF Area ID"
-    tshark_field: "ospf.area.id"
+    tshark_field: "ospf.area_id"
     description: "Area ID of the originating interface"
 
-  - label: "OSPF Auth Type"
-    tshark_field: "ospf.auth.type"
-    description: "Authentication type: 0=None, 1=Simple, 2=MD5/Cryptographic"
-
-  - label: "OSPF Auth Key ID"
-    tshark_field: "ospf.auth.key_id"
-    description: "MD5 authentication key ID"
-
   - label: "Hello Interval"
-    tshark_field: "ospf.hello.interval"
+    tshark_field: "ospf.hello.hello_interval"
     description: "Hello interval in seconds"
 
   - label: "Dead Interval"
-    tshark_field: "ospf.dead.interval"
+    tshark_field: "ospf.hello.router_dead_interval"
     description: "Dead interval (hello multiplier) in seconds"
 
   - label: "OSPF Neighbor"
-    tshark_field: "ospf.neighbor"
+    tshark_field: "ospf.hello.active_neighbor"
     description: "Router ID of neighbors seen in Hello"
 
   - label: "OSPF Options"
@@ -104,14 +96,6 @@ fields:
     tshark_field: "ipv6.src"
     description: "IPv6 source address (for OSPFv3)"
 
-  - label: "OSPFv3 Instance ID"
-    tshark_field: "ospfv3.instance"
-    description: "OSPFv3 instance ID (must match on both sides)"
-
-  - label: "OSPFv3 Area ID"
-    tshark_field: "ospfv3.area.id"
-    description: "OSPFv3 area ID"
-
 # Common filter examples to help LLM construct tshark commands
 filter_examples:
   - name: "Hello packets only"
@@ -127,24 +111,24 @@ filter_examples:
     description: "Link State Update packets for LSA flooding"
 
   - name: "From specific router"
-    filter: "ospf.router.id == 1.1.1.1"
+    filter: "ospf.srcrouter == 1.1.1.1"
     description: "Filter packets from a specific router ID"
 
 checks:
   - name: "hello_dead_mismatch"
     severity: critical
-    message: "Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.interval}s, dead={ospf.dead.interval}s)"
-    condition: "ospf.msg == 1 and ospf.hello.interval or ospf.dead.interval differs from neighbor"
+    message: "Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.hello_interval}s, dead={ospf.hello.router_dead_interval}s)"
+    condition: "ospf.msg == 1 and ospf.hello.hello_interval or ospf.hello.router_dead_interval differs from neighbor"
 
   - name: "area_id_mismatch"
     severity: critical
-    message: "Area ID mismatch: Router {ospf.router.id} area {ospf.area.id} vs neighbor area"
-    condition: "ospf.msg == 1 and ospf.area.id differs from neighbor router's area id"
+    message: "Area ID mismatch: Router {ospf.srcrouter} area {ospf.area_id} vs neighbor area"
+    condition: "ospf.msg == 1 and ospf.area_id differs from neighbor router's area id"
 
   - name: "router_id_conflict"
     severity: critical
-    message: "Router ID conflict detected: {ospf.router.id} appears from multiple sources"
-    condition: "Same ospf.router.id from different ip.src addresses"
+    message: "Router ID conflict detected: {ospf.srcrouter} appears from multiple sources"
+    condition: "Same ospf.srcrouter from different ip.src addresses"
 
   - name: "mtu_mismatch_dbd"
     severity: major
@@ -159,12 +143,7 @@ checks:
   - name: "stuck_in_init"
     severity: major
     message: "Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast not in neighbor's hello"
-    condition: "ospf.msg == 1 and ospf.neighbor does not contain the expected neighbor router-id"
-
-  - name: "auth_mismatch"
-    severity: critical
-    message: "Authentication mismatch between {ip.src} (auth type {ospf.auth.type}) and neighbor"
-    condition: "ospf.auth.type differs from neighbor, or ospf.auth.key_id differs between peers"
+    condition: "ospf.msg == 1 and ospf.hello.active_neighbor does not contain the expected neighbor router-id"
 
   - name: "lsa_aged_out"
     severity: minor
@@ -175,8 +154,3 @@ checks:
     severity: minor
     message: "Excessive LSA flooding from {ip.src}: {count} LSUs in short interval"
     condition: "More than 10 LSU (ospf.msg == 4) from same source within 1 second"
-
-  - name: "ospfv3_instance_mismatch"
-    severity: critical
-    message: "OSPFv3 instance ID mismatch: router has instance {ospfv3.instance}"
-    condition: "ospfv3.instance differs between OSPFv3 neighbors"

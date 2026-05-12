@@ -1,0 +1,108 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - TShark field query reference
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "TShark Field Query Reference"
+description: "Reference for querying tshark protocol fields using -G fields and -T fields commands"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "_tshark_fields"
+
+# --- How to use this file ---
+# When analyzing a packet capture, the tshark fields listed in protocol-specific
+# YAML files may not cover every scenario. Use the commands below to dynamically
+# discover the correct field names for any protocol.
+
+# --- Query all available fields for a protocol ---
+# tshark -G fields | grep <protocol_keyword>
+#
+# Examples:
+#   tshark -G fields | grep ospf       # List all OSPF-related fields
+#   tshark -G fields | grep bgp        # List all BGP-related fields
+#   tshark -G fields | grep icmpv6     # List all ICMPv6 fields
+#
+# Output format (tab-separated):
+#   F <display_name> <field_name> <field_type> <protocol> <base> <bitmask> <description>
+#
+# The 3rd column is the field name to use with -e parameter:
+#   tshark -r capture.pcap -Y "icmp" -e icmp.type -e icmp.code
+
+# --- Test field extraction on a capture file ---
+# tshark -r <pcap_file> -Y <display_filter> -e <field1> -e <field2> -T fields
+#
+# Examples:
+#   tshark -r bgp.pcap -Y "bgp.type == 2" -e frame.number -e bgp.type -e bgp.update.path_attribute.origin -T fields
+#   tshark -r ospf.pcap -Y "ospf.msg == 1" -e frame.number -e ospf.srcrouter -e ospf.hello.active_neighbor -T fields
+
+# --- Common query patterns ---
+# 1. Find all fields for a protocol:
+#    tshark -G fields | grep "^F\t.*\tospf\."
+#
+# 2. Search fields by keyword:
+#    tshark -G fields | grep -i "neighbor\|adjacency"
+#
+# 3. List all registered protocols:
+#    tshark -G protocols
+#
+# 4. List field types:
+#    FT_NONE, FT_UINT8, FT_UINT16, FT_UINT32, FT_UINT64,
+#    FT_BOOLEAN, FT_IPv4, FT_IPv6, FT_ETHER, FT_STRING, FT_BYTES
+
+# --- Field name conventions ---
+# - Fields use dot notation: protocol.subtype.subfield
+# - IPv4 addresses: ip.src, ip.dst
+# - MAC addresses: eth.src, eth.dst
+# - Protocol types use lowercase: bgp.type, ospf.msg
+# - Nested attributes require full path: bgp.update.path_attribute.next_hop
+# - Boolean flags: ospf.flags.df (don't fragment)
+# - Sequence/ACK numbers: tcp.seq, tcp.ack
+
+# --- Common display filter operators ---
+# ==  Equal (numeric comparison)
+# !=  Not equal
+# >   Greater than
+# <   Less than
+# >=  Greater than or equal
+# <=  Less than or equal
+# contains  Substring match
+# matches  Regex match
+# and / or / not  Logical operators
+# in  Set membership: tcp.port in {80 443 8080}
+# === Exact match (treats field as byte string)
+
+# --- Other useful tshark commands ---
+# List all display filter fields for a protocol:
+#   tshark -G fields | grep "^F.*\tbgp\."
+#
+# List registered protocol dissectors:
+#   tshark -G protocols | grep -i bgp
+#
+# Get decoder table entries:
+#   tshark -G decodes
+#
+# Get default preferences/profiles:
+#   tshark -G currentprefs
+#
+# Get default columns:
+#   tshark -G column-formats
+
+# Common filter examples to help LLM construct tshark commands
+filter_examples:
+  - name: "Find fields for a protocol"
+    filter: "tshark -G fields | grep <protocol>"
+    description: "List all available fields for a specific protocol"
+
+  - name: "Test field extraction"
+    filter: "tshark -r <file> -Y <filter> -e <field> -T fields"
+    description: "Extract specific field values from a capture file"
+
+  - name: "Search fields by keyword"
+    filter: "tshark -G fields | grep -i <keyword>"
+    description: "Search for fields containing a specific keyword"
+
+  - name: "List all protocols"
+    filter: "tshark -G protocols"
+    description: "List all registered protocol dissectors"

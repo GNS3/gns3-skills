@@ -39,15 +39,19 @@ GNS3-Skills/
 ├── packet_analysis/   # Packet capture analysis rules (tshark field extraction)
 │   ├── arp.yaml
 │   ├── bgp.yaml
+│   ├── ospf.yaml
 │   ├── icmp.yaml
-│   └── ospf.yaml
+│   ├── tcp.yaml
+│   └── tshark_fields.yaml (field query reference)
 ├── config/            # Runtime configuration
 │   └── forbidden_commands.txt
 ├── .github/           # CI/CD and validation
 │   ├── workflows/yaml-validation.yml
 │   ├── scripts/validate_yaml.py
 │   ├── scripts/validate_skills.py
-│   └── hooks/pre-commit
+│   └── scripts/validate_tshark_fields.py
+├── .githooks/         # Pre-commit hooks
+│   └── pre-commit
 └── SKILLS_SUMMARY.md  # Full statistics and breakdown
 ```
 
@@ -179,14 +183,14 @@ This project uses GitHub Actions to validate YAML files on every push and pull r
   - Required fields: `name`, `description`, `issues`
   - Required issue fields: `name`, `description`
   - Validated enums: `severity` (low/medium/high/critical), `difficulty` (beginner/intermediate/advanced)
+- **TShark Field Validation**: Validates all `tshark_field` values in `packet_analysis/*.yaml` against the installed tshark version
 
 ### Local Validation (Recommended)
 
 Install the pre-commit hook to validate files before committing:
 
 ```bash
-cd .git/hooks
-ln -s ../../.github/hooks/pre-commit pre-commit
+git config core.hooksPath .githooks
 ```
 
 Or run validation manually:
@@ -197,6 +201,9 @@ python3 .github/scripts/validate_yaml.py
 
 # Validate skill format
 python3 .github/scripts/validate_skills.py
+
+# Validate tshark fields (requires tshark installed)
+python3 .github/scripts/validate_tshark_fields.py
 ```
 
 For detailed CI/CD documentation, see [`.github/scripts/README.md`](.github/scripts/README.md).
@@ -209,7 +216,7 @@ Quick checklist:
 
 1. Create a new YAML file in `injection/`
 2. Follow the [skill format](#skill-format) shown above
-3. Run local validation: `python3 .github/scripts/validate_skills.py`
+3. Run local validation: `python3 .github/scripts/validate_skills.py` and `python3 .github/scripts/validate_tshark_fields.py`
 4. Submit a pull request targeting `main`
 
 ## License

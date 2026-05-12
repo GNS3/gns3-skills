@@ -14,7 +14,13 @@ The CI pipeline validates YAML files on:
 - Checks all `.yaml` and `.yml` files for valid YAML syntax
 - Reports parsing errors with file locations
 
-### 2. Skill Format Validation
+### 2. TShark Field Validation
+- Validates all `tshark_field` values in `packet_analysis/*.yaml` against the installed tshark
+- Requires tshark to be installed (CI installs it automatically via apt)
+- Reports invalid field names with suggestions for correction
+- Ensures compatibility across tshark versions (validated on 4.2.2 and 4.6.4+)
+
+### 3. Skill Format Validation
 Validates skill files against the schema defined in `gns3server/agent/gns3_copilot/skills/loader.py`:
 
 **Required Fields:**
@@ -38,12 +44,13 @@ Validates skill files against the schema defined in `gns3server/agent/gns3_copil
 
 ### Install Pre-commit Hook (Recommended)
 
-Install the git pre-commit hook to validate files before committing:
+Enable automatic validation before every commit:
 
 ```bash
-cd .git/hooks
-ln -s ../../.github/hooks/pre-commit pre-commit
+git config core.hooksPath .githooks
 ```
+
+The hook validates YAML syntax, skill format, and tshark fields on changed `packet_analysis/` files.
 
 Now every commit will automatically validate YAML files.
 
@@ -57,6 +64,9 @@ python3 .github/scripts/validate_yaml.py
 
 # Validate skill format
 python3 .github/scripts/validate_skills.py
+
+# Validate tshark fields (requires tshark installed)
+python3 .github/scripts/validate_tshark_fields.py
 ```
 
 ### Install Dependencies
@@ -86,6 +96,8 @@ on:
 3. Install PyYAML
 4. Run YAML syntax validation
 5. Run skill format validation
+6. Install tshark (apt install tshark)
+7. Run tshark field validation
 
 ## Troubleshooting
 

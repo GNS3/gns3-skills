@@ -1,131 +1,101 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for BGP
+# GNS3-Skills - Packet analysis rules
 #
 # Copyright (C) 2025 Yue Guobin
 #
 
-name: "BGP Packet Analysis"
-description: "BGP-4 packet analysis for session establishment, route exchange, and notification errors"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "bgp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "bgp"
-
-# tshark fields that LLM can use for analysis
+name: BGP Packet Analysis
+description: BGP-4 packet analysis for session establishment, route exchange, and
+  notification errors
+protocol_key: bgp
+display_filter: bgp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Source IP"
-    tshark_field: "ip.src"
-    description: "BGP speaker source address (TCP 179 source or destination)"
-
-  - label: "Destination IP"
-    tshark_field: "ip.dst"
-    description: "BGP peer destination address"
-
-  - label: "BGP Message Type"
-    tshark_field: "bgp.type"
-    description: "BGP message type: 1=Open, 2=Update, 3=Notification, 4=Keepalive, 5=RouteRefresh"
-
-  - label: "BGP Message Length"
-    tshark_field: "bgp.length"
-    description: "Total BGP message length in bytes (header + data)"
-
-  - label: "BGP Marker"
-    tshark_field: "bgp.marker"
-    description: "BGP marker (all 0xFF for IPv4, used for synchronization)"
-
-  - label: "Open - BGP Identifier"
-    tshark_field: "bgp.open.identifier"
-    description: "BGP Router-ID (advertised in OPEN message)"
-
-  - label: "Open - AS Number"
-    tshark_field: "bgp.open.myas"
-    description: "AS number from OPEN message (2-byte or 4-byte)"
-
-  - label: "Open - Hold Time"
-    tshark_field: "bgp.open.holdtime"
-    description: "Hold time advertised in OPEN (negotiated to lower of the two)"
-
-  - label: "Open - Optional Parameters"
-    tshark_field: "bgp.optional_parameter.type"
-    description: "Capabilities advertised: 2=4-byte AS, 64=Graceful Restart, 6=RouteRefresh, 1=Add-Path"
-
-  - label: "Update - Withdrawn Routes"
-    tshark_field: "bgp.withdrawn_prefix"
-    description: "Prefixes being withdrawn in UPDATE message"
-
-  - label: "Update - NLRI Prefixes"
-    tshark_field: "bgp.nlri_prefix"
-    description: "Prefixes being advertised in UPDATE message"
-
-  - label: "Update - Next Hop"
-    tshark_field: "bgp.update.path_attribute.next_hop"
-    description: "Next-hop IP address in UPDATE path attributes"
-
-  - label: "Update - AS Path"
-    tshark_field: "bgp.update.path_attribute.as_path_segment"
-    description: "AS path attribute (use .as2 or .as4 for AS numbers)"
-
-  - label: "Update - Origin"
-    tshark_field: "bgp.update.path_attribute.origin"
-    description: "Origin attribute: 0=IGP, 1=EGP, 2=Incomplete"
-
-  - label: "Update - Local Preference"
-    tshark_field: "bgp.update.path_attribute.local_pref"
-    description: "Local preference attribute (only within AS)"
-
-  - label: "Update - Multi-Exit Discriminator"
-    tshark_field: "bgp.update.path_attribute.multi_exit_disc"
-    description: "MED attribute for inbound path selection"
-
-  - label: "Notification - Error Code"
-    tshark_field: "bgp.notify.major_error"
-    description: "Notification error code: 1=MsgHeader, 2=Open, 3=Update, 4=HoldTimer, 5=FSM, 6=Cease"
-
-  - label: "Notification - Error Subcode"
-    tshark_field: "bgp.notify.minor_error"
-    description: "Notification error subcode (specific reason)"
-
-  - label: "Route Refresh - AFI"
-    tshark_field: "bgp.route_refresh.afi"
-    description: "Address Family Identifier in Route Refresh"
-
-  - label: "Route Refresh - SAFI"
-    tshark_field: "bgp.route_refresh.safi"
-    description: "Subsequent AFI in Route Refresh"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Source IP
+  tshark_field: ip.src
+  description: BGP speaker source address (TCP 179 source or destination)
+- label: Destination IP
+  tshark_field: ip.dst
+  description: BGP peer destination address
+- label: BGP Message Type
+  tshark_field: bgp.type
+  description: 'BGP message type: 1=Open, 2=Update, 3=Notification, 4=Keepalive, 5=RouteRefresh'
+- label: BGP Message Length
+  tshark_field: bgp.length
+  description: Total BGP message length in bytes (header + data)
+- label: BGP Marker
+  tshark_field: bgp.marker
+  description: BGP marker (all 0xFF for IPv4, used for synchronization)
+- label: Open - BGP Identifier
+  tshark_field: bgp.open.identifier
+  description: BGP Router-ID (advertised in OPEN message)
+- label: Open - AS Number
+  tshark_field: bgp.open.myas
+  description: AS number from OPEN message (2-byte or 4-byte)
+- label: Open - Hold Time
+  tshark_field: bgp.open.holdtime
+  description: Hold time advertised in OPEN (negotiated to lower of the two)
+- label: Open - Optional Parameters
+  tshark_field: bgp.open.opt.param.type
+  description: 'Capabilities advertised: 2=4-byte AS, 64=Graceful Restart, 6=RouteRefresh,
+    1=Add-Path'
+- label: Update - Withdrawn Routes
+  tshark_field: bgp.withdrawn_prefix
+  description: Prefixes being withdrawn in UPDATE message
+- label: Update - NLRI Prefixes
+  tshark_field: bgp.nlri_prefix
+  description: Prefixes being advertised in UPDATE message
+- label: Update - Next Hop
+  tshark_field: bgp.update.path_attribute.next_hop
+  description: Next-hop IP address in UPDATE path attributes
+- label: Update - AS Path
+  tshark_field: bgp.update.path_attribute.as_path_segment
+  description: AS path attribute (use .as2 or .as4 for AS numbers)
+- label: Update - Origin
+  tshark_field: bgp.update.path_attribute.origin
+  description: 'Origin attribute: 0=IGP, 1=EGP, 2=Incomplete'
+- label: Update - Local Preference
+  tshark_field: bgp.update.path_attribute.local_pref
+  description: Local preference attribute (only within AS)
+- label: Update - Multi-Exit Discriminator
+  tshark_field: bgp.update.path_attribute.multi_exit_disc
+  description: MED attribute for inbound path selection
+- label: Notification - Error Code
+  tshark_field: bgp.notify.major_error
+  description: 'Notification error code: 1=MsgHeader, 2=Open, 3=Update, 4=HoldTimer,
+    5=FSM, 6=Cease'
+- label: Notification - Error Subcode
+  tshark_field: bgp.notify.minor_error
+  description: Notification error subcode (specific reason)
+- label: Route Refresh - AFI
+  tshark_field: bgp.route_refresh.afi
+  description: Address Family Identifier in Route Refresh
+- label: Route Refresh - SAFI
+  tshark_field: bgp.route_refresh.safi
+  description: Subsequent AFI in Route Refresh
 filter_examples:
-  - name: "BGP Open messages"
-    filter: "bgp.type == 1"
-    description: "Filter for BGP OPEN messages to analyze session establishment"
-
-  - name: "BGP Update messages"
-    filter: "bgp.type == 2"
-    description: "Filter for BGP UPDATE messages for route exchange analysis"
-    note: "Use -e bgp.update.path_attribute.* for specific attributes"
-
-  - name: "BGP Notification messages"
-    filter: "bgp.type == 3"
-    description: "Filter for BGP NOTIFICATION messages to see session errors"
-
-  - name: "BGP Keepalive"
-    filter: "bgp.type == 4"
-    description: "Filter for BGP KEEPALIVE messages"
-
+- name: BGP Open messages
+  filter: bgp.type == 1
+  description: Filter for BGP OPEN messages to analyze session establishment
+- name: BGP Update messages
+  filter: bgp.type == 2
+  description: Filter for BGP UPDATE messages for route exchange analysis
+  note: Use -e bgp.update.path_attribute.* for specific attributes
+- name: BGP Notification messages
+  filter: bgp.type == 3
+  description: Filter for BGP NOTIFICATION messages to see session errors
+- name: BGP Keepalive
+  filter: bgp.type == 4
+  description: Filter for BGP KEEPALIVE messages
 checks:
-  - name: "bgp_notification_cease"
-    severity: critical
-    message: "BGP session terminated: Cease notification from {ip.src}"
-    condition: "bgp.notify.major_error == 6"
-
-  - name: "bgp_hold_timer_expired"
-    severity: critical
-    message: "BGP hold timer expired for session {ip.src}<->{ip.dst}"
-    condition: "bgp.notify.major_error == 4"
+- name: bgp_notification_cease
+  severity: critical
+  message: 'BGP session terminated: Cease notification from {ip.src}'
+  condition: bgp.notify.major_error == 6
+- name: bgp_hold_timer_expired
+  severity: critical
+  message: BGP hold timer expired for session {ip.src}<->{ip.dst}
+  condition: bgp.notify.major_error == 4

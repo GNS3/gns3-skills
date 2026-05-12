@@ -1,108 +1,80 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for Telnet
+# GNS3-Skills - Packet analysis rules
 #
 # Copyright (C) 2025 Yue Guobin
 #
 
-name: "Telnet Packet Analysis"
-description: "Telnet protocol packet analysis for remote terminal session troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "telnet"
-
-# tshark display filter - used for -Y parameter
-display_filter: "telnet"
-
-# tshark fields that LLM can use for analysis
+name: Telnet Packet Analysis
+description: Telnet protocol packet analysis for remote terminal session troubleshooting
+protocol_key: telnet
+display_filter: telnet
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Command"
-    tshark_field: "telnet.cmd"
-    description: "Telnet command: 240=SE, 241=NOP, 242=DM, 243=Break, 244=IP, 245=AO, 246=AYT, 247=EC, 248=EL, 249=GA, 250=SB, 251=WILL, 252=WON'T, 253=DO, 254=DON'T, 255=IAC"
-
-  - label: "Subcommand"
-    tshark_field: "telnet.subcmd"
-    description: "Telnet subcommand or option"
-
-  - label: "Authentication Name"
-    tshark_field: "telnet.auth.name"
-    description: "Username being authenticated"
-
-  - label: "Auth Command"
-    tshark_field: "telnet.auth.cmd"
-    description: "Authentication command"
-
-  - label: "Auth Type"
-    tshark_field: "telnet.auth.type"
-    description: "Authentication type"
-
-  - label: "Authentication Data"
-    tshark_field: "telnet.auth.data"
-    description: "Authentication data"
-
-  - label: "NAWS Width"
-    tshark_field: "telnet.naws_subopt.width"
-    description: "Terminal width (NAWS option)"
-
-  - label: "NAWS Height"
-    tshark_field: "telnet.naws_subopt.height"
-    description: "Terminal height (NAWS option)"
-
-  - label: "Terminal Type"
-    tshark_field: "telnet.termtype_subopt.ttype"
-    description: "Terminal type string"
-
-  - label: "Data"
-    tshark_field: "telnet.data"
-    description: "Telnet data payload"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Command
+  tshark_field: telnet.cmd
+  description: 'Telnet command: 240=SE, 241=NOP, 242=DM, 243=Break, 244=IP, 245=AO,
+    246=AYT, 247=EC, 248=EL, 249=GA, 250=SB, 251=WILL, 252=WON''T, 253=DO, 254=DON''T,
+    255=IAC'
+- label: Subcommand
+  tshark_field: telnet.subcmd
+  description: Telnet subcommand or option
+- label: Authentication Name
+  tshark_field: telnet.auth.name
+  description: Username being authenticated
+- label: Auth Command
+  tshark_field: telnet.auth.cmd
+  description: Authentication command
+- label: Auth Type
+  tshark_field: telnet.auth.type
+  description: Authentication type
+- label: Authentication Data
+  tshark_field: telnet.auth.data
+  description: Authentication data
+- label: NAWS Width
+  tshark_field: telnet.naws_subopt.width
+  description: Terminal width (NAWS option)
+- label: NAWS Height
+  tshark_field: telnet.naws_subopt.height
+  description: Terminal height (NAWS option)
+- label: Data
+  tshark_field: telnet.data
+  description: Telnet data payload
 filter_examples:
-  - name: "Telnet IAC"
-    filter: "telnet.cmd == 255"
-    description: "Filter for Telnet IAC (Interpret As Command)"
-
-  - name: "Telnet DO"
-    filter: "telnet.cmd == 253"
-    description: "Filter for Telnet DO command"
-
-  - name: "Telnet WILL"
-    filter: "telnet.cmd == 251"
-    description: "Filter for Telnet WILL command"
-
-  - name: "Telnet WONT"
-    filter: "telnet.cmd == 252"
-    description: "Filter for Telnet WON'T command"
-
-  - name: "Telnet Subnegotiation"
-    filter: "telnet.cmd == 250"
-    description: "Filter for Telnet subnegotiation begin"
-
-  - name: "Telnet Authentication"
-    filter: "telnet.auth.name"
-    description: "Filter for Telnet authentication"
-
+- name: Telnet IAC
+  filter: telnet.cmd == 255
+  description: Filter for Telnet IAC (Interpret As Command)
+- name: Telnet DO
+  filter: telnet.cmd == 253
+  description: Filter for Telnet DO command
+- name: Telnet WILL
+  filter: telnet.cmd == 251
+  description: Filter for Telnet WILL command
+- name: Telnet WONT
+  filter: telnet.cmd == 252
+  description: Filter for Telnet WON'T command
+- name: Telnet Subnegotiation
+  filter: telnet.cmd == 250
+  description: Filter for Telnet subnegotiation begin
+- name: Telnet Authentication
+  filter: telnet.auth.name
+  description: Filter for Telnet authentication
 checks:
-  - name: "telnet_connection_refused"
-    severity: major
-    message: "Telnet connection refused: TCP RST from {ip.dst}"
-    condition: "tcp.flags.reset == 1 with destination port 23"
-
-  - name: "telnet_auth_failure"
-    severity: major
-    message: "Telnet authentication failure for user {telnet.auth.name}"
-    condition: "telnet.auth.data contains 'failure' or 'denied'"
-
-  - name: "telnet_option_negotiation_loop"
-    severity: minor
-    message: "Telnet option negotiation loop detected"
-    condition: "Repeated telnet DO/WON'T or WILL/WON'T for same option"
-
-  - name: "telnet_ayt_timeout"
-    severity: minor
-    message: "Telnet AYT (Are You There) timeout"
-    condition: "telnet.cmd == 246 (AYT) and no timely response"
+- name: telnet_connection_refused
+  severity: major
+  message: 'Telnet connection refused: TCP RST from {ip.dst}'
+  condition: tcp.flags.reset == 1 with destination port 23
+- name: telnet_auth_failure
+  severity: major
+  message: Telnet authentication failure for user {telnet.auth.name}
+  condition: telnet.auth.data contains 'failure' or 'denied'
+- name: telnet_option_negotiation_loop
+  severity: minor
+  message: Telnet option negotiation loop detected
+  condition: Repeated telnet DO/WON'T or WILL/WON'T for same option
+- name: telnet_ayt_timeout
+  severity: minor
+  message: Telnet AYT (Are You There) timeout
+  condition: telnet.cmd == 246 (AYT) and no timely response

@@ -1,156 +1,121 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for OSPF/OSPFv3
+# GNS3-Skills - Packet analysis rules
 #
 # Copyright (C) 2025 Yue Guobin
 #
 
-name: "OSPF / OSPFv3 Packet Analysis"
-description: "OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange, and routing issues"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ospf"
-
-# tshark display filter - used for -Y parameter
-display_filter: "ospf or ospfv3"
-
-# tshark fields that LLM can use for analysis
+name: OSPF / OSPFv3 Packet Analysis
+description: OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange,
+  and routing issues
+protocol_key: ospf
+display_filter: ospf or ospfv3
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Source IP"
-    tshark_field: "ip.src"
-    description: "IPv4 source address"
-
-  - label: "Destination IP"
-    tshark_field: "ip.dst"
-    description: "IPv4 destination address (224.0.0.5=allSPF, 224.0.0.6=allDR)"
-
-  - label: "OSPF Message Type"
-    tshark_field: "ospf.msg"
-    description: "OSPF message type: 1=Hello, 2=DBD, 3=LSR, 4=LSU, 5=LSACK"
-
-  - label: "OSPF Router ID"
-    tshark_field: "ospf.srcrouter"
-    description: "Originating router ID"
-
-  - label: "OSPF Area ID"
-    tshark_field: "ospf.area_id"
-    description: "Area ID of the originating interface"
-
-  - label: "Hello Interval"
-    tshark_field: "ospf.hello.hello_interval"
-    description: "Hello interval in seconds"
-
-  - label: "Dead Interval"
-    tshark_field: "ospf.hello.router_dead_interval"
-    description: "Dead interval (hello multiplier) in seconds"
-
-  - label: "OSPF Neighbor"
-    tshark_field: "ospf.hello.active_neighbor"
-    description: "Router ID of neighbors seen in Hello"
-
-  - label: "OSPF Options"
-    tshark_field: "ospf.options"
-    description: "OSPF options flags (E=external, MC=multicast, N=NSSA, DC=demand)"
-
-  - label: "DBD MTU"
-    tshark_field: "ospf.dbdescr.mtu"
-    description: "Interface MTU advertised in DBD packet"
-
-  - label: "DBD Flags"
-    tshark_field: "ospf.dbdescr.flags"
-    description: "DBD flags: I=Init, M=More, MS=Master/Slave"
-
-  - label: "DBD Sequence"
-    tshark_field: "ospf.dbdescr.seq"
-    description: "DBD sequence number for master/slave negotiation"
-
-  - label: "LSA Type"
-    tshark_field: "ospf.lsa.type"
-    description: "LSA type: 1=Router, 2=Network, 3=Summary(IP), 4=Summary(ASBR), 5=External, 7=NSSA"
-
-  - label: "LSA ID"
-    tshark_field: "ospf.lsa.id"
-    description: "Link-State ID (varies by LSA type)"
-
-  - label: "LSA Advertising Router"
-    tshark_field: "ospf.lsa.advrouter"
-    description: "Router that originated the LSA"
-
-  - label: "LSA Age"
-    tshark_field: "ospf.lsa.age"
-    description: "LSA age in seconds (max 3600)"
-
-  - label: "LSA Sequence"
-    tshark_field: "ospf.lsa.seq"
-    description: "LSA sequence number (higher = newer)"
-
-  - label: "LSA Options"
-    tshark_field: "ospf.lsa.options"
-    description: "LSA options flags"
-
-  - label: "OSPFv3 Source"
-    tshark_field: "ipv6.src"
-    description: "IPv6 source address (for OSPFv3)"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Source IP
+  tshark_field: ip.src
+  description: IPv4 source address
+- label: Destination IP
+  tshark_field: ip.dst
+  description: IPv4 destination address (224.0.0.5=allSPF, 224.0.0.6=allDR)
+- label: OSPF Message Type
+  tshark_field: ospf.msg
+  description: 'OSPF message type: 1=Hello, 2=DBD, 3=LSR, 4=LSU, 5=LSACK'
+- label: OSPF Router ID
+  tshark_field: ospf.srcrouter
+  description: Originating router ID
+- label: OSPF Area ID
+  tshark_field: ospf.area_id
+  description: Area ID of the originating interface
+- label: Hello Interval
+  tshark_field: ospf.hello.hello_interval
+  description: Hello interval in seconds
+- label: Dead Interval
+  tshark_field: ospf.hello.router_dead_interval
+  description: Dead interval (hello multiplier) in seconds
+- label: OSPF Neighbor
+  tshark_field: ospf.hello.active_neighbor
+  description: Router ID of neighbors seen in Hello
+- label: OSPF Options
+  tshark_field: ospf.v2.options
+  description: OSPF options flags (E=external, MC=multicast, N=NSSA, DC=demand)
+- label: DBD MTU
+  tshark_field: ospf.db.interface_mtu
+  description: Interface MTU advertised in DBD packet
+- label: DBD Sequence
+  tshark_field: ospf.lsa.seqnum
+  description: DBD sequence number for master/slave negotiation
+- label: LSA ID
+  tshark_field: ospf.lsa.id
+  description: Link-State ID (varies by LSA type)
+- label: LSA Advertising Router
+  tshark_field: ospf.advrouter
+  description: Router that originated the LSA
+- label: LSA Age
+  tshark_field: ospf.lsa.age
+  description: LSA age in seconds (max 3600)
+- label: LSA Sequence
+  tshark_field: ospf.lsa.seqnum
+  description: LSA sequence number (higher = newer)
+- label: LSA Options
+  tshark_field: ospf.v2.options
+  description: LSA options flags
+- label: OSPFv3 Source
+  tshark_field: ipv6.src
+  description: IPv6 source address (for OSPFv3)
 filter_examples:
-  - name: "Hello packets only"
-    filter: "ospf.msg == 1"
-    description: "Filter for OSPF Hello packets to analyze neighbor establishment"
-
-  - name: "DBD packets"
-    filter: "ospf.msg == 2"
-    description: "Database Description packets for LSDB exchange"
-
-  - name: "LSU packets"
-    filter: "ospf.msg == 4"
-    description: "Link State Update packets for LSA flooding"
-
-  - name: "From specific router"
-    filter: "ospf.srcrouter == 1.1.1.1"
-    description: "Filter packets from a specific router ID"
-
+- name: Hello packets only
+  filter: ospf.msg == 1
+  description: Filter for OSPF Hello packets to analyze neighbor establishment
+- name: DBD packets
+  filter: ospf.msg == 2
+  description: Database Description packets for LSDB exchange
+- name: LSU packets
+  filter: ospf.msg == 4
+  description: Link State Update packets for LSA flooding
+- name: From specific router
+  filter: ospf.srcrouter == 1.1.1.1
+  description: Filter packets from a specific router ID
 checks:
-  - name: "hello_dead_mismatch"
-    severity: critical
-    message: "Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.hello_interval}s, dead={ospf.hello.router_dead_interval}s)"
-    condition: "ospf.msg == 1 and ospf.hello.hello_interval or ospf.hello.router_dead_interval differs from neighbor"
-
-  - name: "area_id_mismatch"
-    severity: critical
-    message: "Area ID mismatch: Router {ospf.srcrouter} area {ospf.area_id} vs neighbor area"
-    condition: "ospf.msg == 1 and ospf.area_id differs from neighbor router's area id"
-
-  - name: "router_id_conflict"
-    severity: critical
-    message: "Router ID conflict detected: {ospf.srcrouter} appears from multiple sources"
-    condition: "Same ospf.srcrouter from different ip.src addresses"
-
-  - name: "mtu_mismatch_dbd"
-    severity: major
-    message: "MTU mismatch: router {ip.src} advertises MTU {ospf.dbdescr.mtu} in DBD"
-    condition: "ospf.msg == 2 and ospf.dbdescr.mtu differs between neighbors (ospf.dbdescr.mtu shows different values)"
-
-  - name: "dbd_stuck_exstart"
-    severity: major
-    message: "Neighbor stuck in EXSTART: DBD negotiation failed between {ip.src} and neighbor"
-    condition: "ospf.msg == 2 with I-bit set and repeated DBD retransmissions without state progression"
-
-  - name: "stuck_in_init"
-    severity: major
-    message: "Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast not in neighbor's hello"
-    condition: "ospf.msg == 1 and ospf.hello.active_neighbor does not contain the expected neighbor router-id"
-
-  - name: "lsa_aged_out"
-    severity: minor
-    message: "LSA approaching max age: type {ospf.lsa.type}, ID {ospf.lsa.id}, age {ospf.lsa.age}"
-    condition: "ospf.lsa.age > 3500"
-
-  - name: "lsa_flooding_high_rate"
-    severity: minor
-    message: "Excessive LSA flooding from {ip.src}: {count} LSUs in short interval"
-    condition: "More than 10 LSU (ospf.msg == 4) from same source within 1 second"
+- name: hello_dead_mismatch
+  severity: critical
+  message: Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.hello_interval}s,
+    dead={ospf.hello.router_dead_interval}s)
+  condition: ospf.msg == 1 and ospf.hello.hello_interval or ospf.hello.router_dead_interval
+    differs from neighbor
+- name: area_id_mismatch
+  severity: critical
+  message: 'Area ID mismatch: Router {ospf.srcrouter} area {ospf.area_id} vs neighbor
+    area'
+  condition: ospf.msg == 1 and ospf.area_id differs from neighbor router's area id
+- name: router_id_conflict
+  severity: critical
+  message: 'Router ID conflict detected: {ospf.srcrouter} appears from multiple sources'
+  condition: Same ospf.srcrouter from different ip.src addresses
+- name: mtu_mismatch_dbd
+  severity: major
+  message: 'MTU mismatch: router {ip.src} advertises MTU {ospf.dbdescr.mtu} in DBD'
+  condition: ospf.msg == 2 and ospf.dbdescr.mtu differs between neighbors (ospf.dbdescr.mtu
+    shows different values)
+- name: dbd_stuck_exstart
+  severity: major
+  message: 'Neighbor stuck in EXSTART: DBD negotiation failed between {ip.src} and
+    neighbor'
+  condition: ospf.msg == 2 with I-bit set and repeated DBD retransmissions without
+    state progression
+- name: stuck_in_init
+  severity: major
+  message: 'Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast
+    not in neighbor''s hello'
+  condition: ospf.msg == 1 and ospf.hello.active_neighbor does not contain the expected
+    neighbor router-id
+- name: lsa_aged_out
+  severity: minor
+  message: 'LSA approaching max age: type {ospf.lsa.type}, ID {ospf.lsa.id}, age {ospf.lsa.age}'
+  condition: ospf.lsa.age > 3500
+- name: lsa_flooding_high_rate
+  severity: minor
+  message: 'Excessive LSA flooding from {ip.src}: {count} LSUs in short interval'
+  condition: More than 10 LSU (ospf.msg == 4) from same source within 1 second

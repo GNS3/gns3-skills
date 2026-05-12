@@ -1,60 +1,42 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for ISL
+# GNS3-Skills - Packet analysis rules
 #
 # Copyright (C) 2025 Yue Guobin
 #
 
-name: "ISL Packet Analysis"
-description: "ISL (Inter-Switch Link) packet analysis for Cisco legacy VLAN trunking"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "isl"
-
-# tshark display filter - used for -Y parameter
-display_filter: "isl"
-
-# tshark fields that LLM can use for analysis
+name: ISL Packet Analysis
+description: ISL (Inter-Switch Link) packet analysis for Cisco legacy VLAN trunking
+protocol_key: isl
+display_filter: isl
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "DA"
-    tshark_field: "isl.da"
-    description: "Destination MAC (ISL multicast)"
-
-  - label: "SA"
-    tshark_field: "isl.sa"
-    description: "Source MAC"
-
-  - label: "Type"
-    tshark_field: "isl.type"
-    description: "ISL frame type"
-
-  - label: "User Bits"
-    tshark_field: "isl.user"
-    description: "User defined bits"
-
-  - label: "VLAN ID"
-    tshark_field: "isl.vlan"
-    description: "VLAN ID"
-
-  - label: "Index"
-    tshark_field: "isl.index"
-    description: "Source port index"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: SA
+  tshark_field: isl.hsa
+  description: Source MAC
+- label: Type
+  tshark_field: isl.type
+  description: ISL frame type
+- label: User Bits
+  tshark_field: isl.user
+  description: User defined bits
+- label: VLAN ID
+  tshark_field: isl.vlan_id
+  description: VLAN ID
+- label: Index
+  tshark_field: isl.index
+  description: Source port index
 filter_examples:
-  - name: "Specific VLAN"
-    filter: "isl.vlan == 10"
-    description: "Filter for specific ISL VLAN"
-
-  - name: "ISL trunk"
-    filter: "isl"
-    description: "Filter for all ISL encapsulated frames"
-
+- name: Specific VLAN
+  filter: isl.vlan == 10
+  description: Filter for specific ISL VLAN
+- name: ISL trunk
+  filter: isl
+  description: Filter for all ISL encapsulated frames
 checks:
-  - name: "isl_vlan_mismatch"
-    severity: major
-    message: "ISL VLAN mismatch: expected VLAN {expected}, got {isl.vlan}"
-    condition: "Different isl.vlan than expected for the trunk"
+- name: isl_vlan_mismatch
+  severity: major
+  message: 'ISL VLAN mismatch: expected VLAN {expected}, got {isl.vlan}'
+  condition: Different isl.vlan than expected for the trunk

@@ -1,134 +1,88 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for PPP
+# GNS3-Skills - Packet analysis rules
 #
 # Copyright (C) 2025 Yue Guobin
 #
 
-name: "PPP Packet Analysis"
-description: "PPP (Point-to-Point Protocol) packet analysis for WAN serial link troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ppp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "ppp"
-
-# tshark fields that LLM can use for analysis
+name: PPP Packet Analysis
+description: PPP (Point-to-Point Protocol) packet analysis for WAN serial link troubleshooting
+protocol_key: ppp
+display_filter: ppp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Direction"
-    tshark_field: "ppp.direction"
-    description: "PPP direction (0=request, 1=response)"
-
-  - label: "Protocol"
-    tshark_field: "ppp.protocol"
-    description: "PPP protocol field: 0xC021=LCP, 0xC023=CHAP, 0xC223=Authentication, 0x0021=IP, 0x8021=IPCP"
-
-  - label: "Code"
-    tshark_field: "ppp.code"
-    description: "LCP code: 1=Configure-Request, 2=Configure-Ack, 3=Configure-Nak, 4=Configure-Reject, 5=Terminate-Request, etc."
-
-  - label: "Identifier"
-    tshark_field: "ppp.identifier"
-    description: "LCP identifier for matching requests/responses"
-
-  - label: "Length"
-    tshark_field: "ppp.length"
-    description: "PPP packet length"
-
-  - label: "Magic Number"
-    tshark_field: "ppp.magic_number"
-    description: "LCP magic number for loopback detection"
-
-  - label: "FCS Status"
-    tshark_field: "ppp.fcs.status"
-    description: "Frame Check Sequence verification status"
-
-  - label: "Authentication Protocol"
-    tshark_field: "ppp.auth.protocol"
-    description: "Authentication protocol (CHAP/PAP)"
-
-  - label: "Algorithm"
-    tshark_field: "ppp.chap.algorithm"
-    description: "CHAP algorithm (5=MD5)"
-
-  - label: "CHAP Code"
-    tshark_field: "ppp.chap.code"
-    description: "CHAP code: 1=Challenge, 2=Response, 3=Success, 4=Failure"
-
-  - label: "CHAP Identifier"
-    tshark_field: "ppp.chap.identifier"
-    description: "CHAP identifier"
-
-  - label: "Username"
-    tshark_field: "ppp.auth.name"
-    description: "Authentication username"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Direction
+  tshark_field: ppp.direction
+  description: PPP direction (0=request, 1=response)
+- label: Protocol
+  tshark_field: ppp.protocol
+  description: 'PPP protocol field: 0xC021=LCP, 0xC023=CHAP, 0xC223=Authentication,
+    0x0021=IP, 0x8021=IPCP'
+- label: Code
+  tshark_field: ppp.code
+  description: 'LCP code: 1=Configure-Request, 2=Configure-Ack, 3=Configure-Nak, 4=Configure-Reject,
+    5=Terminate-Request, etc.'
+- label: Identifier
+  tshark_field: ppp.identifier
+  description: LCP identifier for matching requests/responses
+- label: Length
+  tshark_field: ppp.length
+  description: PPP packet length
+- label: Magic Number
+  tshark_field: ppp.magic_number
+  description: LCP magic number for loopback detection
+- label: FCS Status
+  tshark_field: ppp.fcs.status
+  description: Frame Check Sequence verification status
 filter_examples:
-  - name: "PPP LCP"
-    filter: "ppp.protocol == 0xc021"
-    description: "Filter for PPP Link Control Protocol"
-
-  - name: "PPP IPCP"
-    filter: "ppp.protocol == 0x8021"
-    description: "Filter for PPP IP Control Protocol"
-
-  - name: "PPP CHAP"
-    filter: "ppp.protocol == 0xc223"
-    description: "Filter for PPP CHAP authentication"
-
-  - name: "PPP PAP"
-    filter: "ppp.protocol == 0xc023"
-    description: "Filter for PPP PAP authentication"
-
-  - name: "PPP Configure Request"
-    filter: "ppp.code == 1"
-    description: "Filter for PPP Configure-Request"
-
-  - name: "PPP Configure Ack"
-    filter: "ppp.code == 2"
-    description: "Filter for PPP Configure-Ack"
-
-  - name: "PPP Terminate Request"
-    filter: "ppp.code == 5"
-    description: "Filter for PPP Terminate-Request"
-
-  - name: "PPP IPv4"
-    filter: "ppp.protocol == 0x0021"
-    description: "Filter for PPP IPv4 packets"
-
+- name: PPP LCP
+  filter: ppp.protocol == 0xc021
+  description: Filter for PPP Link Control Protocol
+- name: PPP IPCP
+  filter: ppp.protocol == 0x8021
+  description: Filter for PPP IP Control Protocol
+- name: PPP CHAP
+  filter: ppp.protocol == 0xc223
+  description: Filter for PPP CHAP authentication
+- name: PPP PAP
+  filter: ppp.protocol == 0xc023
+  description: Filter for PPP PAP authentication
+- name: PPP Configure Request
+  filter: ppp.code == 1
+  description: Filter for PPP Configure-Request
+- name: PPP Configure Ack
+  filter: ppp.code == 2
+  description: Filter for PPP Configure-Ack
+- name: PPP Terminate Request
+  filter: ppp.code == 5
+  description: Filter for PPP Terminate-Request
+- name: PPP IPv4
+  filter: ppp.protocol == 0x0021
+  description: Filter for PPP IPv4 packets
 checks:
-  - name: "ppp_loopback_detected"
-    severity: critical
-    message: "PPP loopback detected: magic number {ppp.magic_number} echoed back"
-    condition: "ppp.magic_number in received packet matches transmitted magic_number"
-
-  - name: "ppp_auth_failure"
-    severity: major
-    message: "PPP authentication failure: {ppp.chap.code} for user {ppp.auth.name}"
-    condition: "ppp.chap.code == 4"
-
-  - name: "ppp_lcp_negotiation_failure"
-    severity: major
-    message: "PPP LCP negotiation failure: Configure-Nak or Reject"
-    condition: "ppp.code == 3 or ppp.code == 4"
-
-  - name: "ppp_link_down"
-    severity: critical
-    message: "PPP link down: Terminate-Request received"
-    condition: "ppp.code == 5"
-
-  - name: "ppp_fcs_error"
-    severity: major
-    message: "PPP FCS error: CRC checksum failure"
-    condition: "ppp.fcs.status != 0"
-
-  - name: "ppp_mru_mismatch"
-    severity: minor
-    message: "PPP MRU mismatch: configured MRU differs from peer"
-    condition: "Different MRU values in LCP negotiation"
+- name: ppp_loopback_detected
+  severity: critical
+  message: 'PPP loopback detected: magic number {ppp.magic_number} echoed back'
+  condition: ppp.magic_number in received packet matches transmitted magic_number
+- name: ppp_auth_failure
+  severity: major
+  message: 'PPP authentication failure: {ppp.chap.code} for user {ppp.auth.name}'
+  condition: ppp.chap.code == 4
+- name: ppp_lcp_negotiation_failure
+  severity: major
+  message: 'PPP LCP negotiation failure: Configure-Nak or Reject'
+  condition: ppp.code == 3 or ppp.code == 4
+- name: ppp_link_down
+  severity: critical
+  message: 'PPP link down: Terminate-Request received'
+  condition: ppp.code == 5
+- name: ppp_fcs_error
+  severity: major
+  message: 'PPP FCS error: CRC checksum failure'
+  condition: ppp.fcs.status != 0
+- name: ppp_mru_mismatch
+  severity: minor
+  message: 'PPP MRU mismatch: configured MRU differs from peer'
+  condition: Different MRU values in LCP negotiation

@@ -1,166 +1,119 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNS3-Skills - Packet analysis rules for SNMP
+# GNS3-Skills - Packet analysis rules
 #
-# Copyright (C) 2025 Yue Guubin
+# Copyright (C) 2025 Yue Guobin
 #
 
-name: "SNMP Packet Analysis"
-description: "SNMP (Simple Network Management Protocol) packet analysis for network monitoring troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "snmp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "snmp"
-
-# tshark fields that LLM can use for analysis
+name: SNMP Packet Analysis
+description: SNMP (Simple Network Management Protocol) packet analysis for network
+  monitoring troubleshooting
+protocol_key: snmp
+display_filter: snmp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "SNMP Version"
-    tshark_field: "snmp.version"
-    description: "SNMP version: 0=SNMPv1, 1=SNMPv2c, 2=SNMPv3, 3=SNMPv2c, 4=SNMPv3"
-
-  - label: "Community"
-    tshark_field: "snmp.community"
-    description: "SNMP community string (v1/v2c)"
-
-  - label: "PDU Type"
-    tshark_field: "snmp.pdu_type"
-    description: "SNMP PDU type: 0=GetRequest, 1=GetNextRequest, 2=GetResponse, 3=SetRequest, 5=GetBulkRequest, 7=InformRequest, 8=SNMPv2-Trap"
-
-  - label: "Request ID"
-    tshark_field: "snmp.reqid"
-    description: "SNMP request identifier"
-
-  - label: "Error Status"
-    tshark_field: "snmp.error_status"
-    description: "SNMP error status: 0=noError, 1=tooBig, 2=noSuchName, 3=badValue, 4=readOnly, 5=genErr"
-
-  - label: "Error Index"
-    tshark_field: "snmp.error_index"
-    description: "SNMP error index (position of error in variable bindings)"
-
-  - label: "Variable Bindings"
-    tshark_field: "snmp.varbind"
-    description: "SNMP variable bindings"
-
-  - label: "OID"
-    tshark_field: "snmp.oid"
-    description: "SNMP object identifier"
-
-  - label: "Value (Integer)"
-    tshark_field: "snmp.value.int"
-    description: "SNMP integer value"
-
-  - label: "Value (String)"
-    tshark_field: "snmp.value.octets"
-    description: "SNMP octet string value"
-
-  - label: "Value (OID)"
-    tshark_field: "snmp.value.oid"
-    description: "SNMP OID value"
-
-  - label: "Value (IP Address)"
-    tshark_field: "snmp.value.ipv4"
-    description: "SNMP IPv4 address value"
-
-  - label: "Value (Counter)"
-    tshark_field: "snmp.value.u32"
-    description: "SNMP unsigned 32-bit value"
-
-  - label: "Value (Null)"
-    tshark_field: "snmp.value.null"
-    description: "SNMP null value"
-
-  - label: "Engine ID"
-    tshark_field: "snmp.engineid.data"
-    description: "SNMPv3 engine ID"
-
-  - label: "Authentication"
-    tshark_field: "snmp.v3.flags.auth"
-    description: "SNMPv3 authentication flag"
-
-  - label: "Encryption"
-    tshark_field: "snmp.v3.flags.crypt"
-    description: "SNMPv3 privacy (encryption) flag"
-
-  - label: "Response Time"
-    tshark_field: "snmp.time"
-    description: "Time between request and response"
-
-  - label: "Response In"
-    tshark_field: "snmp.response_in"
-    description: "Frame number of response"
-
-  - label: "Response To"
-    tshark_field: "snmp.response_to"
-    description: "Frame number of request"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: SNMP Version
+  tshark_field: snmp.version
+  description: 'SNMP version: 0=SNMPv1, 1=SNMPv2c, 2=SNMPv3, 3=SNMPv2c, 4=SNMPv3'
+- label: Community
+  tshark_field: snmp.community
+  description: SNMP community string (v1/v2c)
+- label: Error Status
+  tshark_field: snmp.error_status
+  description: 'SNMP error status: 0=noError, 1=tooBig, 2=noSuchName, 3=badValue,
+    4=readOnly, 5=genErr'
+- label: Error Index
+  tshark_field: snmp.error_index
+  description: SNMP error index (position of error in variable bindings)
+- label: OID
+  tshark_field: snmp.value.oid
+  description: SNMP object identifier
+- label: Value (Integer)
+  tshark_field: snmp.value.int
+  description: SNMP integer value
+- label: Value (String)
+  tshark_field: snmp.value.octets
+  description: SNMP octet string value
+- label: Value (OID)
+  tshark_field: snmp.value.oid
+  description: SNMP OID value
+- label: Value (IP Address)
+  tshark_field: snmp.value.ipv4
+  description: SNMP IPv4 address value
+- label: Value (Counter)
+  tshark_field: snmp.value.u32
+  description: SNMP unsigned 32-bit value
+- label: Value (Null)
+  tshark_field: snmp.value.null
+  description: SNMP null value
+- label: Engine ID
+  tshark_field: snmp.engineid.data
+  description: SNMPv3 engine ID
+- label: Authentication
+  tshark_field: snmp.v3.flags.auth
+  description: SNMPv3 authentication flag
+- label: Encryption
+  tshark_field: snmp.v3.flags.crypt
+  description: SNMPv3 privacy (encryption) flag
+- label: Response Time
+  tshark_field: snmp.time
+  description: Time between request and response
+- label: Response In
+  tshark_field: snmp.response_in
+  description: Frame number of response
+- label: Response To
+  tshark_field: snmp.response_to
+  description: Frame number of request
 filter_examples:
-  - name: "SNMP GetRequest"
-    filter: "snmp.pdu_type == 0"
-    description: "Filter for SNMP GetRequest"
-
-  - name: "SNMP GetResponse"
-    filter: "snmp.pdu_type == 2"
-    description: "Filter for SNMP GetResponse"
-
-  - name: "SNMP SetRequest"
-    filter: "snmp.pdu_type == 3"
-    description: "Filter for SNMP SetRequest"
-
-  - name: "SNMP GetBulkRequest"
-    filter: "snmp.pdu_type == 5"
-    description: "Filter for SNMP GetBulkRequest (v2c/v3)"
-
-  - name: "SNMP Trap"
-    filter: "snmp.pdu_type == 4 or snmp.pdu_type == 8"
-    description: "Filter for SNMP traps"
-
-  - name: "SNMP errors"
-    filter: "snmp.error_status != 0"
-    description: "Filter for SNMP error responses"
-
-  - name: "SNMPv3"
-    filter: "snmp.version == 3"
-    description: "Filter for SNMPv3 messages"
-
-  - name: "Specific community"
-    filter: "snmp.community == \"public\""
-    description: "Filter for specific community string"
-
+- name: SNMP GetRequest
+  filter: snmp.pdu_type == 0
+  description: Filter for SNMP GetRequest
+- name: SNMP GetResponse
+  filter: snmp.pdu_type == 2
+  description: Filter for SNMP GetResponse
+- name: SNMP SetRequest
+  filter: snmp.pdu_type == 3
+  description: Filter for SNMP SetRequest
+- name: SNMP GetBulkRequest
+  filter: snmp.pdu_type == 5
+  description: Filter for SNMP GetBulkRequest (v2c/v3)
+- name: SNMP Trap
+  filter: snmp.pdu_type == 4 or snmp.pdu_type == 8
+  description: Filter for SNMP traps
+- name: SNMP errors
+  filter: snmp.error_status != 0
+  description: Filter for SNMP error responses
+- name: SNMPv3
+  filter: snmp.version == 3
+  description: Filter for SNMPv3 messages
+- name: Specific community
+  filter: snmp.community == "public"
+  description: Filter for specific community string
 checks:
-  - name: "snmp_no_response"
-    severity: major
-    message: "SNMP request timeout: no response for request ID {snmp.reqid}"
-    condition: "snmp.pdu_type != 2 and no matching snmp.response_in within timeout"
-
-  - name: "snmp_error"
-    severity: major
-    message: "SNMP error response: {snmp.error_status} at index {snmp.error_index}"
-    condition: "snmp.error_status != 0"
-
-  - name: "snmp_auth_failure"
-    severity: major
-    message: "SNMP authentication failure from {ip.src}"
-    condition: "SNMP packet with authentication error"
-
-  - name: "snmp_slow_response"
-    severity: minor
-    message: "SNMP slow response: {snmp.time} seconds for request ID {snmp.reqid}"
-    condition: "snmp.time > 5"
-
-  - name: "snmp_community_mismatch"
-    severity: minor
-    message: "SNMP community mismatch: unexpected community '{snmp.community}' from {ip.src}"
-    condition: "snmp.community not in expected list"
-
-  - name: "snmp_trap_high_rate"
-    severity: minor
-    message: "High SNMP trap rate: {count} traps from {ip.src} within 1 minute"
-    condition: "More than 60 SNMP traps from same source within 60 seconds"
+- name: snmp_no_response
+  severity: major
+  message: 'SNMP request timeout: no response for request ID {snmp.reqid}'
+  condition: snmp.pdu_type != 2 and no matching snmp.response_in within timeout
+- name: snmp_error
+  severity: major
+  message: 'SNMP error response: {snmp.error_status} at index {snmp.error_index}'
+  condition: snmp.error_status != 0
+- name: snmp_auth_failure
+  severity: major
+  message: SNMP authentication failure from {ip.src}
+  condition: SNMP packet with authentication error
+- name: snmp_slow_response
+  severity: minor
+  message: 'SNMP slow response: {snmp.time} seconds for request ID {snmp.reqid}'
+  condition: snmp.time > 5
+- name: snmp_community_mismatch
+  severity: minor
+  message: 'SNMP community mismatch: unexpected community ''{snmp.community}'' from
+    {ip.src}'
+  condition: snmp.community not in expected list
+- name: snmp_trap_high_rate
+  severity: minor
+  message: 'High SNMP trap rate: {count} traps from {ip.src} within 1 minute'
+  condition: More than 60 SNMP traps from same source within 60 seconds

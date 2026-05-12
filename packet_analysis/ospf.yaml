@@ -15,9 +15,6 @@ protocol_key: "ospf"
 display_filter: "ospf or ospfv3"
 
 # tshark fields that LLM can use for analysis
-# To find available tshark fields, use:
-#   tshark -G fields | grep <protocol>     # List all fields for a protocol
-#   tshark -r <pcap> -T fields -e <field>  # Test field extraction on actual data
 fields:
   - label: "Frame Number"
     tshark_field: "frame.number"

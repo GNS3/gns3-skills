@@ -7,16 +7,32 @@ This script tests loading skills from YAML files in the GNS3-Skills repository.
 
 import sys
 import os
+from pathlib import Path
+
+def find_gns3_server():
+    """Find gns3-server by walking up from the skills repo."""
+    current = Path(__file__).resolve().parent
+    for ancestor in [current] + list(current.parents):
+        if (ancestor / "gns3-server").is_dir():
+            return str(ancestor / "gns3-server")
+    # Fallback: check sibling directory
+    sibling = current.parent / "gns3-server"
+    if sibling.is_dir():
+        return str(sibling)
+    raise RuntimeError(
+        "Cannot find gns3-server directory. "
+        "Expected it as a sibling of GNS3-Skills (e.g., ~/myCode/GNS3/gns3-server)."
+    )
 
 # Add gns3-server to path
-sys.path.insert(0, '/home/yueguobin/myCode/GNS3/gns3-server')
+sys.path.insert(0, find_gns3_server())
 
 from gns3server.agent.gns3_copilot.skills.loader import SkillsLoader
 
 def test_skills_loading():
     """Test loading skills from YAML files"""
 
-    skills_dir = "/home/yueguobin/myCode/GNS3/GNS3-Skills"
+    skills_dir = str(Path(__file__).resolve().parent)
 
     print(f"Testing skills loading from: {skills_dir}")
     print("=" * 60)

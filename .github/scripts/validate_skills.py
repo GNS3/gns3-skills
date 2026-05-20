@@ -64,10 +64,11 @@ class SkillValidator:
                 self.errors.append(f"{relative_path}: File must contain a YAML dictionary")
                 return False
 
-            # Determine skill type based on directory
-            if "injection" in str(file_path):
+            # Determine skill type based on parent directory name
+            parent_dir = Path(file_path).parent.name
+            if parent_dir == "injection":
                 return self._validate_injection_skill(relative_path, data)
-            elif "device" in str(file_path) or "feature" in str(file_path):
+            elif parent_dir in ("device", "feature"):
                 return self._validate_device_skill(relative_path, data)
             else:
                 self.warnings.append(f"{relative_path}: Unknown skill type, skipping format validation")
@@ -111,6 +112,8 @@ class SkillValidator:
             if not isinstance(data["issues"], dict):
                 self.errors.append(f"{file_path}: 'issues' must be a dictionary")
                 valid = False
+            elif len(data["issues"]) == 0:
+                self.warnings.append(f"{file_path}: 'issues' dictionary is empty - no faults defined")
             else:
                 for issue_key, issue_data in data["issues"].items():
                     if not self._validate_issue(file_path, issue_key, issue_data):

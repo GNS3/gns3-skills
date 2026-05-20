@@ -101,6 +101,8 @@ issues:
       - "Verify route-maps filter leaked routes correctly"
     applicability: "VRF-lite with inter-VRF routing requirements"
 
+  # Routing Policy Configuration Issues
+
   prefix_list_wrong:
     name: "Prefix-List Match Criteria Error"
     description: "Configure prefix-list with incorrect prefix length range or wrong network"
@@ -148,7 +150,7 @@ issues:
   set_as_path:
     name: "Set AS Path in Route-Map Error"
     description: "Configure set as-path prepend in route-map incorrectly"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - routing-policy
@@ -167,6 +169,8 @@ issues:
       - "Use 'set as-path tag' for compatibility with other protocols"
       - "Verify route-map is applied in the correct direction (in/out)"
     applicability: "BGP AS path manipulation for traffic engineering"
+
+  # VRF Advanced and Service Integration Issues
 
   vrf_rt_filter:
     name: "VRF Route-Target Filter (RTF) Misconfiguration"
@@ -258,7 +262,7 @@ issues:
   route_policy_seq:
     name: "Routing Policy Sequence Number / Continue Statement Issue"
     description: "Configure route-map with continue statement but sequence evaluation not as expected"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - routing-policy

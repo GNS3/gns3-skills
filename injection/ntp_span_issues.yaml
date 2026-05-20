@@ -61,7 +61,7 @@ issues:
   ntp_source:
     name: "NTP Source Interface Misconfiguration"
     description: "Configure NTP with wrong source interface causing packets dropped by ACL"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - ntp
@@ -79,10 +79,12 @@ issues:
       - "ACL on NTP server must permit the source IP"
     applicability: "NTP with source-based filtering"
 
+  # NTP Hierarchy and Peer Configuration Issues
+
   ntp_stratum:
     name: "NTP Stratum Level Manipulation"
     description: "Configure wrong NTP stratum level causing time source not preferred"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ntp
@@ -99,6 +101,8 @@ issues:
       - "Lower stratum = more accurate (preferred)"
       - "Default stratum when acting as master is 8"
     applicability: "NTP hierarchy and redundancy design"
+
+  # SPAN, RSPAN, and ERSPAN Configuration Issues
 
   span_destination:
     name: "SPAN Destination Port Misconfiguration"
@@ -191,7 +195,7 @@ issues:
   ntp_peer_assoc:
     name: "NTP Peer / Symmetric Association Misconfiguration"
     description: "Configure NTP peer (symmetric active) but association not established or clock loop"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - ntp
@@ -212,7 +216,7 @@ issues:
   ntp_broadcast:
     name: "NTP Broadcast/Multicast Mode Misconfiguration"
     description: "Configure NTP broadcast/multicast but clients not receiving time updates"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ntp
@@ -230,10 +234,12 @@ issues:
       - "Use for LAN environments with many NTP clients"
     applicability: "NTP for LAN environments with many hosts"
 
+  # Resource and Access Control Issues
+
   span_cpu:
     name: "SPAN CPU / RSPAN/ERSPAN Resource Exhaustion"
     description: "Configure too many SPAN sessions causing CPU or hardware resource exhaustion"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - span

@@ -41,7 +41,7 @@ issues:
   vpls_mtu_mismatch:
     name: "VPLS/VPWS MTU Mismatch"
     description: "Configure different MTU values on VPLS pseudowire endpoints"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - vpls
@@ -82,6 +82,8 @@ issues:
       - "VPLS must use consistent encapsulation across all PEs"
       - "VLAN encapsulation strips/pushes VLAN tags"
     applicability: "VPLS with different encapsulations"
+
+  # VPLS Network Design and Redundancy Issues
 
   vpls_full_mesh:
     name: "VPLS Full-Mesh Pseudowire Missing"
@@ -149,6 +151,8 @@ issues:
       - "Use 'mpls ldp router-id <interface>' for LDP source"
       - "Check 'ping mpls ipv4 <peer-rid>/32' for LSP reachability"
     applicability: "VPLS/VPWS in MPLS networks"
+
+  # VPWS, Signaling, and QoS Issues
 
   vpws_interworking:
     name: "VPWS L2VPN Interworking Mode Mismatch"
@@ -220,7 +224,7 @@ issues:
   vpls_qos:
     name: "VPLS QoS / EXP Bit Preservation Issue"
     description: "Configure VPLS but MPLS EXP (QoS) bits not preserved across pseudowire"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - vpls

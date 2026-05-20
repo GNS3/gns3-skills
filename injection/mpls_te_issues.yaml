@@ -59,10 +59,12 @@ issues:
       - "Reduce tunnel bandwidth request or increase RSVP pool"
     applicability: "MPLS-TE bandwidth reservations"
 
+  # TE Path Optimization Issues
+
   te_reoptimize:
     name: "TE Tunnel Reoptimization Failure"
     description: "TE tunnel not reoptimizing to better path when network changes"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - mpls-te
@@ -84,7 +86,7 @@ issues:
   te_affinity:
     name: "TE Tunnel Affinity / Attribute-List Mismatch"
     description: "Configure TE tunnel affinity that excludes valid links in the network"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - mpls-te
@@ -102,6 +104,8 @@ issues:
       - "Use 'show mpls traffic-eng topology' to verify link attributes"
       - "Default: no affinity (accepts all links)"
     applicability: "MPLS-TE with administrative constraints"
+
+  # TE Integration and Protection Issues
 
   te_autoroute:
     name: "TE Autoroute / Forwarding Adjacency Misconfiguration"
@@ -211,6 +215,8 @@ issues:
       - "Verify IGP has complete link-state information"
       - "Loose hop = 'next-address loose <ip>' in explicit path"
     applicability: "MPLS-TE with loose hop path specification"
+
+  # Advanced TE Configuration Issues
 
   te_inter_area:
     name: "TE Inter-Area / Inter-AS Tunnel Misconfiguration"

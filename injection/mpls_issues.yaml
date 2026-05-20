@@ -11,7 +11,7 @@ category: "injection"
 protocols:
   - mpls
   - ldp
-  - mpls_vpn
+  - mpls-vpn
 
 issues:
   ldp_neighbor_mismatch:
@@ -79,14 +79,14 @@ issues:
       - "MPLS PHP reduces lookup on egress LSR"
     applicability: "MPLS networks with Penultimate Hop Popping"
 
-  mpls_vpn_route_target:
+  mpls-vpn_route_target:
     name: "MPLS VPN Route Target Mismatch"
     description: "Configure mismatched route targets (import/export) between PE routers"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "VPN routes not exchanged between PE routers"
@@ -323,14 +323,14 @@ issues:
 
   # MPLS VPN Specific Issues
 
-  mpls_vpn_pe_ce_redistribute:
+  mpls-vpn_pe_ce_redistribute:
     name: "MPLS VPN PE-CE Route Redistribution Issue"
     description: "Configure PE-CE routing protocol redistribution into/out-of VRF incorrectly, causing missing or incorrect routes"
     severity: "high"
     difficulty: "intermediate"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "CE routes not appearing in VRF on remote PE"
@@ -346,14 +346,14 @@ issues:
       - "Verify backdoor routes not blockingMP-BGP redistribution"
     applicability: "MPLS L3VPN PE routers with PE-CE routing"
 
-  mpls_vpn_label_mode:
+  mpls-vpn_label_mode:
     name: "MPLS VPN Label Allocation Mode Issue"
     description: "Configure VPN label allocation mode (per-VRF vs per-prefix) incorrectly, causing label scaling or forwarding issues"
     severity: "medium"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
     symptoms:
       - "Too many MPLS labels allocated in large VPN deployment"
       - "Per-VRF label mode causes aggregation issues"
@@ -368,14 +368,14 @@ issues:
       - "Per-VRF default on most platforms"
     applicability: "MPLS L3VPN large-scale deployments"
 
-  mpls_vpn_ospf_sham_link:
+  mpls-vpn_ospf_sham_link:
     name: "MPLS VPN OSPF Sham-Link Configuration Error"
     description: "Configure OSPF sham-link in MPLS VPN incorrectly, causing suboptimal OSPF backdoor routing"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
     symptoms:
       - "OSPF backdoor link preferred over MPLS VPN path"
       - "Suboptimal routing between OSPF sites connected via MPLS"
@@ -657,14 +657,14 @@ issues:
 
   # MPLS VPN Extended Issues
 
-  mpls_vpn_hub_spoke:
+  mpls-vpn_hub_spoke:
     name: "MPLS VPN Hub-and-Spoke Topology Error"
     description: "Configure MPLS VPN hub-and-spoke topology incorrectly, allowing spoke-to-spoke direct communication instead of via hub"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "Spoke-to-spoke direct path used instead of hub"
@@ -680,14 +680,14 @@ issues:
       - "Verify import/export RT configuration on each VRF"
     applicability: "MPLS L3VPN hub-and-spoke deployments"
 
-  mpls_vpn_as_override:
+  mpls-vpn_as_override:
     name: "MPLS VPN AS-Override / Site-of-Origin Error"
     description: "Configure MPLS VPN with AS-override or Site-of-Origin incorrectly, causing route acceptance/rejection problems"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "CE receiving routes with own AS in AS path"
@@ -703,14 +703,14 @@ issues:
       - "Common in MPLS VPN with overlapping customer AS numbers"
     applicability: "MPLS L3VPN with overlapping customer AS numbers"
 
-  mpls_vpn_extranet:
+  mpls-vpn_extranet:
     name: "MPLS VPN Extranet / VRF Route Leaking Misconfiguration"
     description: "Configure MPLS VPN extranet (cross-VRF route leaking) incorrectly, exposing wrong sets of routes between VRFs"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "Routes from VRF A not appearing in VRF B despite extranet config"
@@ -726,14 +726,14 @@ issues:
       - "Verify RT values used for extranet do not conflict with regular VPN RTs"
     applicability: "MPLS L3VPN deployments requiring cross-VRF access"
 
-  mpls_vpn_vrf_select:
+  mpls-vpn_vrf_select:
     name: "BGP VRF Select (Source-Based VRF Selection) Error"
     description: "Configure BGP VRF Select incorrectly, failing to select the correct VRF based on source IP or other match criteria"
     severity: "high"
     difficulty: "advanced"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "Traffic from certain sources not mapped to correct VRF"
@@ -749,14 +749,14 @@ issues:
       - "VRF Select allows multi-tenant/hosting with shared CEs"
     applicability: "Multi-tenant MPLS VPN, shared CE deployments"
 
-  mpls_vpn_bgp_rt_limit:
+  mpls-vpn_bgp_rt_limit:
     name: "MPLS VPN Route Target Filter Restriction"
     description: "Configure BGP route-target filter incorrectly on PE, blocking VPN route import that should be accepted"
     severity: "high"
     difficulty: "intermediate"
     protocols:
       - mpls
-      - mpls_vpn
+      - mpls-vpn
       - bgp
     symptoms:
       - "VPN routes present in BGP but not imported into VRF"

@@ -38,6 +38,8 @@ issues:
       - "VTY access-class must allow NETCONF client IP"
     applicability: "NETCONF-based network automation"
 
+  # NETCONF Session and Configuration Issues
+
   netconf_capability:
     name: "NETCONF Capability / YANG Module Mismatch"
     description: "Configure NETCONF client and server with incompatible capabilities or missing YANG modules"
@@ -63,7 +65,7 @@ issues:
   netconf_lock:
     name: "NETCONF Datastore Lock / Configuration Conflict"
     description: "Configure multiple NETCONF sessions attempting to lock datastore simultaneously"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netconf
@@ -80,6 +82,8 @@ issues:
       - "<unlock> releases lock on session close"
       - "Implement retry logic in automation scripts"
     applicability: "Concurrent NETCONF automation deployments"
+
+  # RESTCONF and Data Management Issues
 
   restconf_api:
     name: "RESTCONF API / HTTP Method Misconfiguration"
@@ -102,10 +106,12 @@ issues:
       - "Verify AAA authentication for RESTCONF API users"
     applicability: "RESTCONF-based automation deployments"
 
+  # Telemetry and gNMI Issues
+
   telemetry_subscription:
     name: "Model-Driven Telemetry Subscription Failure"
     description: "Configure MDT subscription but collector not receiving telemetry data"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - telemetry
@@ -126,7 +132,7 @@ issues:
   gnmi_session:
     name: "gNMI (gRPC Network Management Interface) Session Failure"
     description: "Configure gNMI but gRPC session between client and device not established"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - gnmi
@@ -170,7 +176,7 @@ issues:
   netconf_filter:
     name: "NETCONF Subtree / XPath Filter Misconfiguration"
     description: "Configure NETCONF <get> or <get-config> with incorrect filter returning too much or too little data"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netconf
@@ -233,7 +239,7 @@ issues:
   gnmi_subscribe:
     name: "gNMI Subscribe / On-Change Telemetry Issue"
     description: "Configure gNMI subscription with on-change mode but updates not triggered when value changes"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - gnmi

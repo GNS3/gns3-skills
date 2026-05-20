@@ -56,10 +56,12 @@ issues:
       - "Aggressive: 8 retries of UDLD probes before err-disable"
     applicability: "Fiber links with aggressive UDLD protection"
 
+  # CDP Configuration Issues
+
   cdp_disabled:
     name: "CDP Disabled Causing Neighbor Discovery Failure"
     description: "Disable CDP on interfaces where it is needed for device discovery"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - cdp
@@ -98,10 +100,12 @@ issues:
       - "Non-Cisco devices typically do not support CDP"
     applicability: "Cisco device discovery, mixed vendor environments"
 
+  # LLDP Configuration Issues
+
   lldp_disabled:
     name: "LLDP Disabled Causing Multi-Vendor Discovery Failure"
     description: "Disable LLDP on interfaces where it is needed for multi-vendor discovery"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - lldp
@@ -139,6 +143,8 @@ issues:
       - "Disable TLV filtering: 'no lldp tlv-select'"
       - "Check 'show lldp neighbors detail' for received TLVs"
     applicability: "Multi-vendor networks, VoIP, PoE deployments"
+
+  # Advanced UDLD and Interoperability Issues
 
   udld_mismatch:
     name: "UDLD Mode/Feature Mismatch Between Peers"
@@ -206,7 +212,7 @@ issues:
   cdp_lldp_interop:
     name: "CDP/LLDP Interworking / VoIP Dual Discovery Issue"
     description: "Configure CDP and LLDP simultaneously with conflicting device discovery information"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - cdp

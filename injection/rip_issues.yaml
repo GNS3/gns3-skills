@@ -32,6 +32,8 @@ issues:
       - "RIP v2 supports VLSM and authentication"
     applicability: "RIP configurations"
 
+  # Basic RIP Configuration Issues
+
   rip_passive_interface:
     name: "RIP Passive Interface Blocking Updates"
     description: "Configure passive-interface on RIP interface preventing route advertisement"
@@ -117,7 +119,7 @@ issues:
   rip_timer_mismatch:
     name: "RIP Update / Invalid / Hold Timer Mismatch"
     description: "Configure non-standard RIP timers on different routers causing slow convergence or route expiration"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - rip
@@ -134,6 +136,8 @@ issues:
       - "Shorter update timer = faster convergence, more bandwidth"
       - "Hold timer prevents route oscillation after withdrawal"
     applicability: "RIP deployments needing timer tuning"
+
+  # Route Propagation and Redistribution Issues
 
   rip_redistribution:
     name: "RIP Route Redistribution Error"
@@ -176,6 +180,8 @@ issues:
       - "Default route advertised to all RIP neighbors"
       - "Check 'show ip rip database' for default route entry"
     applicability: "RIP networks connecting to external networks"
+
+  # Route Policy and Optimization Issues
 
   rip_offset_list:
     name: "RIP Offset-List Metric Manipulation"
@@ -223,7 +229,7 @@ issues:
   rip_max_paths:
     name: "RIP Maximum Paths / Load Balancing Error"
     description: "Configure RIP with multiple equal-cost paths but load balancing limited by maximum-paths"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - rip
@@ -307,7 +313,7 @@ issues:
   rip_bfd:
     name: "RIP BFD Integration / Fast Failure Detection"
     description: "Configure RIP with BFD for fast link failure detection but BFD not integrated with RIP"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - rip
@@ -324,6 +330,8 @@ issues:
       - "RIP may need workarounds: PBR + IP tracking for faster convergence"
       - "Consider replacing RIP with EIGRP or OSPF if fast convergence needed"
     applicability: "RIP deployments needing faster convergence"
+
+  # RIPng IPv6 Issues
 
   ripng_interface_enable:
     name: "RIPng Interface Not Enabled for IPv6"

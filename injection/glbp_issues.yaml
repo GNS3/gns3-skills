@@ -15,7 +15,7 @@ issues:
   glbp_priority:
     name: "GLBP Priority / AVG Election Manipulation"
     description: "Set wrong GLBP priority causing suboptimal AVG (Active Virtual Gateway) election"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - glbp
@@ -36,7 +36,7 @@ issues:
   glbp_avf:
     name: "GLBP AVF (Active Virtual Forwarder) Preempt Disabled"
     description: "AVF preempt disabled causing AVF role not reclaimed after recovery"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - glbp
@@ -57,7 +57,7 @@ issues:
   glbp_weight:
     name: "GLBP Weight Tracking Misconfiguration"
     description: "Configure GLBP weight tracking with wrong decrement value causing premature AVF change"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - glbp
@@ -78,7 +78,7 @@ issues:
   glbp_timers:
     name: "GLBP Timer Mismatch"
     description: "Configure GLBP timers that are too fast or too slow causing instability or slow failover"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - glbp
@@ -120,7 +120,7 @@ issues:
   glbp_load_balancing:
     name: "GLBP Load Balancing Method Misconfiguration"
     description: "Configure GLBP load balancing method that doesn't match traffic patterns"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - glbp
@@ -137,6 +137,8 @@ issues:
       - "Host-dependent: same host always gets same AVF"
       - "Use 'glbp <group> load-balancing <method>' to set"
     applicability: "GLBP traffic distribution tuning"
+
+  # Authentication and Forwarding Issues
 
   glbp_auth:
     name: "GLBP Authentication Mismatch"
@@ -222,6 +224,8 @@ issues:
       - "Both IPv4 and IPv6 GLBP can run simultaneously"
       - "IPv6 GLBP not available on all platforms (check support)"
     applicability: "Dual-stack IPv4/IPv6 GLBP deployments"
+
+  # High Availability and Redundancy Issues
 
   glbp_split_brain:
     name: "GLBP Split-Brain / Multiple AVG Election"

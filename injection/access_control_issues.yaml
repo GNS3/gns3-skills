@@ -16,6 +16,8 @@ protocols:
   - acl
 
 issues:
+  # Basic ACL Configuration Issues
+
   blocking_acl:
     name: "Blocking ACL"
     description: "Apply an ACL that blocks legitimate traffic"
@@ -77,6 +79,8 @@ issues:
       - "Verify direction matches intent"
     applicability: "ACLs applied to interfaces"
 
+  # ACL Design and Advanced Features
+
   acl_overlap_conflict:
     name: "ACL Overlap or Conflict"
     description: "Multiple ACLs with overlapping or conflicting rules"
@@ -98,6 +102,8 @@ issues:
       - "Use 'show access-lists <acl-name>' to see rule order"
       - "Test each ACL separately to identify conflicts"
     applicability: "Multiple ACLs on same interface or across the traffic path"
+
+  # Security and Specialized ACLs
 
   zone_based_firewall:
     name: "Zone-Based Firewall Policy Missing"
@@ -171,7 +177,7 @@ issues:
   acl_time_based:
     name: "Time-Based ACL / Time Range Configuration Error"
     description: "Configure time-based ACL with incorrect time range causing rules to be active when they shouldn't"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - acl

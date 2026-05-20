@@ -12,10 +12,12 @@ protocols:
   - qos
 
 issues:
+  # Classification and Marking Issues
+
   qos_class_map:
     name: "QoS Class-Map Match Criteria Error"
     description: "Configure class-map with incorrect match criteria causing wrong traffic classification"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - qos
@@ -32,6 +34,8 @@ issues:
       - "Match protocol requires NBAR configuration"
       - "Use 'show policy-map interface <intf>' for class statistics"
     applicability: "Modular QoS CLI (MQC) configurations"
+
+  # Policy Attachment and Bandwidth Issues
 
   qos_policy_attach:
     name: "QoS Policy Not Attached to Interface"
@@ -53,6 +57,8 @@ issues:
       - "Check interface is correct (sub-interface vs main interface)"
       - "Direction: input classifies before routing, output after routing"
     applicability: "All MQC QoS deployments"
+
+  # Queuing and Congestion Management Issues
 
   qos_bandwidth:
     name: "QoS Bandwidth Allocation Exceeded"
@@ -99,7 +105,7 @@ issues:
   qos_marking:
     name: "QoS Marking/Remarking Not Working"
     description: "Configure QoS marking but CoS/DSCP/IP precedence not being set correctly"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - qos
@@ -116,6 +122,8 @@ issues:
       - "Campus switches: trust at access edge, remark at distribution"
       - "Use 'show policy-map interface <intf> class <class>' for marking stats"
     applicability: "QoS marking and trust boundaries"
+
+  # Policing and Advanced QoS Issues
 
   qos_policing:
     name: "QoS Policing / Shaping Misconfiguration"
@@ -141,7 +149,7 @@ issues:
   qos_trust:
     name: "QoS Trust Boundary / CoS/DSCP Trust Misconfiguration"
     description: "Configure QoS trust boundary incorrectly allowing untrusted devices to set QoS markings"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - qos
@@ -162,7 +170,7 @@ issues:
   qos_nbar:
     name: "QoS NBAR / Application Recognition Failure"
     description: "Configure QoS NBAR (Network Based Application Recognition) but application not correctly identified"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - qos
@@ -183,7 +191,7 @@ issues:
   qos_wred:
     name: "QoS WRED / Congestion Avoidance Misconfiguration"
     description: "Configure WRED (Weighted Random Early Detection) incorrectly causing premature drops or no drops"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - qos
@@ -204,7 +212,7 @@ issues:
   qos_cos_dscp_map:
     name: "QoS CoS-to-DSCP / DSCP-to-CoS Mapping Error"
     description: "Configure CoS-to-DSCP or DSCP-to-CoS mapping inconsistently causing layer 2/3 QoS mismatch"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - qos
@@ -225,7 +233,7 @@ issues:
   qos_auto:
     name: "QoS Auto-QoS / Misconfiguration from Auto-Generated Policies"
     description: "Configure Auto-QoS but generated policies conflict with existing QoS or cause unexpected results"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - qos

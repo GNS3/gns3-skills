@@ -39,7 +39,7 @@ issues:
   netflow_version:
     name: "NetFlow Export Version Misconfiguration"
     description: "Configure NetFlow export version that collector does not support"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - netflow
@@ -58,10 +58,12 @@ issues:
       - "v9/IPFIX for MPLS and advanced features"
     applicability: "NetFlow v5, v9, IPFIX deployments"
 
+  # NetFlow Sampling and Application Recognition Issues
+
   netflow_sampler:
     name: "NetFlow Sampler / Sampling Rate Misconfiguration"
     description: "Configure NetFlow sampling rate too high or too low affecting accuracy"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netflow
@@ -83,7 +85,7 @@ issues:
   netflow_nbar:
     name: "NetFlow with NBAR Application Recognition Issues"
     description: "NetFlow using NBAR for application classification not matching expected traffic"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netflow
@@ -101,6 +103,8 @@ issues:
       - "NetFlow v9/IPFIX exports app ID with flow record"
       - "Encrypted traffic: NBAR cannot inspect encrypted payload"
     applicability: "NetFlow with application visibility"
+
+  # NetFlow Resource and Performance Issues
 
   netflow_timeout:
     name: "NetFlow Active/Inactive Timer Misconfiguration"
@@ -144,6 +148,8 @@ issues:
       - "Enable flow sampling to reduce table entries"
     applicability: "High-traffic NetFlow deployments"
 
+  # sFlow and Advanced NetFlow Configuration Issues
+
   sflow_issues:
     name: "sFlow Agent / Collector Misconfiguration"
     description: "Configure sFlow with wrong agent IP or collector settings"
@@ -168,7 +174,7 @@ issues:
   netflow_export_acl:
     name: "NetFlow ACL / Filter Misconfiguration"
     description: "Configure NetFlow with capture ACL that matches too broadly or too narrowly"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netflow
@@ -189,7 +195,7 @@ issues:
   netflow_template_refresh:
     name: "NetFlow v9/IPFIX Template Refresh Rate Issue"
     description: "Configure NetFlow v9/IPFIX template refresh rate too slow causing collector data loss"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - netflow
@@ -233,7 +239,7 @@ issues:
   netflow_ipfix_enterprise:
     name: "IPFIX Enterprise / Vendor-Specific IE Misconfiguration"
     description: "Configure IPFIX with enterprise Information Elements (IEs) not recognized by collector"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - ipfix
@@ -254,7 +260,7 @@ issues:
   sflow_counter_poll:
     name: "sFlow Counter Polling / Interface Statistics Issue"
     description: "Configure sFlow counter polling interval too long or too short"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - sflow

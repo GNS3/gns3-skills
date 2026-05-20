@@ -13,6 +13,8 @@ protocols:
   - route-map
 
 issues:
+  # Basic Application and Forwarding Issues
+
   pbr_route_map_not_applied:
     name: "PBR Route-Map Not Applied to Interface"
     description: "Configure route-map but fail to apply it to the required interface"
@@ -34,6 +36,8 @@ issues:
       - "Check interface is not 'no ip policy'"
       - "PBR processes inbound traffic only"
     applicability: "All PBR configurations"
+
+  # ACL and Next-Hop Configuration
 
   pbr_acl_mismatch:
     name: "PBR ACL Match Criteria Incorrect"
@@ -126,7 +130,7 @@ issues:
   pbr_sequence_order:
     name: "PBR Route-Map Sequence Order Error"
     description: "Configure route-map entries in wrong sequence order causing incorrect matching"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - pbr
@@ -148,7 +152,7 @@ issues:
   pbr_default_route:
     name: "PBR Default Route / No Match Fallback"
     description: "Configure PBR where no route-map match occurs and traffic falls to default routing"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - pbr
@@ -166,6 +170,8 @@ issues:
       - "Use 'match ip address <acl>' in route-map for specific traffic"
       - "Add deny ACE at end of ACL for logging unmatched traffic"
     applicability: "PBR with selective traffic matching"
+
+  # Advanced PBR Issues
 
   pbr_ipv6:
     name: "PBR for IPv6 (IPv6 PBR) Misconfiguration"
@@ -237,7 +243,7 @@ issues:
   pbr_set_dscp:
     name: "PBR Set DSCP / QoS Marking via Route-Map"
     description: "Configure PBR with set dscp but QoS marking not applied to policy-routed traffic"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - pbr

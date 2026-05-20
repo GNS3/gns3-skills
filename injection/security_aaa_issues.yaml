@@ -38,6 +38,8 @@ issues:
       - "Multi-auth/host mode: 'authentication host-mode multi-host'"
     applicability: "Network access control (NAC) deployments"
 
+  # 802.1X RADIUS and Port Control Issues
+
   dot1x_radius:
     name: "802.1X RADIUS Server Misconfiguration"
     description: "Configure 802.1X with unreachable or misconfigured RADIUS server"
@@ -106,6 +108,8 @@ issues:
       - "MAC format: xxxx.xxxx.xxxx (no hyphens, lowercase)"
     applicability: "Mixed environments with 802.1X and legacy devices"
 
+  # AAA Framework and Method Configuration
+
   aaa_new_model:
     name: "AAA New Model Not Enabled"
     description: "Configure AAA commands without enabling 'aaa new-model'"
@@ -155,7 +159,7 @@ issues:
   aaa_accounting:
     name: "AAA Accounting Not Configured"
     description: "AAA accounting not sending logs for security or billing"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - aaa
@@ -174,6 +178,8 @@ issues:
       - "Stop-only only sends stop record"
       - "Check AAA server for received accounting packets"
     applicability: "Audit, compliance, and billing requirements"
+
+  # RADIUS Policy and Dynamic Assignment Issues
 
   dot1x_vlan_assign:
     name: "802.1X RADIUS VLAN Assign / Restricted VLAN Issue"
@@ -223,7 +229,7 @@ issues:
   dot1x_host_mode:
     name: "802.1X Host Mode / Multi-Domain Multi-Host Misconfig"
     description: "Configure 802.1X host mode incorrectly allowing too many or too few devices"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - 802.1x
@@ -241,6 +247,8 @@ issues:
       - "Multi-host: first successful auth opens for all"
       - "Check 'show authentication interface <intf>' for host mode"
     applicability: "802.1X with voice, data, and guest device coexistence"
+
+  # TACACS+ Authorization Issues
 
   tacacs_command_auth:
     name: "TACACS+ Command Authorization / Privilege Level Issue"

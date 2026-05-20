@@ -12,10 +12,12 @@ protocols:
   - eem
 
 issues:
+  # EEM Event Trigger Issues
+
   eem_trigger_none:
     name: "EEM Applet Not Triggering (Wrong Event)"
     description: "Configure EEM applet with event that never occurs or is incorrectly specified"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - eem
@@ -33,10 +35,12 @@ issues:
       - "Test with 'event manager run <applet>' to verify actions"
     applicability: "EEM automation deployments"
 
+  # EEM Action and Script Issues
+
   eem_action_cli:
     name: "EEM CLI Action Syntax Error"
     description: "Configure EEM CLI action with incorrect command causing action failure"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - eem
@@ -57,7 +61,7 @@ issues:
   eem_recurring:
     name: "EEM Recurring Timer Running Too Frequently"
     description: "Configure EEM recurring timer with too-short interval causing high CPU"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - eem
@@ -120,7 +124,7 @@ issues:
   eem_env_var:
     name: "EEM Environment Variable Not Defined"
     description: "EEM applet referencing undefined environment variables causing action failure"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - eem
@@ -138,10 +142,12 @@ issues:
       - "Use 'format' in action string to embed variables"
     applicability: "EEM applets using environment variables"
 
+  # EEM Notification and Recovery Issues
+
   eem_snmp_trap:
     name: "EEM SNMP Trap / Syslog Output Not Generated"
     description: "Configure EEM applet with SNMP trap or syslog action but notification not sent"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - eem
@@ -162,7 +168,7 @@ issues:
   eem_timer_cron:
     name: "EEM Cron Timer / Scheduled Execution Misconfiguration"
     description: "Configure EEM cron timer with incorrect schedule pattern causing never-triggering"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - eem
@@ -183,7 +189,7 @@ issues:
   eem_conditional:
     name: "EEM Conditional / Multiple Event Trigger Issue"
     description: "Configure EEM with multiple event conditions but AND/OR logic not working"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - eem
@@ -204,7 +210,7 @@ issues:
   eem_tcl:
     name: "EEM Tcl Script / Tool Command Language Error"
     description: "Configure EEM with Tcl script but script execution fails due to syntax or environment issue"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - eem

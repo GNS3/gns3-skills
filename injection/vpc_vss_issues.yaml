@@ -84,7 +84,7 @@ issues:
   vpc_orphan:
     name: "vPC Orphan Port Misconfiguration"
     description: "Device connected to only one vPC peer causing orphan port issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - vpc
@@ -101,6 +101,8 @@ issues:
       - "Consider dual-homing for critical devices (servers, firewalls)"
       - "Monitor orphan port state during vPC peer failures"
     applicability: "vPC with single-homed devices"
+
+  # VSS and Stacking Configuration Issues
 
   vss_switch_id:
     name: "VSS Switch ID / Switch Number Conflict"
@@ -167,6 +169,8 @@ issues:
       - "Stack cable must form a ring topology"
       - "Stack members: up to 9 (3850) or 8 (3750/9300)"
     applicability: "Cisco Catalyst switch stacking (StackWise / FlexStack)"
+
+  # vPC Advanced Feature Issues
 
   vpc_peer_gateway:
     name: "vPC Peer Gateway Misconfiguration"

@@ -14,6 +14,8 @@ protocols:
   - bgp
 
 issues:
+  # EVPN Service and Peer Configuration
+
   evpn_l2vni_not_created:
     name: "EVPN L2VNI Not Created on Leaf"
     description: "L2VNI not configured or created on a leaf switch causing EVPN service not available"
@@ -102,6 +104,8 @@ issues:
       - "Anycast gateway enables active-active forwarding"
     applicability: "EVPN VXLAN with inter-subnet routing"
 
+  # EVPN Gateway and Route Advertisement
+
   evpn_type2_route_missing:
     name: "EVPN Type 2 Route Missing"
     description: "MAC/IP advertisement routes not being sent or received in EVPN"
@@ -171,7 +175,7 @@ issues:
   evpn_mac_mobility:
     name: "EVPN MAC Mobility / MAC Move Loop"
     description: "Configure EVPN with MAC mobility (host moves between ports) but sequence number or MAC move limit causes issues"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - evpn
@@ -189,10 +193,12 @@ issues:
       - "Stuck MAC: clear with 'clear l2route evpn mac <mac>'"
     applicability: "EVPN VXLAN with mobile hosts or VM migrations"
 
+  # EVPN Multi-Homing and Advanced Issues
+
   evpn_df_election:
     name: "EVPN DF (Designated Forwarder) Election Issue"
     description: "Configure EVPN with multi-homed CE but designated forwarder election fails or incorrect DF elected"
-    severity: "high"
+    severity: "medium"
     difficulty: "advanced"
     protocols:
       - evpn
@@ -234,7 +240,7 @@ issues:
   evpn_aliasing:
     name: "EVPN E-ALIASing / Load Balancing Issue"
     description: "Configure EVPN with aliasing (E-ALIAS) but load balancing not distributing traffic across multi-homed PEs"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - evpn
@@ -277,7 +283,7 @@ issues:
   evpn_arp_nd_suppression:
     name: "EVPN ARP/ND Suppression Cache Miss"
     description: "Configure EVPN with ARP/ND suppression but cache miss causes BUM flooding for ARP/ND packets"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - evpn
@@ -341,7 +347,7 @@ issues:
   evpn_etree:
     name: "EVPN E-Tree / Root-and-Leaf Topology Misconfiguration"
     description: "Configure EVPN E-Tree incorrectly, causing leaf-to-leaf communication when isolation is required"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - evpn

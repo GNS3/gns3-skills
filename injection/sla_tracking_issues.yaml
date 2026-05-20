@@ -35,10 +35,12 @@ issues:
       - "Check 'show ip sla configuration <id>' for settings"
     applicability: "IP SLA based failover and tracking"
 
+  # Probe Configuration and Timing Issues
+
   sla_frequency:
     name: "IP SLA Probe Frequency Misconfiguration"
     description: "Configure IP SLA probe frequency too slow or too fast"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - ip-sla
@@ -60,7 +62,7 @@ issues:
   sla_threshold:
     name: "IP SLA Threshold / Timeout Misconfiguration"
     description: "Configure IP SLA threshold or timeout too low causing false positives"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ip-sla
@@ -100,6 +102,8 @@ issues:
       - "Track object state reflects the SLA probe state"
       - "Multiple track objects can use same SLA probe"
     applicability: "All object tracking configurations"
+
+  # Object Tracking and Failover Issues
 
   track_list_logic:
     name: "Track List Boolean Logic Error"
@@ -168,10 +172,12 @@ issues:
       - "Verify track state and client action match expectations"
     applicability: "Static route failover, HSRP/VRRP interface tracking"
 
+  # Advanced SLA Monitoring Issues
+
   sla_icmp_jitter:
     name: "IP SLA ICMP Jitter / Voice Quality Monitoring Issue"
     description: "Configure IP SLA jitter probe but statistics not collected or inaccurate"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - ip-sla
@@ -192,7 +198,7 @@ issues:
   sla_multi_hop:
     name: "IP SLA Multi-Hop / Path Monitoring Issue"
     description: "Configure IP SLA probe for path beyond directly connected neighbor"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ip-sla
@@ -213,7 +219,7 @@ issues:
   sla_dns_http:
     name: "IP SLA HTTP/DNS Application Monitoring Issue"
     description: "Configure IP SLA application-specific probe (HTTP, DNS, FTP) but application check fails"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ip-sla
@@ -255,7 +261,7 @@ issues:
   sla_multi_probe:
     name: "IP SLA Multiple Probe / Scheduler Conflict"
     description: "Configure multiple IP SLA probes with overlapping schedules or same operation ID"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ip-sla

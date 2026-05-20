@@ -17,6 +17,8 @@ protocols:
   - ldp
 
 issues:
+  # SID Allocation and Configuration Issues
+
   srgb_mismatch:
     name: "SRGB (Segment Routing Global Block) Mismatch"
     description: "Configure different SRGB ranges on routers in the same SR domain"
@@ -65,7 +67,7 @@ issues:
   adjacency_sid:
     name: "Adjacency-SID Misconfiguration"
     description: "Adjacency-SID not generated or incorrect due to IGP interface configuration"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - segment-routing
@@ -83,6 +85,8 @@ issues:
       - "Adjacency-SID persists across IGP restarts"
       - "Only one adjacency-SID is allocated per adjacency (IPv4 or IPv6)"
     applicability: "SR-TE and strict path segment routing"
+
+  # SR-TE and Traffic Steering Issues
 
   sr_te_policy:
     name: "SR-TE Policy Candidate-Path Misconfiguration"
@@ -130,6 +134,8 @@ issues:
       - "Steering via autoroute or static route per policy"
     applicability: "SR-TE traffic steering in BGP networks"
 
+  # Fast-Reroute and Protection Issues
+
   sr_ti_lfa:
     name: "SR TI-LFA (Topology-Independent LFA) Failure"
     description: "Configure SR TI-LFA backup path not being computed due to missing adjacency-SID or constraints"
@@ -153,10 +159,12 @@ issues:
       - "All intermediate routers need SR enabled for TI-LFA"
     applicability: "Segment Routing fast-reroute deployments"
 
+  # Interoperability and Domain Issues
+
   sr_mpls_ldp_interop:
     name: "SR-MPLS and LDP Interoperability Issue"
     description: "Configure SR-MPLS and LDP on same router but label mapping mismatched"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - segment-routing
@@ -267,7 +275,7 @@ issues:
   sr_liveness:
     name: "SR Liveness / BFD for SR Policy Failure"
     description: "Configure BFD for SR-TE policy but BFD session not established"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - segment-routing

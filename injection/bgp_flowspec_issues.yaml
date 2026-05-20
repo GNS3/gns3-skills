@@ -14,10 +14,12 @@ protocols:
   - rtbh
 
 issues:
+  # BGP FlowSpec Basic Configuration
+
   flowspec_af:
     name: "BGP FlowSpec Address-Family Not Activated"
     description: "FlowSpec address-family not activated under BGP causing FlowSpec routes not exchanged"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bgp
@@ -39,7 +41,7 @@ issues:
   flowspec_action:
     name: "BGP FlowSpec Action Community Misconfiguration"
     description: "Configure FlowSpec action extended community (drop/rate-limit/redirect) incorrectly"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -79,6 +81,8 @@ issues:
       - "TCP flags filter: SYN, ACK, FIN, RST, URG, PSH"
       - "Check 'show bgp ipv4 flowspec <prefix>' for match fields"
     applicability: "DDoS mitigation with BGP FlowSpec"
+
+  # RTBH and DDoS Mitigation
 
   rtbh_community:
     name: "RTBH (Remotely Triggered Black Hole) Community Misconfiguration"
@@ -124,6 +128,8 @@ issues:
       - "Verify 'show ip route <prefix>' on edge for null0 next-hop"
     applicability: "RTBH blackhole filtering"
 
+  # FlowSpec Advanced and Hardware Issues
+
   flowspec_validation:
     name: "BGP FlowSpec Validation / Origination Issue"
     description: "FlowSpec route not originated or rejected due to validation failure"
@@ -149,7 +155,7 @@ issues:
   flowspec_send_community:
     name: "BGP FlowSpec Send-Community Missing"
     description: "Configure FlowSpec without send-community extended, preventing action community propagation"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - bgp
@@ -171,7 +177,7 @@ issues:
   flowspec_route_policy:
     name: "BGP FlowSpec Route Policy / Origination via Policy"
     description: "Configure FlowSpec route origination via local policy but policy not correctly applied"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -193,7 +199,7 @@ issues:
   flowspec_hw_offload:
     name: "BGP FlowSpec Hardware Offload / TCAM Programming"
     description: "Configure BGP FlowSpec but rules not programmed in hardware forwarding"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -215,7 +221,7 @@ issues:
   flowspec_v6_validation:
     name: "BGP IPv6 FlowSpec Validation / Inter-AS Deployment"
     description: "Configure IPv6 FlowSpec across AS boundaries but validation check prevents propagation"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -238,7 +244,7 @@ issues:
   flowspec_rate_limit:
     name: "BGP FlowSpec Rate-Limit / Traffic-Rate Action Failure"
     description: "Configure FlowSpec traffic-rate action but rate limiting not applied correctly"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -260,7 +266,7 @@ issues:
   flowspec_redirect_next_hop:
     name: "BGP FlowSpec Redirect-to-Next-Hop / Redirect VRF Issue"
     description: "Configure FlowSpec redirect action but traffic not redirected to next-hop or VRF"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp
@@ -282,7 +288,7 @@ issues:
   flowspec_service_provider:
     name: "BGP FlowSpec Service Provider / Customer Inter-AS Issue"
     description: "Configure BGP FlowSpec between customer and provider AS but validation policies block rules"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - bgp

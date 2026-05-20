@@ -86,6 +86,8 @@ issues:
       - "Use 'show crypto engine connections active' for packet counts"
     applicability: "Site-to-site IPsec VPN with crypto map"
 
+  # NAT Traversal and DMVPN Configuration Issues
+
   ipsec_nat_t:
     name: "IPsec NAT Traversal (NAT-T) Issues"
     description: "Configure IPsec NAT-T when a NAT device exists between peers"
@@ -154,10 +156,12 @@ issues:
       - "Phase 2 requires no route summarization on hub"
     applicability: "DMVPN network design and migration"
 
+  # Tunnel MTU, DPD, and Fragmentation Issues
+
   gre_keepalive:
     name: "GRE Tunnel Keepalive Misconfiguration"
     description: "Configure GRE keepalive without proper routing causing tunnel flapping"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - gre
@@ -203,7 +207,7 @@ issues:
   ipsec_dpd:
     name: "IPsec DPD (Dead Peer Detection) Misconfiguration"
     description: "Configure IPsec DPD timeout too short or too long causing peer flapping or slow failover"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ipsec
@@ -222,6 +226,8 @@ issues:
       - "Too long: slow failover (tunnel stays up after peer failure)"
       - "Check 'show crypto isakmp sa' for DPD status"
     applicability: "Site-to-site IPsec VPN with failover requirements"
+
+  # Advanced IPsec and DMVPN Configuration Issues
 
   ipsec_cert_auth:
     name: "IPsec Certificate-Based Authentication Failure"

@@ -19,10 +19,12 @@ protocols:
   - vrrp
 
 issues:
+  # BFD Session Configuration Issues
+
   bfd_not_enabled:
     name: "BFD Not Configured on Interface"
     description: "Disable BFD on the required interface preventing fast failure detection"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - bfd
@@ -43,7 +45,7 @@ issues:
   bfd_timer_mismatch:
     name: "BFD Interval / Multiplier Negotiation Issue"
     description: "Configure mismatched BFD timers causing session rejection or asymmetric failure detection"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bfd
@@ -64,7 +66,7 @@ issues:
   bfd_no_auth:
     name: "BFD Authentication / MD5 SHA Key Mismatch"
     description: "Configure BFD authentication on one side but mismatched key on the other"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bfd
@@ -82,10 +84,12 @@ issues:
       - "Disable auth on one side for testing: 'no bfd authentication'"
     applicability: "BFD deployments requiring authentication"
 
+  # BFD Protocol Integration Issues
+
   bfd_protocol_not_registered:
     name: "BFD Client Not Registered with BFD Process"
     description: "Configure routing protocol with BFD but BFD client registration missing"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - bfd
@@ -129,7 +133,7 @@ issues:
   bfd_ospf_integration:
     name: "OSPF BFD Integration Not Working"
     description: "Configure OSPF with BFD but OSPF does not respond to BFD down event"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bfd
@@ -151,7 +155,7 @@ issues:
   bfd_bgp_integration:
     name: "BGP BFD Integration / Fall-Over Not Configured"
     description: "Configure BGP with BFD but BGP fall-over BFD missing causing slow BGP convergence"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bfd
@@ -173,7 +177,7 @@ issues:
   bfd_isis_integration:
     name: "IS-IS BFD Integration Failure"
     description: "Configure IS-IS with BFD but adjacency per-interface BFD missing"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - bfd
@@ -192,10 +196,12 @@ issues:
       - "Without BFD: IS-IS uses hello timers (3.3s P2P, 10s broadcast)"
     applicability: "IS-IS with BFD fast convergence"
 
+  # BFD Scaling and Advanced Features
+
   bfd_session_limit:
     name: "BFD Session Hardware / Platform Limit Exceeded"
     description: "Configure BFD on too many neighbors exceeding platform session limit"
-    severity: "high"
+    severity: "medium"
     difficulty: "intermediate"
     protocols:
       - bfd

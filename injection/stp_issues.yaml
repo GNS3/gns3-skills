@@ -17,7 +17,7 @@ issues:
   stp_root_bridge:
     name: "STP Root Bridge Election Manipulation"
     description: "Set bridge priority to force the wrong switch to become the root bridge"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - stp
@@ -62,7 +62,7 @@ issues:
   stp_path_cost:
     name: "STP Port Path Cost Manipulation"
     description: "Set artificially high or low path cost on a port to alter STP topology"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - stp
@@ -103,6 +103,8 @@ issues:
       - "BPDU guard err-disables the port on BPDU reception"
       - "Clear err-disabled with 'shutdown' followed by 'no shutdown'"
     applicability: "All switched networks with end-host connections"
+
+  # STP Protection and Security Issues
 
   stp_loop_guard:
     name: "STP Loop Guard Misconfiguration"
@@ -147,6 +149,8 @@ issues:
       - "'spanning-tree uplinkfast' reduces convergence impact"
       - "Use 'spanning-tree bpduguard portfast' to stop unauthorized switch additions"
     applicability: "Switched networks with frequent port state changes"
+
+  # STP Advanced and Interoperability Issues
 
   stp_mst_region:
     name: "MSTP Region / Instance Mapping Misconfiguration"
@@ -217,7 +221,7 @@ issues:
   stp_uplinkfast:
     name: "STP UplinkFast / BackboneFast Misconfiguration"
     description: "Configure STP acceleration features (UplinkFast, BackboneFast) incorrectly causing convergence issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - stp

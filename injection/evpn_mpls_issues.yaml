@@ -15,6 +15,8 @@ protocols:
   - pim
 
 issues:
+  # EVPN MPLS Configuration and Tunnel Issues
+
   evpn_mpls_label:
     name: "EVPN MPLS Label Allocation Failure"
     description: "EVPN MPLS service label not allocated for an EVI (EVPN Instance)"
@@ -130,7 +132,7 @@ issues:
   evpn_mpls_mac_learning:
     name: "EVPN MPLS MAC Distribution / Learning Failure"
     description: "MAC addresses not distributed via EVPN MPLS between PEs"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - evpn
@@ -149,10 +151,12 @@ issues:
       - "IRB: routed interfaces need 'evpn arp advertise' for IP routes"
     applicability: "EVPN MPLS MAC learning across PEs"
 
+  # EVPN MPLS Multi-Homing and Advanced Features
+
   evpn_mpls_control_word:
     name: "EVPN MPLS Control-Word / Sequencing Misconfiguration"
     description: "Configure EVPN MPLS control-word incorrectly causing frame sequencing or OAM issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - evpn
@@ -174,7 +178,7 @@ issues:
   evpn_mpls_bw:
     name: "EVPN MPLS Bandwidth / EVI Load Balancing Issue"
     description: "Configure EVPN MPLS multi-homing but bandwidth not load shared across PEs"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - evpn
@@ -242,7 +246,7 @@ issues:
   evpn_mpls_dual_homing:
     name: "EVPN MPLS CE Dual-Homing / Active-Active Failure"
     description: "Configure EVPN MPLS dual-homing with active-active mode but traffic not load balanced"
-    severity: "high"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - evpn

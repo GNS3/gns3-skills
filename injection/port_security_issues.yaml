@@ -35,10 +35,12 @@ issues:
       - "Check 'show port-security' for violation counts"
     applicability: "Switch access ports with port security"
 
+  # Port Security Violation and Learning Settings
+
   port_security_violation_action:
     name: "Port Security Violation Action Misconfiguration"
     description: "Configure violation action to 'protect' instead of 'restrict' or 'shutdown' causing silent traffic drops"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - port-security
@@ -60,7 +62,7 @@ issues:
   port_security_sticky_disabled:
     name: "Port Security Sticky MAC Learning Disabled"
     description: "Disable sticky MAC learning causing MAC addresses to be lost after switch reload"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - port-security
@@ -82,7 +84,7 @@ issues:
   port_security_shutdown_recovery:
     name: "Port Security Shutdown / Err-Disable Recovery"
     description: "Configure err-disable recovery disabled, requiring manual port re-enable after violation"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - port-security
@@ -100,6 +102,8 @@ issues:
       - "Set recovery timer: 'errdisable recovery interval <seconds>'"
       - "Check 'show errdisable recovery' for recovery configuration"
     applicability: "Port security with automatic recovery requirements"
+
+  # Static MAC and Multi-Device Issues
 
   port_security_static_mac:
     name: "Port Security Static MAC Conflict"
@@ -167,6 +171,8 @@ issues:
       - "Auto-recovery: 'errdisable recovery cause psecure-violation'"
       - "Consider 802.1X + port security for user mobility"
     applicability: "Environments with laptop/users moving between desks"
+
+  # Advanced Port Security Scenarios
 
   port_security_trunk:
     name: "Port Security on Trunk Port Misconfiguration"

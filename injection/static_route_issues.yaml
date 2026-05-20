@@ -60,7 +60,7 @@ issues:
   floating_static_wrong_ad:
     name: "Floating Static Route Wrong Administrative Distance"
     description: "Set administrative distance too high or too low on floating static route"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - static
@@ -82,7 +82,7 @@ issues:
   static_route_null0:
     name: "Static Route to Null0 (Black Hole)"
     description: "Add static route pointing to null0 interface causing traffic to be dropped"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - static
@@ -147,6 +147,8 @@ issues:
       - "Check the router needs to reach the next hop directly"
       - "Verify the upstream device is configured correctly"
     applicability: "Edge routers and network egress points"
+
+  # Advanced Static Route Features
 
   static_route_track:
     name: "Static Route with Object Tracking Failure"
@@ -217,7 +219,7 @@ issues:
   static_route_load_balance:
     name: "Static Route Load Balancing / ECMP Issue"
     description: "Configure multiple static routes to same destination but ECMP not working as expected"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - static

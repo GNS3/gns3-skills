@@ -15,6 +15,8 @@ protocols:
   - private-vlan
 
 issues:
+  # DHCP Snooping Configuration Issues
+
   dhcp_snooping_disabled:
     name: "DHCP Snooping Disabled on Trusted Ports"
     description: "Disable DHCP snooping or configure wrong trust state"
@@ -39,7 +41,7 @@ issues:
   dhcp_snooping_rate:
     name: "DHCP Snooping Rate Limit Exceeded"
     description: "Configure DHCP snooping rate limit too low causing DHCP packets dropped"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - dhcp-snooping
@@ -60,7 +62,7 @@ issues:
   dhcp_snooping_option82:
     name: "DHCP Snooping Option 82 Misconfiguration"
     description: "Configure DHCP snooping option 82 incorrectly (disable or wrong format)"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - dhcp-snooping
@@ -78,10 +80,12 @@ issues:
       - "Disable option 82 for non-Cisco DHCP servers: 'no ip dhcp snooping information option'"
     applicability: "DHCP snooping with centralized DHCP servers"
 
+  # DAI and IP Source Guard Issues
+
   dai_disabled:
     name: "DAI (Dynamic ARP Inspection) Not Configured"
     description: "DAI not enabled on VLANs where ARP spoofing protection is needed"
-    severity: "high"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - dai
@@ -144,6 +148,8 @@ issues:
       - "Err-disabled: 'errdisable recovery cause arp-inspection'"
     applicability: "DAI on high-traffic VLANs"
 
+  # Private VLAN Issues
+
   pvlan_mismatch:
     name: "Private VLAN Association Mismatch"
     description: "Configure wrong private VLAN type (primary, community, isolated) or incorrect association"
@@ -189,7 +195,7 @@ issues:
   ipsg_missing:
     name: "IP Source Guard Not Configured"
     description: "Configure DHCP snooping but IP Source Guard not enabled on untrusted ports"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - dhcp-snooping
@@ -210,7 +216,7 @@ issues:
   dhcp_snooping_binding_db:
     name: "DHCP Snooping Binding Database / Persistence Issue"
     description: "Configure DHCP snooping binding database not persisted across reloads causing binding loss"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - dhcp-snooping

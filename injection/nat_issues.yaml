@@ -57,6 +57,8 @@ issues:
       - "NAT ACLs typically permit RFC1918 private addresses"
     applicability: "Dynamic NAT and PAT configurations"
 
+  # NAT Resource Exhaustion Issues
+
   nat_pool_exhaustion:
     name: "NAT Pool Address Exhaustion"
     description: "Configure too-small NAT pool that runs out of addresses for translations"
@@ -120,6 +122,8 @@ issues:
       - "Use 'show running-config | include ip nat inside source static'"
       - "Static NAT creates one-to-one permanent mapping"
     applicability: "Static NAT for server publishing"
+
+  # Advanced NAT Deployment Issues
 
   nat_hairpinning:
     name: "NAT Hairpinning / NAT Reflection Missing"
@@ -251,7 +255,7 @@ issues:
   nat_timeout:
     name: "NAT Translation Timeout / Session Expiration"
     description: "Configure NAT translation timeout too short causing premature session drops"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - nat

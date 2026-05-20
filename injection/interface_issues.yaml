@@ -92,6 +92,8 @@ issues:
       - "Verify path MTU discovery is working"
     applicability: "All interface types, especially critical for trunk links and WAN connections"
 
+  # Security and Feature Issues
+
   interface_error_disable:
     name: "Interface Error-Disabled State"
     description: "Trigger interface error-disable condition due to port-security, BPDU guard, or other violation"
@@ -116,7 +118,7 @@ issues:
   interface_flap:
     name: "Interface Flapping / Link Instability"
     description: "Create conditions causing interface to go up/down repeatedly"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - all
@@ -137,7 +139,7 @@ issues:
   interface_storm_control:
     name: "Interface Storm Control Misconfiguration"
     description: "Configure storm control too restrictively, causing legitimate traffic to be suppressed"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ethernet
@@ -154,6 +156,8 @@ issues:
       - "Use 'show storm-control <intf> count' for drop counters"
       - "Apply to broadcast, multicast, unicast individually"
     applicability: "Switched networks with broadcast storm protection"
+
+  # Layer 3 and Advanced Interface Issues
 
   interface_sub_interface:
     name: "Sub-Interface Configuration / VLAN Encapsulation Error"
@@ -202,7 +206,7 @@ issues:
   interface_management:
     name: "Management Interface / MGMT Port Configuration Error"
     description: "Configure management interface with wrong VLAN, IP, or routing causing management access issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - ipv4
@@ -267,7 +271,7 @@ issues:
   interface_cable_fault:
     name: "Cable Fault / Media Error / TDR Detection"
     description: "Physical layer issue with cable or connector causing high error rate or link instability"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - ethernet

@@ -73,6 +73,8 @@ issues:
       - "Verify transport address in LDP matches IGP reachable address"
     applicability: "MPLS networks with BGP-free core or MPLS services"
 
+  # FHRP and NAT Interaction Issues
+
   vrrp_nat_failover:
     name: "VRRP/HSRP NAT Failover Tracking"
     description: "VRRP/HSRP active router loses upstream connectivity but NAT state not synchronized to backup"
@@ -95,6 +97,8 @@ issues:
       - "HSRP with 'standby track' adjusts priority on upstream loss"
       - "For stateful NAT: configure 'ip nat stateful id' and bulk sync"
     applicability: "Firewall/router redundancy with NAT gateway"
+
+  # Policy and Security Feature Interaction Issues
 
   pbr_sla_tracking:
     name: "PBR with IP SLA Tracking Failure"
@@ -170,7 +174,7 @@ issues:
   vlan_stp_interaction:
     name: "VLAN Change Triggering STP Reconvergence"
     description: "Add or remove a VLAN on a trunk causing STP topology change for that VLAN"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - vlan
@@ -194,7 +198,7 @@ issues:
   ipv4_ipv6_dns:
     name: "IPv4/IPv6 DNS Resolution Failure"
     description: "DNS server reachable via IPv4 but not IPv6 (or vice versa) causing name resolution failures"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - ipv4

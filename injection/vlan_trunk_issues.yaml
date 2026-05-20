@@ -106,6 +106,8 @@ issues:
       - "Verify VLAN exists in VLAN database"
     applicability: "Access ports connecting end devices"
 
+  # Inter-VLAN Routing and VTP Issues
+
   vlan_deleted:
     name: "VLAN Deleted from VLAN Database"
     description: "Delete a VLAN from the VLAN database causing all ports in that VLAN to become inactive"
@@ -194,6 +196,8 @@ issues:
       - "VLAN removed from pruning-eligible list is always forwarded"
       - "VTP pruning doesn't prevent configuration of VLAN on client"
     applicability: "Large switched networks with VTP"
+
+  # Advanced VLAN and Security Issues
 
   vlan_private:
     name: "Private VLAN / Community/Isolated VLAN Misconfiguration"

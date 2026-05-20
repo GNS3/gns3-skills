@@ -14,10 +14,12 @@ protocols:
   - glbp
 
 issues:
+  # VRRP Configuration Issues
+
   vrrp_priority:
     name: "VRRP Priority Misconfiguration"
     description: "Set lower priority on the intended master router or higher priority on the standby router"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - vrrp
@@ -38,7 +40,7 @@ issues:
   vrrp_timers:
     name: "VRRP Timer Mismatch"
     description: "Set non-standard VRRP advertisement interval causing master dead timer issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - vrrp
@@ -56,10 +58,12 @@ issues:
       - "Master and backup use same timer (master advertises it)"
     applicability: "VRRP groups requiring fast failover"
 
+  # HSRP Configuration Issues
+
   hsrp_priority:
     name: "HSRP Priority Misconfiguration"
     description: "Set lower HSRP priority on intended active router or higher priority on standby"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - hsrp
@@ -80,7 +84,7 @@ issues:
   hsrp_timers:
     name: "HSRP Hello/Hold Timer Mismatch"
     description: "Configure mismatched HSRP hello and hold timers causing failover issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - hsrp
@@ -119,10 +123,12 @@ issues:
       - "HSRP version 2 uses MD5, version 1 uses plain text"
     applicability: "HSRP with authentication configured"
 
+  # Advanced FHRP Features
+
   fhr_preempt:
     name: "FHRP Preempt Disabling / Failback Prevention"
     description: "Configure HSRP/VRRP without preempt on the active router preventing graceful failback after a failure recovers"
-    severity: "high"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - hsrp
@@ -210,7 +216,7 @@ issues:
   fhrp_mac_conflict:
     name: "FHRP Virtual MAC Address Conflict"
     description: "Configure HSRP/VRRP where virtual MAC address conflicts with another device or is manually overridden incorrectly"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - hsrp

@@ -16,6 +16,8 @@ protocols:
   - restconf
 
 issues:
+  # SNMP Community and Access Configuration
+
   snmp_community:
     name: "SNMP Community String / Access Mismatch"
     description: "Configure SNMP with incorrect community string or access permissions"
@@ -79,10 +81,12 @@ issues:
       - "Both sides must have identical credentials"
     applicability: "SNMPv3 secure monitoring deployments"
 
+  # Syslog and Logging Configuration
+
   syslog_server:
     name: "Syslog Server Unreachable / Logging Misconfiguration"
     description: "Configure syslog server but log messages not received"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - syslog
@@ -104,7 +108,7 @@ issues:
   syslog_rate_limit:
     name: "Syslog Rate-Limit / Suppression Misconfiguration"
     description: "Configure syslog rate-limit too aggressively causing critical messages suppressed"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - syslog
@@ -144,10 +148,12 @@ issues:
       - "Use 'logging monitor <level>' for terminal monitoring"
     applicability: "Device logging and troubleshooting"
 
+  # SNMP Advanced Configuration
+
   snmp_ifindex:
     name: "SNMP ifIndex / Interface Index Persistence Issue"
     description: "Configure SNMP but interface ifIndex changes after reload causing monitoring gaps"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - snmp
@@ -210,7 +216,7 @@ issues:
   syslog_facility:
     name: "Syslog Facility / Level / Origin-ID Misconfiguration"
     description: "Configure syslog with wrong facility code causing server-side filtering issues"
-    severity: "medium"
+    severity: "low"
     difficulty: "beginner"
     protocols:
       - syslog

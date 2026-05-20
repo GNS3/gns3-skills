@@ -61,6 +61,8 @@ issues:
       - "NAT traversal: AP behind NAT may need CAPWAP NAT config"
     applicability: "CAPWAP-based wireless deployments"
 
+  # WLAN and Controller Configuration Issues
+
   wlan_ssid:
     name: "WLAN SSID / Radio Policy Misconfiguration"
     description: "Configure WLAN with wrong SSID, security or radio policy"
@@ -173,7 +175,7 @@ issues:
   wlan_qos_rr:
     name: "WLAN QoS / RRM Radio Resource Management Issue"
     description: "Configure WLAN QoS or RRM (EDCA, WMM, DCA) incorrectly causing poor wireless performance"
-    severity: "medium"
+    severity: "low"
     difficulty: "advanced"
     protocols:
       - wireless
@@ -194,7 +196,7 @@ issues:
   wlan_band_select:
     name: "WLAN Band Select / Client Band Steering Issue"
     description: "Configure band select / band steering incorrectly preventing clients from connecting to 5GHz"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - wireless
@@ -233,6 +235,8 @@ issues:
       - "Check 'show client summary' for total associations"
     applicability: "Wireless network capacity planning"
 
+  # RF and Channel Management Issues
+
   wlan_rf_channel:
     name: "WLAN RF Channel / Power Level Misconfiguration"
     description: "Configure wireless channel or transmit power incorrectly causing interference or coverage holes"
@@ -257,7 +261,7 @@ issues:
   wlan_channel:
     name: "Wireless Radio Channel / Power Misconfiguration"
     description: "Configure AP radio channel that is DFS-restricted or power that causes interference"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - wireless

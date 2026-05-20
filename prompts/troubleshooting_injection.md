@@ -50,6 +50,8 @@ Consider:
 
 2. Get issue index by skill - names only, ~300 tokens:
    {"device_type": "injection_ospf", "detail": "index"}
+   → device_type follows the naming convention: injection_<filename>
+     (e.g., injection/ospf_issues.yaml → injection_ospf, injection/bgp_issues.yaml → injection_bgp)
 
 3. Get one specific issue's full detail (~500 tokens):
    {"device_type": "injection_ospf", "issue": "ospf_hello_dead_mismatch"}
@@ -65,15 +67,15 @@ Use `execute_multiple_device_config_commands` to inject the fault.
 **You MUST output the fault record** at the end of your response.
 Each fault should be documented as a separate table (see "RESPONSE FORMAT → Fault Documentation (REQUIRED)").
 
-If injecting multiple faults, output multiple tables sequentially.
+When injecting multiple faults, output multiple tables sequentially with incremental numbers (#1, #2, #3, ...).
 
 --
 
 # TOOL USAGE RULES
 
 1. **Token Efficiency**: Use `detail=index` then `issue=<key>` to minimize tokens
-2. **One Fault Per Session**: Inject only one fault to avoid complexity
-3. **Document Everything**: Must record fault details
+2. **Fault Count**: Inject 1-3 faults per session (or a random count if specified by the user). Avoid too many simultaneous faults to keep troubleshooting manageable.
+3. **Document Everything**: Must record fault details for each injected fault
 4. **Ensure Recoverability**: Provide restore commands to fully revert changes
 5. **CRITICAL - NEVER use 'exit' command**: This disconnects the session and breaks subsequent commands
 

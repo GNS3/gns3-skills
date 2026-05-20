@@ -14,10 +14,12 @@ protocols:
   - etherchannel
 
 issues:
+  # LACP Configuration Issues
+
   lacp_rate_mismatch:
     name: "LACP Rate Mismatch"
     description: "Configure different LACP rate (fast vs slow) on bundle members"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - lacp
@@ -62,7 +64,7 @@ issues:
   lacp_max_bundle:
     name: "LACP Max-Bundle Limit Exceeded"
     description: "Configure LACP max-bundle too low causing ports to be placed in standby"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - lacp
@@ -80,6 +82,8 @@ issues:
       - "Max-bundle limits the number of active ports"
       - "Useful for deterministic capacity planning"
     applicability: "LACP with active/standby port configuration"
+
+  # PAgP Configuration Issues
 
   pagp_mode:
     name: "PAgP Mode Mismatch"
@@ -106,7 +110,7 @@ issues:
   load_balance:
     name: "EtherChannel Load Balancing Misconfiguration"
     description: "Configure inappropriate EtherChannel load balancing method causing uneven distribution"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - etherchannel
@@ -172,7 +176,7 @@ issues:
   lacp_fast_sw:
     name: "LACP Fast Switchover / Port Priority Issue"
     description: "Configure LACP port priority incorrectly causing suboptimal active port selection"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - lacp
@@ -194,7 +198,7 @@ issues:
   pagp_aggressive:
     name: "PAgP Aggressive / Failover Mode Misconfiguration"
     description: "Configure PAgP with wrong failover or misconfig causing bundle instability"
-    severity: "medium"
+    severity: "low"
     difficulty: "intermediate"
     protocols:
       - pagp
@@ -212,6 +216,8 @@ issues:
       - "Check 'show pagp <id>' for PAgP bundle state"
       - "PAgP provides faster failover than static EtherChannel"
     applicability: "PAgP-based EtherChannel (Cisco proprietary)"
+
+  # EtherChannel General Issues
 
   etherchannel_misconfig:
     name: "EtherChannel Configuration Inconsistency / Mismatch"

@@ -39,6 +39,8 @@ issues:
       - "Common when connecting Cisco (HDLC default) to non-Cisco (PPP default)"
     applicability: "Serial links between routers"
 
+  # Authentication Issues
+
   ppp_chap_mismatch:
     name: "PPP CHAP Authentication Password Mismatch"
     description: "Configure CHAP with mismatched passwords causing PPP authentication failure"
@@ -127,6 +129,8 @@ issues:
       - "If one side only offers CHAP and the other only PAP: no agreement"
       - "Check 'debug ppp negotiation' for LCP auth option negotiation"
     applicability: "PPP with different authentication configurations"
+
+  # Protocol Negotiation and Aggregation Issues
 
   ppp_ipcp:
     name: "PPP IPCP / IP Address Negotiation Failure"

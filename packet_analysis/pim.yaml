@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: PIM Packet Analysis
-description: PIM (Protocol Independent Multicast) packet analysis for multicast routing
-  troubleshooting
+description: PIM (Protocol Independent Multicast) packet analysis for multicast routing troubleshooting
 protocol_key: pim
 display_filter: pim
 fields:
@@ -19,8 +11,8 @@ fields:
   description: PIM version (usually 2)
 - label: PIM Type
   tshark_field: pim.type
-  description: 'PIM message type: 0=Hello, 1=Register, 2=Register-Stop, 3=Join/Prune,
-    4=Bootstrap, 5=Assert, 6=Graft, 7=Graft-Ack, 8=Candidate RP Advertisement'
+  description: 'PIM message type: 0=Hello, 1=Register, 2=Register-Stop, 3=Join/Prune, 4=Bootstrap, 5=Assert, 6=Graft, 7=Graft-Ack,
+    8=Candidate RP Advertisement'
 - label: Checksum
   tshark_field: pim.cksum
   description: PIM checksum
@@ -86,12 +78,13 @@ checks:
 - name: pim_neighbor_timeout
   severity: major
   message: 'PIM neighbor timeout: no Hello from {ip.src} within holdtime'
-  condition: pim.type == 0 and subsequent packets from same source missing within
-    holdtime
+  description: pim.type == 0 and subsequent packets from same source missing within holdtime
+  condition: pim.type == 0
 - name: pim_dr_change
   severity: minor
   message: 'PIM DR change: new DR priority {pim.dr_priority} from {ip.src}'
-  condition: Different pim.dr_priority values from same LAN segment
+  description: Different pim.dr_priority values from same LAN segment
+  condition: null
 - name: pim_assert_winner
   severity: minor
   message: 'PIM Assert winner: {ip.src} won assert for group {pim.group_address}'
@@ -103,4 +96,5 @@ checks:
 - name: pim_rp_mapping_change
   severity: minor
   message: PIM RP mapping change detected
-  condition: Different RP mappings in Bootstrap messages
+  description: Different RP mappings in Bootstrap messages
+  condition: null

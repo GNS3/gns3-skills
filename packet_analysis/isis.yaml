@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: IS-IS Packet Analysis
-description: IS-IS (Intermediate System to Intermediate System) packet analysis for
-  link-state routing troubleshooting
+description: IS-IS (Intermediate System to Intermediate System) packet analysis for link-state routing troubleshooting
 protocol_key: isis
 display_filter: isis
 fields:
@@ -16,8 +8,8 @@ fields:
   description: Packet sequence number in capture
 - label: PDU Type
   tshark_field: isis.type
-  description: 'IS-IS PDU type: 15=L1 LAN Hello, 16=L2 LAN Hello, 17=P2P Hello, 18=L1
-    LSP, 19=L2 LSP, 20=L1 CSNP, 21=L2 CSNP, 22=L1 PSNP, 23=L2 PSNP'
+  description: 'IS-IS PDU type: 15=L1 LAN Hello, 16=L2 LAN Hello, 17=P2P Hello, 18=L1 LSP, 19=L2 LSP, 20=L1 CSNP, 21=L2 CSNP,
+    22=L1 PSNP, 23=L2 PSNP'
 - label: Version
   tshark_field: isis.version
   description: IS-IS protocol version
@@ -95,8 +87,10 @@ checks:
 - name: isis_area_mismatch
   severity: major
   message: 'IS-IS area mismatch: different area addresses from {ip.src}'
-  condition: Multiple different IS-IS area addresses in hello packets from same source
+  description: Multiple different IS-IS area addresses in hello packets from same source
+  condition: null
 - name: isis_dis_change
   severity: minor
   message: 'IS-IS DIS change: new LAN ID {isis.hello.lan_id}'
-  condition: Different isis.lan_hello.lan_id from same LAN segment
+  description: Different isis.lan_hello.lan_id from same LAN segment
+  condition: null

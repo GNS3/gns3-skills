@@ -1,146 +1,105 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for SSH
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "SSH Packet Analysis"
-description: "SSH (Secure Shell) protocol packet analysis for secure remote access troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ssh"
-
-# tshark display filter - used for -Y parameter
-display_filter: "ssh"
-
-# tshark fields that LLM can use for analysis
+name: SSH Packet Analysis
+description: SSH (Secure Shell) protocol packet analysis for secure remote access troubleshooting
+protocol_key: ssh
+display_filter: ssh
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "SSH Protocol"
-    tshark_field: "ssh.protocol"
-    description: "SSH protocol version (e.g., SSH-2.0)"
-
-  - label: "Packet Length"
-    tshark_field: "ssh.packet_length"
-    description: "SSH packet length"
-
-  - label: "Padding Length"
-    tshark_field: "ssh.padding_length"
-    description: "SSH padding length"
-
-  - label: "Sequence Number"
-    tshark_field: "ssh.seq_num"
-    description: "SSH sequence number"
-
-  - label: "Message Code"
-    tshark_field: "ssh.message_code"
-    description: "SSH message code: 1=DISCONNECT, 2=IGNORE, 5=SUCCESS, 20=KEXINIT, etc."
-
-  - label: "KEX Algorithms"
-    tshark_field: "ssh.kex_algorithms"
-    description: "Key exchange algorithms offered/supported"
-
-  - label: "Server Host Key Algorithms"
-    tshark_field: "ssh.server_host_key_algorithms"
-    description: "Server host key algorithms"
-
-  - label: "Encryption Algorithms (C2S)"
-    tshark_field: "ssh.encryption_algorithms_client_to_server"
-    description: "Encryption algorithms client to server"
-
-  - label: "Encryption Algorithms (S2C)"
-    tshark_field: "ssh.encryption_algorithms_server_to_client"
-    description: "Encryption algorithms server to client"
-
-  - label: "MAC Algorithms (C2S)"
-    tshark_field: "ssh.mac_algorithms_client_to_server"
-    description: "MAC algorithms client to server"
-
-  - label: "MAC Algorithms (S2C)"
-    tshark_field: "ssh.mac_algorithms_server_to_client"
-    description: "MAC algorithms server to client"
-
-  - label: "Compression Algorithms (C2S)"
-    tshark_field: "ssh.compression_algorithms_client_to_server"
-    description: "Compression algorithms client to server"
-
-  - label: "Compression Algorithms (S2C)"
-    tshark_field: "ssh.compression_algorithms_server_to_client"
-    description: "Compression algorithms server to client"
-
-  - label: "Direction"
-    tshark_field: "ssh.direction"
-    description: "Message direction (originator/responder)"
-
-  - label: "MAC Status"
-    tshark_field: "ssh.mac.status"
-    description: "MAC verification status"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: SSH Protocol
+  tshark_field: ssh.protocol
+  description: SSH protocol version (e.g., SSH-2.0)
+- label: Packet Length
+  tshark_field: ssh.packet_length
+  description: SSH packet length
+- label: Padding Length
+  tshark_field: ssh.padding_length
+  description: SSH padding length
+- label: Sequence Number
+  tshark_field: ssh.seq_num
+  description: SSH sequence number
+- label: Message Code
+  tshark_field: ssh.message_code
+  description: 'SSH message code: 1=DISCONNECT, 2=IGNORE, 5=SUCCESS, 20=KEXINIT, etc.'
+- label: KEX Algorithms
+  tshark_field: ssh.kex_algorithms
+  description: Key exchange algorithms offered/supported
+- label: Server Host Key Algorithms
+  tshark_field: ssh.server_host_key_algorithms
+  description: Server host key algorithms
+- label: Encryption Algorithms (C2S)
+  tshark_field: ssh.encryption_algorithms_client_to_server
+  description: Encryption algorithms client to server
+- label: Encryption Algorithms (S2C)
+  tshark_field: ssh.encryption_algorithms_server_to_client
+  description: Encryption algorithms server to client
+- label: MAC Algorithms (C2S)
+  tshark_field: ssh.mac_algorithms_client_to_server
+  description: MAC algorithms client to server
+- label: MAC Algorithms (S2C)
+  tshark_field: ssh.mac_algorithms_server_to_client
+  description: MAC algorithms server to client
+- label: Compression Algorithms (C2S)
+  tshark_field: ssh.compression_algorithms_client_to_server
+  description: Compression algorithms client to server
+- label: Compression Algorithms (S2C)
+  tshark_field: ssh.compression_algorithms_server_to_client
+  description: Compression algorithms server to client
+- label: Direction
+  tshark_field: ssh.direction
+  description: Message direction (originator/responder)
+- label: MAC Status
+  tshark_field: ssh.mac.status
+  description: MAC verification status
 filter_examples:
-  - name: "SSH KEXINIT"
-    filter: "ssh.message_code == 20"
-    description: "Filter for SSH key exchange initialization"
-
-  - name: "SSH Disconnect"
-    filter: "ssh.message_code == 1"
-    description: "Filter for SSH disconnect messages"
-
-  - name: "SSH New Keys"
-    filter: "ssh.message_code == 21"
-    description: "Filter for SSH NEWKEYS messages"
-
-  - name: "SSH Userauth Request"
-    filter: "ssh.message_code == 50"
-    description: "Filter for SSH authentication requests"
-
-  - name: "SSH Userauth Success"
-    filter: "ssh.message_code == 52"
-    description: "Filter for SSH authentication success"
-
-  - name: "SSH Userauth Failure"
-    filter: "ssh.message_code == 51"
-    description: "Filter for SSH authentication failure"
-
-  - name: "SSH Channel Open"
-    filter: "ssh.message_code == 90"
-    description: "Filter for SSH channel open requests"
-
-  - name: "SSH Protocol Version"
-    filter: "ssh.protocol == \"SSH-2.0\""
-    description: "Filter for SSH-2.0 protocol"
-
+- name: SSH KEXINIT
+  filter: ssh.message_code == 20
+  description: Filter for SSH key exchange initialization
+- name: SSH Disconnect
+  filter: ssh.message_code == 1
+  description: Filter for SSH disconnect messages
+- name: SSH New Keys
+  filter: ssh.message_code == 21
+  description: Filter for SSH NEWKEYS messages
+- name: SSH Userauth Request
+  filter: ssh.message_code == 50
+  description: Filter for SSH authentication requests
+- name: SSH Userauth Success
+  filter: ssh.message_code == 52
+  description: Filter for SSH authentication success
+- name: SSH Userauth Failure
+  filter: ssh.message_code == 51
+  description: Filter for SSH authentication failure
+- name: SSH Channel Open
+  filter: ssh.message_code == 90
+  description: Filter for SSH channel open requests
+- name: SSH Protocol Version
+  filter: ssh.protocol == "SSH-2.0"
+  description: Filter for SSH-2.0 protocol
 checks:
-  - name: "ssh_auth_failure"
-    severity: major
-    message: "SSH authentication failure from {ip.src}"
-    condition: "ssh.message_code == 51"
-
-  - name: "ssh_disconnect"
-    severity: major
-    message: "SSH disconnect from {ip.src}"
-    condition: "ssh.message_code == 1"
-
-  - name: "ssh_mac_error"
-    severity: critical
-    message: "SSH MAC verification error in stream"
-    condition: "ssh.mac.status != 0"
-
-  - name: "ssh_version_mismatch"
-    severity: minor
-    message: "SSH protocol version mismatch between {ip.src} and {ip.dst}"
-    condition: "Multiple ssh.protocol values in same stream"
-
-  - name: "ssh_weak_kex"
-    severity: minor
-    message: "SSH weak key exchange algorithm: {ssh.kex_algorithms}"
-    condition: "ssh.kex_algorithms contains 'diffie-hellman-group1-sha1'"
-
-  - name: "ssh_weak_encryption"
-    severity: minor
-    message: "SSH weak encryption algorithm: {ssh.encryption_algorithms_client_to_server}"
-    condition: "ssh.encryption_algorithms_client_to_server contains 'arcfour' or ssh.encryption_algorithms_client_to_server contains '3des-cbc'"
+- name: ssh_auth_failure
+  severity: major
+  message: SSH authentication failure from {ip.src}
+  condition: ssh.message_code == 51
+- name: ssh_disconnect
+  severity: major
+  message: SSH disconnect from {ip.src}
+  condition: ssh.message_code == 1
+- name: ssh_mac_error
+  severity: critical
+  message: SSH MAC verification error in stream
+  condition: ssh.mac.status != 0
+- name: ssh_version_mismatch
+  severity: minor
+  message: SSH protocol version mismatch between {ip.src} and {ip.dst}
+  description: Multiple ssh.protocol values in same stream
+  condition: null
+- name: ssh_weak_kex
+  severity: minor
+  message: 'SSH weak key exchange algorithm: {ssh.kex_algorithms}'
+  condition: ssh.kex_algorithms contains 'diffie-hellman-group1-sha1'
+- name: ssh_weak_encryption
+  severity: minor
+  message: 'SSH weak encryption algorithm: {ssh.encryption_algorithms_client_to_server}'
+  condition: ssh.encryption_algorithms_client_to_server contains 'arcfour' or ssh.encryption_algorithms_client_to_server contains
+    '3des-cbc'

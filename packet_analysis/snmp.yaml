@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: SNMP Packet Analysis
-description: SNMP (Simple Network Management Protocol) packet analysis for network
-  monitoring troubleshooting
+description: SNMP (Simple Network Management Protocol) packet analysis for network monitoring troubleshooting
 protocol_key: snmp
 display_filter: snmp
 fields:
@@ -22,8 +14,7 @@ fields:
   description: SNMP community string (v1/v2c)
 - label: Error Status
   tshark_field: snmp.error_status
-  description: 'SNMP error status: 0=noError, 1=tooBig, 2=noSuchName, 3=badValue,
-    4=readOnly, 5=genErr'
+  description: 'SNMP error status: 0=noError, 1=tooBig, 2=noSuchName, 3=badValue, 4=readOnly, 5=genErr'
 - label: Error Index
   tshark_field: snmp.error_index
   description: SNMP error index (position of error in variable bindings)
@@ -36,9 +27,6 @@ fields:
 - label: Value (String)
   tshark_field: snmp.value.octets
   description: SNMP octet string value
-- label: Value (OID)
-  tshark_field: snmp.value.oid
-  description: SNMP OID value
 - label: Value (IP Address)
   tshark_field: snmp.value.ipv4
   description: SNMP IPv4 address value
@@ -95,7 +83,8 @@ checks:
 - name: snmp_no_response
   severity: major
   message: 'SNMP request timeout: no response for request ID {frame.number}'
-  condition: snmp.pdu_type != 2 and no matching snmp.response_in within timeout
+  description: snmp.pdu_type != 2 and no matching snmp.response_in within timeout
+  condition: snmp.pdu_type != 2
 - name: snmp_error
   severity: major
   message: 'SNMP error response: {snmp.error_status} at index {snmp.error_index}'
@@ -103,17 +92,19 @@ checks:
 - name: snmp_auth_failure
   severity: major
   message: SNMP authentication failure from {ip.src}
-  condition: SNMP packet with authentication error
+  description: SNMP packet with authentication error
+  condition: null
 - name: snmp_slow_response
   severity: minor
   message: 'SNMP slow response: {snmp.time} seconds for request ID {frame.number}'
   condition: snmp.time > 5
 - name: snmp_community_mismatch
   severity: minor
-  message: 'SNMP community mismatch: unexpected community ''{snmp.community}'' from
-    {ip.src}'
-  condition: snmp.community not in expected list
+  message: 'SNMP community mismatch: unexpected community ''{snmp.community}'' from {ip.src}'
+  description: snmp.community not in expected list
+  condition: null
 - name: snmp_trap_high_rate
   severity: minor
   message: 'High SNMP trap rate: {count} traps from {ip.src} within 1 minute'
-  condition: More than 60 SNMP traps from same source within 60 seconds
+  description: More than 60 SNMP traps from same source within 60 seconds
+  condition: null

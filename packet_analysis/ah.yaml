@@ -1,69 +1,47 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for AH
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "IPsec AH Packet Analysis"
-description: "IPsec AH (Authentication Header) packet analysis for VPN integrity checking"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ah"
-
-# tshark display filter - used for -Y parameter
-display_filter: "ah"
-
-# tshark fields that LLM can use for analysis
+name: IPsec AH Packet Analysis
+description: IPsec AH (Authentication Header) packet analysis for VPN integrity checking
+protocol_key: ah
+display_filter: ah
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Next Header"
-    tshark_field: "ah.next_header"
-    description: "Next header protocol after AH"
-
-  - label: "Length"
-    tshark_field: "ah.length"
-    description: "AH header length"
-
-  - label: "SPI"
-    tshark_field: "ah.spi"
-    description: "Security Parameters Index"
-
-  - label: "Sequence Number"
-    tshark_field: "ah.sequence"
-    description: "AH sequence number (anti-replay)"
-
-  - label: "ICV"
-    tshark_field: "ah.icv"
-    description: "Integrity Check Value"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Next Header
+  tshark_field: ah.next_header
+  description: Next header protocol after AH
+- label: Length
+  tshark_field: ah.length
+  description: AH header length
+- label: SPI
+  tshark_field: ah.spi
+  description: Security Parameters Index
+- label: Sequence Number
+  tshark_field: ah.sequence
+  description: AH sequence number (anti-replay)
+- label: ICV
+  tshark_field: ah.icv
+  description: Integrity Check Value
 filter_examples:
-  - name: "Specific SPI"
-    filter: "ah.spi == 0x12345678"
-    description: "Filter for specific AH SPI"
-
-  - name: "AH transport mode"
-    filter: "ah.next_header == 4 or ah.next_header == 6 or ah.next_header == 17"
-    description: "Filter for AH transport mode (direct protocol)"
-
-  - name: "AH tunnel mode"
-    filter: "ah.next_header == 4"
-    description: "Filter for AH tunnel mode (IP-in-IP)"
-
-  - name: "AH with IPv4"
-    filter: "ah and ip"
-    description: "Filter for AH with IPv4 payload"
-
+- name: Specific SPI
+  filter: ah.spi == 0x12345678
+  description: Filter for specific AH SPI
+- name: AH transport mode
+  filter: ah.next_header == 4 or ah.next_header == 6 or ah.next_header == 17
+  description: Filter for AH transport mode (direct protocol)
+- name: AH tunnel mode
+  filter: ah.next_header == 4
+  description: Filter for AH tunnel mode (IP-in-IP)
+- name: AH with IPv4
+  filter: ah and ip
+  description: Filter for AH with IPv4 payload
 checks:
-  - name: "ah_sequence_gap"
-    severity: major
-    message: "AH sequence gap: possible replay or packet loss"
-    condition: "ah.sequence jumps by more than expected window"
-
-  - name: "ah_replay_attack"
-    severity: critical
-    message: "AH possible replay attack: duplicate sequence {ah.sequence}"
-    condition: "Duplicate ah.sequence for same ah.spi"
+- name: ah_sequence_gap
+  severity: major
+  message: 'AH sequence gap: possible replay or packet loss'
+  description: ah.sequence jumps by more than expected window
+  condition: null
+- name: ah_replay_attack
+  severity: critical
+  message: 'AH possible replay attack: duplicate sequence {ah.sequence}'
+  description: Duplicate ah.sequence for same ah.spi
+  condition: null

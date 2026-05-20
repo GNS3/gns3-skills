@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: VLAN Packet Analysis
-description: IEEE 802.1Q VLAN tagging packet analysis for trunking and segmentation
-  troubleshooting
+description: IEEE 802.1Q VLAN tagging packet analysis for trunking and segmentation troubleshooting
 protocol_key: vlan
 display_filter: vlan
 fields:
@@ -61,16 +53,20 @@ checks:
 - name: vlan_mismatch
   severity: major
   message: 'VLAN mismatch: expected VLAN {expected_vlan}, got {vlan.id} on {eth.src}'
-  condition: VLAN ID differs from expected for port or MAC address
+  description: VLAN ID differs from expected for port or MAC address
+  condition: null
 - name: vlan_native_mismatch
   severity: minor
   message: 'Native VLAN mismatch: untagged frame on trunk expecting VLAN {expected_native_vlan}'
-  condition: Untagged frame received on trunk port
+  description: Untagged frame received on trunk port
+  condition: null
 - name: vlan_storm
   severity: major
   message: 'VLAN storm detected: {count} frames in VLAN {vlan.id} within 1 second'
-  condition: More than 1000 frames with same vlan.id within 1 second
+  description: More than 1000 frames with same vlan.id within 1 second
+  condition: null
 - name: vlan_hop
   severity: critical
   message: 'VLAN hopping attempt: double-tagged frame with different outer VLAN {vlan.id}'
-  condition: frame.vlan_count == 2 with mismatched inner VLAN tags
+  description: frame.vlan_count == 2 with mismatched inner VLAN tags
+  condition: frame.vlan_count == 2

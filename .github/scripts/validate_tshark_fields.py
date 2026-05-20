@@ -97,9 +97,11 @@ def validate_fields(yaml_files: list[Path], registered: set) -> tuple:
             else:
                 errors.append((yf.name, fname, field.get("label", "")))
 
-        # Check {field} references in conditions/messages
+        # Check {field} references in conditions/messages/description
         for check in data.get("checks", []):
-            check_text = check.get("message", "") + " " + check.get("condition", "")
+            check_text = (check.get("message", "") + " " +
+                         (check.get("condition") or "") + " " +
+                         (check.get("description") or ""))
             refs = re.findall(r'\{([^}]+)\}', check_text)
             for ref in refs:
                 if ref.startswith("count") or ref in {"expected", "prev"}:

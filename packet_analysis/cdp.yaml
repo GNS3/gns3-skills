@@ -1,10 +1,3 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: CDP Packet Analysis
 description: CDP (Cisco Discovery Protocol) packet analysis for Cisco neighbor discovery
 protocol_key: cdp
@@ -81,16 +74,20 @@ checks:
 - name: cdp_neighbor_timeout
   severity: minor
   message: 'CDP neighbor timeout: no CDP from {cdp.deviceid} within TTL'
-  condition: No CDP frames from neighbor within cdp.ttl seconds
+  description: No CDP frames from neighbor within cdp.ttl seconds
+  condition: null
 - name: cdp_native_vlan_mismatch
   severity: major
   message: 'CDP native VLAN mismatch: neighbor {cdp.deviceid} has VLAN {cdp.native_vlan}'
-  condition: cdp.native_vlan differs from local configuration
+  description: cdp.native_vlan differs from local configuration
+  condition: null
 - name: cdp_duplex_mismatch
   severity: major
   message: 'CDP duplex mismatch: neighbor {cdp.deviceid} shows {cdp.duplex}'
-  condition: cdp.duplex differs from local interface setting
+  description: cdp.duplex differs from local interface setting
+  condition: null
 - name: cdp_device_id_change
   severity: minor
   message: 'CDP device ID change: new device {cdp.deviceid} on port'
-  condition: Different cdp.deviceid from same source MAC
+  description: Different cdp.deviceid from same source MAC
+  condition: null

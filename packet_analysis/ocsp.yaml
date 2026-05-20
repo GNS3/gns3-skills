@@ -1,56 +1,36 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for OCSP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "OCSP Packet Analysis"
-description: "OCSP (Online Certificate Status Protocol) packet analysis for certificate validation troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ocsp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "ocsp"
-
-# tshark fields that LLM can use for analysis
+name: OCSP Packet Analysis
+description: OCSP (Online Certificate Status Protocol) packet analysis for certificate validation troubleshooting
+protocol_key: ocsp
+display_filter: ocsp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "OCSP Request"
-    tshark_field: "ocsp.tbsRequest_element"
-    description: "OCSP request data"
-
-  - label: "OCSP Response Type"
-    tshark_field: "ocsp.responseType.id"
-    description: "OCSP response type"
-
-  - label: "OCSP Version"
-    tshark_field: "ocsp.version"
-    description: "OCSP version"
-
-  - label: "Signature Algorithm"
-    tshark_field: "ocsp.signatureAlgorithm_element"
-    description: "OCSP signature algorithm"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: OCSP Request
+  tshark_field: ocsp.tbsRequest_element
+  description: OCSP request data
+- label: OCSP Response Type
+  tshark_field: ocsp.responseType.id
+  description: OCSP response type
+- label: OCSP Version
+  tshark_field: ocsp.version
+  description: OCSP version
+- label: Signature Algorithm
+  tshark_field: ocsp.signatureAlgorithm_element
+  description: OCSP signature algorithm
 filter_examples:
-  - name: "OCSP Request"
-    filter: "ocsp.tbsRequest_element"
-    description: "Filter for OCSP requests"
-
-  - name: "OCSP Response"
-    filter: "ocsp.responseType.id"
-    description: "Filter for OCSP responses"
-
-  - name: "OCSP over HTTP"
-    filter: "ocsp and http"
-    description: "Filter for OCSP over HTTP"
-
+- name: OCSP Request
+  filter: ocsp.tbsRequest_element
+  description: Filter for OCSP requests
+- name: OCSP Response
+  filter: ocsp.responseType.id
+  description: Filter for OCSP responses
+- name: OCSP over HTTP
+  filter: ocsp and http
+  description: Filter for OCSP over HTTP
 checks:
-  - name: "ocsp_no_response"
-    severity: minor
-    message: "OCSP request without response: certificate validation pending"
-    condition: "OCSP request with no matching response"
+- name: ocsp_no_response
+  severity: minor
+  message: 'OCSP request without response: certificate validation pending'
+  description: OCSP request with no matching response
+  condition: null

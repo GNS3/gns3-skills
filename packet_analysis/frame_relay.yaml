@@ -1,107 +1,75 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for Frame Relay
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "Frame Relay Packet Analysis"
-description: "Frame Relay packet analysis for WAN troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "frame_relay"
-
-# tshark display filter - used for -Y parameter
-display_filter: "fr"
-
-# tshark fields that LLM can use for analysis
+name: Frame Relay Packet Analysis
+description: Frame Relay packet analysis for WAN troubleshooting
+protocol_key: frame_relay
+display_filter: fr
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "DLCI"
-    tshark_field: "fr.dlci"
-    description: "Data Link Connection Identifier (combined)"
-
-  - label: "Upper DLCI"
-    tshark_field: "fr.upper_dlci"
-    description: "Upper DLCI bits"
-
-  - label: "Lower DLCI"
-    tshark_field: "fr.lower_dlci"
-    description: "Lower DLCI bits"
-
-  - label: "FECN"
-    tshark_field: "fr.fecn"
-    description: "Forward Explicit Congestion Notification"
-
-  - label: "BECN"
-    tshark_field: "fr.becn"
-    description: "Backward Explicit Congestion Notification"
-
-  - label: "DE"
-    tshark_field: "fr.de"
-    description: "Discard Eligibility flag"
-
-  - label: "CR"
-    tshark_field: "fr.cr"
-    description: "Command/Response field"
-
-  - label: "EA"
-    tshark_field: "fr.ea"
-    description: "Extended Address flag"
-
-  - label: "NLPID"
-    tshark_field: "fr.nlpid"
-    description: "Network Layer Protocol ID"
-
-  - label: "Encapsulated Type"
-    tshark_field: "fr.snaptype"
-    description: "SNAP encapsulated protocol type"
-
-  - label: "Cisco Type"
-    tshark_field: "fr.chdlctype"
-    description: "Cisco HDLC encapsulated protocol type"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: DLCI
+  tshark_field: fr.dlci
+  description: Data Link Connection Identifier (combined)
+- label: Upper DLCI
+  tshark_field: fr.upper_dlci
+  description: Upper DLCI bits
+- label: Lower DLCI
+  tshark_field: fr.lower_dlci
+  description: Lower DLCI bits
+- label: FECN
+  tshark_field: fr.fecn
+  description: Forward Explicit Congestion Notification
+- label: BECN
+  tshark_field: fr.becn
+  description: Backward Explicit Congestion Notification
+- label: DE
+  tshark_field: fr.de
+  description: Discard Eligibility flag
+- label: CR
+  tshark_field: fr.cr
+  description: Command/Response field
+- label: EA
+  tshark_field: fr.ea
+  description: Extended Address flag
+- label: NLPID
+  tshark_field: fr.nlpid
+  description: Network Layer Protocol ID
+- label: Encapsulated Type
+  tshark_field: fr.snaptype
+  description: SNAP encapsulated protocol type
+- label: Cisco Type
+  tshark_field: fr.chdlctype
+  description: Cisco HDLC encapsulated protocol type
 filter_examples:
-  - name: "Specific DLCI"
-    filter: "fr.dlci == 100"
-    description: "Filter for specific DLCI"
-
-  - name: "FECN set"
-    filter: "fr.fecn == 1"
-    description: "Filter for congestion forward notification"
-
-  - name: "BECN set"
-    filter: "fr.becn == 1"
-    description: "Filter for congestion backward notification"
-
-  - name: "DE set"
-    filter: "fr.de == 1"
-    description: "Filter for discard eligible frames"
-
-  - name: "LMI DLCI"
-    filter: "fr.dlci == 0"
-    description: "Filter for LMI DLCI (signaling)"
-
+- name: Specific DLCI
+  filter: fr.dlci == 100
+  description: Filter for specific DLCI
+- name: FECN set
+  filter: fr.fecn == 1
+  description: Filter for congestion forward notification
+- name: BECN set
+  filter: fr.becn == 1
+  description: Filter for congestion backward notification
+- name: DE set
+  filter: fr.de == 1
+  description: Filter for discard eligible frames
+- name: LMI DLCI
+  filter: fr.dlci == 0
+  description: Filter for LMI DLCI (signaling)
 checks:
-  - name: "fr_fecn_congestion"
-    severity: major
-    message: "Frame Relay FECN congestion on DLCI {fr.dlci}"
-    condition: "fr.fecn == 1"
-
-  - name: "fr_becn_congestion"
-    severity: major
-    message: "Frame Relay BECN congestion on DLCI {fr.dlci}"
-    condition: "fr.becn == 1"
-
-  - name: "fr_discard_eligible"
-    severity: minor
-    message: "Frame Relay DE set on DLCI {fr.dlci}"
-    condition: "fr.de == 1"
-
-  - name: "fr_dlci_mismatch"
-    severity: critical
-    message: "Frame Relay DLCI mismatch: local {local_dlci} vs remote DLCI"
-    condition: "Different DLCI values in LMI status from same PVC"
+- name: fr_fecn_congestion
+  severity: major
+  message: Frame Relay FECN congestion on DLCI {fr.dlci}
+  condition: fr.fecn == 1
+- name: fr_becn_congestion
+  severity: major
+  message: Frame Relay BECN congestion on DLCI {fr.dlci}
+  condition: fr.becn == 1
+- name: fr_discard_eligible
+  severity: minor
+  message: Frame Relay DE set on DLCI {fr.dlci}
+  condition: fr.de == 1
+- name: fr_dlci_mismatch
+  severity: critical
+  message: 'Frame Relay DLCI mismatch: local {local_dlci} vs remote DLCI'
+  description: Different DLCI values in LMI status from same PVC
+  condition: null

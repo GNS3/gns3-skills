@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: MPLS Packet Analysis
-description: MPLS (Multiprotocol Label Switching) packet analysis for label-switched
-  traffic troubleshooting
+description: MPLS (Multiprotocol Label Switching) packet analysis for label-switched traffic troubleshooting
 protocol_key: mpls
 display_filter: mpls
 fields:
@@ -60,7 +52,8 @@ checks:
 - name: mpls_exp_mismatch
   severity: minor
   message: 'MPLS EXP mismatch: expected {expected_exp}, got {mpls.exp}'
-  condition: mpls.exp differs from expected QoS marking
+  description: mpls.exp differs from expected QoS marking
+  condition: null
 - name: mpls_invalid_label
   severity: major
   message: 'MPLS invalid label: {mpls.label}'

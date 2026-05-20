@@ -1,89 +1,61 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for TACACS+
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "TACACS+ Packet Analysis"
-description: "TACACS+ (Terminal Access Controller Access-Control System Plus) packet analysis for AAA troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "tacacs"
-
-# tshark display filter - used for -Y parameter
-display_filter: "tacacs"
-
-# tshark fields that LLM can use for analysis
+name: TACACS+ Packet Analysis
+description: TACACS+ (Terminal Access Controller Access-Control System Plus) packet analysis for AAA troubleshooting
+protocol_key: tacacs
+display_filter: tacacs
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "TACACS+ Version"
-    tshark_field: "tacacs.version"
-    description: "TACACS+ version"
-
-  - label: "Type"
-    tshark_field: "tacacs.type"
-    description: "TACACS+ message type: 1=Authentication, 2=Authorization, 3=Accounting"
-
-  - label: "Username"
-    tshark_field: "tacacs.username"
-    description: "Username"
-
-  - label: "Password"
-    tshark_field: "tacacs.password"
-    description: "Password"
-
-  - label: "Response"
-    tshark_field: "tacacs.response"
-    description: "Authentication response status"
-
-  - label: "Reason"
-    tshark_field: "tacacs.reason"
-    description: "Reason for authentication result"
-
-  - label: "Destination Address"
-    tshark_field: "tacacs.destaddr"
-    description: "Destination IP address"
-
-  - label: "Destination Port"
-    tshark_field: "tacacs.destport"
-    description: "Destination port"
-
-  - label: "Line"
-    tshark_field: "tacacs.line"
-    description: "Line number"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: TACACS+ Version
+  tshark_field: tacacs.version
+  description: TACACS+ version
+- label: Type
+  tshark_field: tacacs.type
+  description: 'TACACS+ message type: 1=Authentication, 2=Authorization, 3=Accounting'
+- label: Username
+  tshark_field: tacacs.username
+  description: Username
+- label: Password
+  tshark_field: tacacs.password
+  description: Password
+- label: Response
+  tshark_field: tacacs.response
+  description: Authentication response status
+- label: Reason
+  tshark_field: tacacs.reason
+  description: Reason for authentication result
+- label: Destination Address
+  tshark_field: tacacs.destaddr
+  description: Destination IP address
+- label: Destination Port
+  tshark_field: tacacs.destport
+  description: Destination port
+- label: Line
+  tshark_field: tacacs.line
+  description: Line number
 filter_examples:
-  - name: "TACACS+ Authentication"
-    filter: "tacacs.type == 1"
-    description: "Filter for TACACS+ Authentication"
-
-  - name: "TACACS+ Authorization"
-    filter: "tacacs.type == 2"
-    description: "Filter for TACACS+ Authorization"
-
-  - name: "TACACS+ Accounting"
-    filter: "tacacs.type == 3"
-    description: "Filter for TACACS+ Accounting"
-
-  - name: "TACACS+ Authentication failure"
-    filter: "tacacs.response != 1 and tacacs.type == 1"
-    description: "Filter for authentication failures"
-
-  - name: "Specific username"
-    filter: "tacacs.username == \"admin\""
-    description: "Filter for specific user"
-
+- name: TACACS+ Authentication
+  filter: tacacs.type == 1
+  description: Filter for TACACS+ Authentication
+- name: TACACS+ Authorization
+  filter: tacacs.type == 2
+  description: Filter for TACACS+ Authorization
+- name: TACACS+ Accounting
+  filter: tacacs.type == 3
+  description: Filter for TACACS+ Accounting
+- name: TACACS+ Authentication failure
+  filter: tacacs.response != 1 and tacacs.type == 1
+  description: Filter for authentication failures
+- name: Specific username
+  filter: tacacs.username == "admin"
+  description: Filter for specific user
 checks:
-  - name: "tacacs_auth_failure"
-    severity: major
-    message: "TACACS+ authentication failure for user {tacacs.username}"
-    condition: "tacacs.type == 1 and tacacs.response != 1"
-
-  - name: "tacacs_no_response"
-    severity: major
-    message: "TACACS+ request timeout for user {tacacs.username}"
-    condition: "TCP SYN without subsequent TACACS+ response"
+- name: tacacs_auth_failure
+  severity: major
+  message: TACACS+ authentication failure for user {tacacs.username}
+  condition: tacacs.type == 1 and tacacs.response != 1
+- name: tacacs_no_response
+  severity: major
+  message: TACACS+ request timeout for user {tacacs.username}
+  description: TCP SYN without subsequent TACACS+ response
+  condition: null

@@ -1,124 +1,89 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for RIP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "RIP Packet Analysis"
-description: "RIP (Routing Information Protocol) packet analysis for distance vector routing troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "rip"
-
-# tshark display filter - used for -Y parameter
-display_filter: "rip"
-
-# tshark fields that LLM can use for analysis
+name: RIP Packet Analysis
+description: RIP (Routing Information Protocol) packet analysis for distance vector routing troubleshooting
+protocol_key: rip
+display_filter: rip
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Command"
-    tshark_field: "rip.command"
-    description: "RIP command: 1=Request, 2=Response"
-
-  - label: "Version"
-    tshark_field: "rip.version"
-    description: "RIP version: 1=RIPv1, 2=RIPv2"
-
-  - label: "Routing Domain"
-    tshark_field: "rip.routing_domain"
-    description: "RIPv2 routing domain"
-
-  - label: "Address Family"
-    tshark_field: "rip.family"
-    description: "Address family identifier: 2=IPv4"
-
-  - label: "Route Tag"
-    tshark_field: "rip.route_tag"
-    description: "Route tag for external routes"
-
-  - label: "IP Address"
-    tshark_field: "rip.ip"
-    description: "Route destination IP address"
-
-  - label: "Netmask"
-    tshark_field: "rip.netmask"
-    description: "Subnet mask for RIPv2"
-
-  - label: "Next Hop"
-    tshark_field: "rip.next_hop"
-    description: "Next hop router IP address"
-
-  - label: "Metric"
-    tshark_field: "rip.metric"
-    description: "Route metric (hop count, 1-15, 16=unreachable)"
-
-  - label: "Authentication Type"
-    tshark_field: "rip.auth.type"
-    description: "Authentication type: 2=Simple Password, 3=MD5"
-
-  - label: "Authentication Password"
-    tshark_field: "rip.auth.passwd"
-    description: "Simple password authentication"
-
-  - label: "Key ID"
-    tshark_field: "rip.key_id"
-    description: "MD5 authentication key ID"
-
-  - label: "Sequence Number"
-    tshark_field: "rip.seq_num"
-    description: "MD5 authentication sequence number"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Command
+  tshark_field: rip.command
+  description: 'RIP command: 1=Request, 2=Response'
+- label: Version
+  tshark_field: rip.version
+  description: 'RIP version: 1=RIPv1, 2=RIPv2'
+- label: Routing Domain
+  tshark_field: rip.routing_domain
+  description: RIPv2 routing domain
+- label: Address Family
+  tshark_field: rip.family
+  description: 'Address family identifier: 2=IPv4'
+- label: Route Tag
+  tshark_field: rip.route_tag
+  description: Route tag for external routes
+- label: IP Address
+  tshark_field: rip.ip
+  description: Route destination IP address
+- label: Netmask
+  tshark_field: rip.netmask
+  description: Subnet mask for RIPv2
+- label: Next Hop
+  tshark_field: rip.next_hop
+  description: Next hop router IP address
+- label: Metric
+  tshark_field: rip.metric
+  description: Route metric (hop count, 1-15, 16=unreachable)
+- label: Authentication Type
+  tshark_field: rip.auth.type
+  description: 'Authentication type: 2=Simple Password, 3=MD5'
+- label: Authentication Password
+  tshark_field: rip.auth.passwd
+  description: Simple password authentication
+- label: Key ID
+  tshark_field: rip.key_id
+  description: MD5 authentication key ID
+- label: Sequence Number
+  tshark_field: rip.seq_num
+  description: MD5 authentication sequence number
 filter_examples:
-  - name: "RIP Request"
-    filter: "rip.command == 1"
-    description: "Filter for RIP request messages"
-
-  - name: "RIP Response"
-    filter: "rip.command == 2"
-    description: "Filter for RIP response messages"
-
-  - name: "RIPv1"
-    filter: "rip.version == 1"
-    description: "Filter for RIPv1 messages"
-
-  - name: "RIPv2"
-    filter: "rip.version == 2"
-    description: "Filter for RIPv2 messages"
-
-  - name: "RIP Unreachable (metric 16)"
-    filter: "rip.metric == 16"
-    description: "Filter for unreachable routes (route poisoning)"
-
-  - label: "RIP for specific network"
-    filter: "rip.ip == 192.168.1.0"
-    description: "Filter for routes to specific network"
-
-  - name: "RIP with authentication"
-    filter: "rip.auth.type"
-    description: "Filter for RIP with authentication"
-
+- name: RIP Request
+  filter: rip.command == 1
+  description: Filter for RIP request messages
+- name: RIP Response
+  filter: rip.command == 2
+  description: Filter for RIP response messages
+- name: RIPv1
+  filter: rip.version == 1
+  description: Filter for RIPv1 messages
+- name: RIPv2
+  filter: rip.version == 2
+  description: Filter for RIPv2 messages
+- name: RIP Unreachable (metric 16)
+  filter: rip.metric == 16
+  description: Filter for unreachable routes (route poisoning)
+- label: RIP for specific network
+  filter: rip.ip == 192.168.1.0
+  description: Filter for routes to specific network
+- name: RIP with authentication
+  filter: rip.auth.type
+  description: Filter for RIP with authentication
 checks:
-  - name: "rip_metric_16"
-    severity: minor
-    message: "RIP route unreachable: {rip.ip}/{rip.netmask} with metric 16 (infinity)"
-    condition: "rip.metric == 16"
-
-  - name: "rip_authentication_failure"
-    severity: major
-    message: "RIP authentication failure detected from {ip.src}"
-    condition: "RIP packet with authentication type but missing or invalid authentication data"
-
-  - name: "rip_version_mismatch"
-    severity: minor
-    message: "RIP version mismatch: expected version {expected}, got {rip.version} from {ip.src}"
-    condition: "Different rip.version values from same neighbor"
-
-  - name: "rip_bad_netmask"
-    severity: minor
-    message: "RIP bad netmask: {rip.netmask} for route {rip.ip}"
-    condition: "rip.netmask != 0.0.0.0 and (rip.ip & rip.netmask) != rip.ip"
+- name: rip_metric_16
+  severity: minor
+  message: 'RIP route unreachable: {rip.ip}/{rip.netmask} with metric 16 (infinity)'
+  condition: rip.metric == 16
+- name: rip_authentication_failure
+  severity: major
+  message: RIP authentication failure detected from {ip.src}
+  description: RIP packet with authentication type but missing or invalid authentication data
+  condition: null
+- name: rip_version_mismatch
+  severity: minor
+  message: 'RIP version mismatch: expected version {expected}, got {rip.version} from {ip.src}'
+  description: Different rip.version values from same neighbor
+  condition: null
+- name: rip_bad_netmask
+  severity: minor
+  message: 'RIP bad netmask: {rip.netmask} for route {rip.ip}'
+  description: rip.netmask != 0.0.0.0 and (rip.ip & rip.netmask) != rip.ip
+  condition: rip.netmask !=

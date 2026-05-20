@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: IPv6 Packet Analysis
-description: IPv6 (Internet Protocol version 6) packet analysis for next-generation
-  IP troubleshooting
+description: IPv6 (Internet Protocol version 6) packet analysis for next-generation IP troubleshooting
 protocol_key: ipv6
 display_filter: ipv6
 fields:
@@ -69,13 +61,13 @@ filter_examples:
 checks:
 - name: ipv6_hop_limit_exceeded
   severity: minor
-  message: 'IPv6 hop limit exceeded: packet from {ipv6.src} to {ipv6.dst} with hop
-    limit {ipv6.hlim}'
+  message: 'IPv6 hop limit exceeded: packet from {ipv6.src} to {ipv6.dst} with hop limit {ipv6.hlim}'
   condition: ipv6.hlim == 0 or icmpv6.type == 3
 - name: ipv6_fragmentation
   severity: minor
   message: 'IPv6 fragmentation detected: ID {ip.id}'
-  condition: ipv6.frag.offset is set
+  description: ipv6.frag.offset is set
+  condition: null
 - name: ipv6_unreachable
   severity: major
   message: 'IPv6 destination unreachable: {ipv6.dst} from {ipv6.src}'
@@ -91,4 +83,5 @@ checks:
 - name: ipv6_address_format_error
   severity: major
   message: 'IPv6 address format error: {ipv6.src} or {ipv6.dst}'
-  condition: Invalid IPv6 address format detected
+  description: Invalid IPv6 address format detected
+  condition: null

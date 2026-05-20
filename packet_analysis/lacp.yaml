@@ -1,149 +1,107 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for LACP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "LACP Packet Analysis"
-description: "LACP (Link Aggregation Control Protocol) packet analysis for EtherChannel/Port-channel troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "lacp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "lacp"
-
-# tshark fields that LLM can use for analysis
+name: LACP Packet Analysis
+description: LACP (Link Aggregation Control Protocol) packet analysis for EtherChannel/Port-channel troubleshooting
+protocol_key: lacp
+display_filter: lacp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "LACP Version"
-    tshark_field: "lacp.version"
-    description: "LACP version (usually 0x01)"
-
-  - label: "TLV Type"
-    tshark_field: "lacp.tlv_type"
-    description: "TLV type: 0x01=Actor, 0x02=Partner, 0x03=Collector"
-
-  - label: "Actor System Priority"
-    tshark_field: "lacp.actor.sys_priority"
-    description: "Actor system priority (0-65535, lower is better)"
-
-  - label: "Actor System ID"
-    tshark_field: "lacp.actor.sysid"
-    description: "Actor system MAC address"
-
-  - label: "Actor Key"
-    tshark_field: "lacp.actor.key"
-    description: "Actor operational key"
-
-  - label: "Actor Port Priority"
-    tshark_field: "lacp.actor.port_priority"
-    description: "Actor port priority"
-
-  - label: "Actor Port"
-    tshark_field: "lacp.actor.port"
-    description: "Actor port number"
-
-  - label: "Actor State"
-    tshark_field: "lacp.actor.state"
-    description: "Actor state flags"
-
-  - label: "Actor Activity"
-    tshark_field: "lacp.actor.state.activity"
-    description: "Actor activity (0=passive, 1=active)"
-
-  - label: "Actor Timeout"
-    tshark_field: "lacp.actor.state.timeout"
-    description: "Actor timeout (0=long, 1=short)"
-
-  - label: "Actor Aggregation"
-    tshark_field: "lacp.actor.state.aggregation"
-    description: "Actor aggregatable flag"
-
-  - label: "Actor Synchronization"
-    tshark_field: "lacp.actor.state.synchronization"
-    description: "Actor in-sync flag"
-
-  - label: "Actor Collecting"
-    tshark_field: "lacp.actor.state.collecting"
-    description: "Actor collecting flag"
-
-  - label: "Actor Distributing"
-    tshark_field: "lacp.actor.state.distributing"
-    description: "Actor distributing flag"
-
-  - label: "Partner System Priority"
-    tshark_field: "lacp.partner.sys_priority"
-    description: "Partner system priority"
-
-  - label: "Partner System ID"
-    tshark_field: "lacp.partner.sysid"
-    description: "Partner system MAC address"
-
-  - label: "Partner Key"
-    tshark_field: "lacp.partner.key"
-    description: "Partner operational key"
-
-  - label: "Partner Port"
-    tshark_field: "lacp.partner.port"
-    description: "Partner port number"
-
-  - label: "Partner State"
-    tshark_field: "lacp.partner.state"
-    description: "Partner state flags"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: LACP Version
+  tshark_field: lacp.version
+  description: LACP version (usually 0x01)
+- label: TLV Type
+  tshark_field: lacp.tlv_type
+  description: 'TLV type: 0x01=Actor, 0x02=Partner, 0x03=Collector'
+- label: Actor System Priority
+  tshark_field: lacp.actor.sys_priority
+  description: Actor system priority (0-65535, lower is better)
+- label: Actor System ID
+  tshark_field: lacp.actor.sysid
+  description: Actor system MAC address
+- label: Actor Key
+  tshark_field: lacp.actor.key
+  description: Actor operational key
+- label: Actor Port Priority
+  tshark_field: lacp.actor.port_priority
+  description: Actor port priority
+- label: Actor Port
+  tshark_field: lacp.actor.port
+  description: Actor port number
+- label: Actor State
+  tshark_field: lacp.actor.state
+  description: Actor state flags
+- label: Actor Activity
+  tshark_field: lacp.actor.state.activity
+  description: Actor activity (0=passive, 1=active)
+- label: Actor Timeout
+  tshark_field: lacp.actor.state.timeout
+  description: Actor timeout (0=long, 1=short)
+- label: Actor Aggregation
+  tshark_field: lacp.actor.state.aggregation
+  description: Actor aggregatable flag
+- label: Actor Synchronization
+  tshark_field: lacp.actor.state.synchronization
+  description: Actor in-sync flag
+- label: Actor Collecting
+  tshark_field: lacp.actor.state.collecting
+  description: Actor collecting flag
+- label: Actor Distributing
+  tshark_field: lacp.actor.state.distributing
+  description: Actor distributing flag
+- label: Partner System Priority
+  tshark_field: lacp.partner.sys_priority
+  description: Partner system priority
+- label: Partner System ID
+  tshark_field: lacp.partner.sysid
+  description: Partner system MAC address
+- label: Partner Key
+  tshark_field: lacp.partner.key
+  description: Partner operational key
+- label: Partner Port
+  tshark_field: lacp.partner.port
+  description: Partner port number
+- label: Partner State
+  tshark_field: lacp.partner.state
+  description: Partner state flags
 filter_examples:
-  - name: "LACP Active"
-    filter: "lacp.actor.state.activity == 1"
-    description: "Filter for LACP active mode"
-
-  - name: "LACP Passive"
-    filter: "lacp.actor.state.activity == 0"
-    description: "Filter for LACP passive mode"
-
-  - name: "LACP Synchronized"
-    filter: "lacp.actor.state.synchronization == 1"
-    description: "Filter for LACP links in-sync"
-
-  - name: "LACP Unsynchronized"
-    filter: "lacp.actor.state.synchronization == 0"
-    description: "Filter for LACP links out-of-sync"
-
-  - name: "LACP Short Timeout"
-    filter: "lacp.actor.state.timeout == 1"
-    description: "Filter for LACP with short timeout"
-
-  - name: "Specific Actor"
-    filter: "lacp.actor.sysid == 00:11:22:33:44:55"
-    description: "Filter for specific actor system"
-
+- name: LACP Active
+  filter: lacp.actor.state.activity == 1
+  description: Filter for LACP active mode
+- name: LACP Passive
+  filter: lacp.actor.state.activity == 0
+  description: Filter for LACP passive mode
+- name: LACP Synchronized
+  filter: lacp.actor.state.synchronization == 1
+  description: Filter for LACP links in-sync
+- name: LACP Unsynchronized
+  filter: lacp.actor.state.synchronization == 0
+  description: Filter for LACP links out-of-sync
+- name: LACP Short Timeout
+  filter: lacp.actor.state.timeout == 1
+  description: Filter for LACP with short timeout
+- name: Specific Actor
+  filter: lacp.actor.sysid == 00:11:22:33:44:55
+  description: Filter for specific actor system
 checks:
-  - name: "lacp_sync_loss"
-    severity: major
-    message: "LACP sync loss: port {lacp.actor.port} no longer in sync with partner"
-    condition: "lacp.actor.state.synchronization == 1 and lacp.partner.state.synchronization == 0"
-
-  - name: "lacp_mismatch"
-    severity: major
-    message: "LACP mismatch: actor key {lacp.actor.key} != partner key {lacp.partner.key}"
-    condition: "lacp.actor.key != lacp.partner.key"
-
-  - label: "lacp_duplicate_system_id"
-    severity: critical
-    message: "LACP duplicate system ID: same lacp.actor.sysid on multiple ports"
-    condition: "Same lacp.actor.sysid from different source ports"
-
-  - name: "lacp_flapping"
-    severity: minor
-    message: "LACP flapping detected: port {lacp.actor.port} state changing frequently"
-    condition: "lacp.actor.state.synchronization changes more than 3 times in 1 minute"
-
-  - name: "lacp_expired"
-    severity: major
-    message: "LACP expired: partner {lacp.partner.sysid} not responding"
-    condition: "lacp.actor.state.expired == 1"
+- name: lacp_sync_loss
+  severity: major
+  message: 'LACP sync loss: port {lacp.actor.port} no longer in sync with partner'
+  condition: lacp.actor.state.synchronization == 1 and lacp.partner.state.synchronization == 0
+- name: lacp_mismatch
+  severity: major
+  message: 'LACP mismatch: actor key {lacp.actor.key} != partner key {lacp.partner.key}'
+  condition: lacp.actor.key != lacp.partner.key
+- name: lacp_duplicate_system_id
+  severity: critical
+  message: 'LACP duplicate system ID: same lacp.actor.sysid on multiple ports'
+  description: Same lacp.actor.sysid from different source ports
+  condition: null
+- name: lacp_flapping
+  severity: minor
+  message: 'LACP flapping detected: port {lacp.actor.port} state changing frequently'
+  description: lacp.actor.state.synchronization changes more than 3 times in 1 minute
+  condition: null
+- name: lacp_expired
+  severity: major
+  message: 'LACP expired: partner {lacp.partner.sysid} not responding'
+  condition: lacp.actor.state.expired == 1

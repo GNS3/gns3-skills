@@ -1,10 +1,3 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: UDLD Packet Analysis
 description: UDLD (UniDirectional Link Detection) packet analysis for link troubleshooting
 protocol_key: udld
@@ -57,12 +50,15 @@ checks:
 - name: udld_link_unidirectional
   severity: critical
   message: 'UDLD unidirectional link detected: neighbor {udld.device_id} not responding'
-  condition: No UDLD Echo response from neighbor within timeout
+  description: No UDLD Echo response from neighbor within timeout
+  condition: null
 - name: udld_loop_detected
   severity: critical
   message: 'UDLD loop detected: self device ID seen from {eth.src}'
-  condition: udld.device_id matches local device MAC
+  description: udld.device_id matches local device MAC
+  condition: udld.device_id matches
 - name: udld_neighbor_mismatch
   severity: major
   message: 'UDLD neighbor mismatch: device ID changed on {eth.src}'
-  condition: Different udld.device_id from same source MAC
+  description: Different udld.device_id from same source MAC
+  condition: null

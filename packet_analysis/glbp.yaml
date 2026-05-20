@@ -1,120 +1,87 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for GLBP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "GLBP Packet Analysis"
-description: "GLBP (Gateway Load Balancing Protocol) packet analysis for Cisco load balancing FHR troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "glbp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "glbp"
-
-# tshark fields that LLM can use for analysis
+name: GLBP Packet Analysis
+description: GLBP (Gateway Load Balancing Protocol) packet analysis for Cisco load balancing FHR troubleshooting
+protocol_key: glbp
+display_filter: glbp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "GLBP Version"
-    tshark_field: "glbp.version"
-    description: "GLBP version (usually 1)"
-
-  - label: "Group"
-    tshark_field: "glbp.group"
-    description: "GLBP group number"
-
-  - label: "Owner ID"
-    tshark_field: "glbp.ownerid"
-    description: "MAC address of the router sending the message"
-
-  - label: "TLV Type"
-    tshark_field: "glbp.type"
-    description: "GLBP TLV type: 1=Hello, 2=Request, 3=Response"
-
-  - label: "VG State"
-    tshark_field: "glbp.hello.vgstate"
-    description: "Virtual Gateway state"
-
-  - label: "Priority"
-    tshark_field: "glbp.hello.priority"
-    description: "GLBP priority (0-255, 100=default)"
-
-  - label: "Hello Interval"
-    tshark_field: "glbp.hello.helloint"
-    description: "Hello interval in milliseconds"
-
-  - label: "Hold Interval"
-    tshark_field: "glbp.hello.holdint"
-    description: "Hold interval in milliseconds"
-
-  - label: "Redirect Interval"
-    tshark_field: "glbp.hello.redirect"
-    description: "Redirect interval in seconds"
-
-  - label: "Forwarder Timeout"
-    tshark_field: "glbp.hello.timeout"
-    description: "Forwarder timeout interval in seconds"
-
-  - label: "Virtual IPv4 Address"
-    tshark_field: "glbp.hello.virtualipv4"
-    description: "Virtual IPv4 address"
-
-  - label: "Virtual IPv6 Address"
-    tshark_field: "glbp.hello.virtualipv6"
-    description: "Virtual IPv6 address"
-
-  - label: "Forwarder Number"
-    tshark_field: "glbp.reqresp.forwarder"
-    description: "AVG forwarder number"
-
-  - label: "VF State"
-    tshark_field: "glbp.reqresp.vfstate"
-    description: "Virtual Forwarder state"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: GLBP Version
+  tshark_field: glbp.version
+  description: GLBP version (usually 1)
+- label: Group
+  tshark_field: glbp.group
+  description: GLBP group number
+- label: Owner ID
+  tshark_field: glbp.ownerid
+  description: MAC address of the router sending the message
+- label: TLV Type
+  tshark_field: glbp.type
+  description: 'GLBP TLV type: 1=Hello, 2=Request, 3=Response'
+- label: VG State
+  tshark_field: glbp.hello.vgstate
+  description: Virtual Gateway state
+- label: Priority
+  tshark_field: glbp.hello.priority
+  description: GLBP priority (0-255, 100=default)
+- label: Hello Interval
+  tshark_field: glbp.hello.helloint
+  description: Hello interval in milliseconds
+- label: Hold Interval
+  tshark_field: glbp.hello.holdint
+  description: Hold interval in milliseconds
+- label: Redirect Interval
+  tshark_field: glbp.hello.redirect
+  description: Redirect interval in seconds
+- label: Forwarder Timeout
+  tshark_field: glbp.hello.timeout
+  description: Forwarder timeout interval in seconds
+- label: Virtual IPv4 Address
+  tshark_field: glbp.hello.virtualipv4
+  description: Virtual IPv4 address
+- label: Virtual IPv6 Address
+  tshark_field: glbp.hello.virtualipv6
+  description: Virtual IPv6 address
+- label: Forwarder Number
+  tshark_field: glbp.reqresp.forwarder
+  description: AVG forwarder number
+- label: VF State
+  tshark_field: glbp.reqresp.vfstate
+  description: Virtual Forwarder state
 filter_examples:
-  - name: "GLBP Hello"
-    filter: "glbp.type == 1"
-    description: "Filter for GLBP Hello messages"
-
-  - name: "GLBP Request"
-    filter: "glbp.type == 2"
-    description: "Filter for GLBP Request messages"
-
-  - name: "GLBP Response"
-    filter: "glbp.type == 3"
-    description: "Filter for GLBP Response messages"
-
-  - name: "Specific Group"
-    filter: "glbp.group == 10"
-    description: "Filter for specific GLBP group"
-
-  - name: "High Priority"
-    filter: "glbp.hello.priority > 100"
-    description: "Filter for high priority AVG candidates"
-
+- name: GLBP Hello
+  filter: glbp.type == 1
+  description: Filter for GLBP Hello messages
+- name: GLBP Request
+  filter: glbp.type == 2
+  description: Filter for GLBP Request messages
+- name: GLBP Response
+  filter: glbp.type == 3
+  description: Filter for GLBP Response messages
+- name: Specific Group
+  filter: glbp.group == 10
+  description: Filter for specific GLBP group
+- name: High Priority
+  filter: glbp.hello.priority > 100
+  description: Filter for high priority AVG candidates
 checks:
-  - name: "glbp_avg_change"
-    severity: major
-    message: "GLBP AVG change: new AVG for group {glbp.group} is {glbp.ownerid}"
-    condition: "Different glbp.ownerid as AVG for same glbp.group"
-
-  - name: "glbp_forwarder_timeout"
-    severity: minor
-    message: "GLBP forwarder timeout: forwarder {glbp.reqresp.forwarder} timed out"
-    condition: "No hello from forwarder within timeout"
-
-  - name: "glbp_priority_preempt"
-    severity: minor
-    message: "GLBP priority higher: {glbp.hello.priority} should preempt current AVG"
-    condition: "glbp.hello.priority > current_avg_priority"
-
-  - name: "glbp_virtual_ip_mismatch"
-    severity: critical
-    message: "GLBP virtual IP mismatch: different VIPs for group {glbp.group}"
-    condition: "Different glbp.hello.virtualipv4 for same glbp.group"
+- name: glbp_avg_change
+  severity: major
+  message: 'GLBP AVG change: new AVG for group {glbp.group} is {glbp.ownerid}'
+  description: Different glbp.ownerid as AVG for same glbp.group
+  condition: null
+- name: glbp_forwarder_timeout
+  severity: minor
+  message: 'GLBP forwarder timeout: forwarder {glbp.reqresp.forwarder} timed out'
+  description: No hello from forwarder within timeout
+  condition: null
+- name: glbp_priority_preempt
+  severity: minor
+  message: 'GLBP priority higher: {glbp.hello.priority} should preempt current AVG'
+  description: glbp.hello.priority > current_avg_priority
+  condition: glbp.hello.priority >
+- name: glbp_virtual_ip_mismatch
+  severity: critical
+  message: 'GLBP virtual IP mismatch: different VIPs for group {glbp.group}'
+  description: Different glbp.hello.virtualipv4 for same glbp.group
+  condition: null

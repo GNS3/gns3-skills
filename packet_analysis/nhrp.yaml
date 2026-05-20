@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: NHRP Packet Analysis
-description: NHRP (Next Hop Resolution Protocol) packet analysis for DMVPN/mGRE tunnel
-  troubleshooting
+description: NHRP (Next Hop Resolution Protocol) packet analysis for DMVPN/mGRE tunnel troubleshooting
 protocol_key: nhrp
 display_filter: nhrp
 fields:
@@ -19,8 +11,7 @@ fields:
   description: NHRP version (usually 1 for draft, 2 for RFC)
 - label: Packet Type
   tshark_field: nhrp.hdr.op.type
-  description: 'NHRP packet type: 1=Resolution Request, 2=Resolution Reply, 3=Registration
-    Request, etc.'
+  description: 'NHRP packet type: 1=Resolution Request, 2=Resolution Reply, 3=Registration Request, etc.'
 - label: Address Family
   tshark_field: nhrp.hdr.afn
   description: 'Address family number: 1=IPv4, 2=IPv6'
@@ -86,11 +77,13 @@ checks:
 - name: nhrp_registration_timeout
   severity: major
   message: 'NHRP registration timeout: spoke {nhrp.src.prot.addr} not registered'
-  condition: No NHRP Registration Reply within expected time
+  description: No NHRP Registration Reply within expected time
+  condition: null
 - name: nhrp_resolution_failure
   severity: major
   message: 'NHRP resolution failure: no path to {nhrp.dst.prot.addr}'
-  condition: nhrp.hdr.op.type == 2 with error code
+  description: nhrp.hdr.op.type == 2 with error code
+  condition: nhrp.hdr.op.type == 2
 - name: nhrp_spoke_to_spoke_failed
   severity: minor
   message: 'NHRP spoke-to-spoke tunnel failed: NHRP purge for {nhrp.dst.prot.addr}'
@@ -98,4 +91,5 @@ checks:
 - name: nhrp_shortcut_timeout
   severity: minor
   message: 'NHRP shortcut timeout: {nhrp.dst.prot.addr} reverted to NHC'
-  condition: NHRP purge without re-registration
+  description: NHRP purge without re-registration
+  condition: null

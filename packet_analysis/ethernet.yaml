@@ -1,121 +1,88 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for Ethernet
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "Ethernet Packet Analysis"
-description: "Ethernet (IEEE 802.3) packet analysis for L2 network troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "ethernet"
-
-# tshark display filter - used for -Y parameter
-display_filter: "eth"
-
-# tshark fields that LLM can use for analysis
+name: Ethernet Packet Analysis
+description: Ethernet (IEEE 802.3) packet analysis for L2 network troubleshooting
+protocol_key: ethernet
+display_filter: eth
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Source MAC"
-    tshark_field: "eth.src"
-    description: "Source MAC address"
-
-  - label: "Destination MAC"
-    tshark_field: "eth.dst"
-    description: "Destination MAC address"
-
-  - label: "Source OUI"
-    tshark_field: "eth.src.oui"
-    description: "Source MAC OUI (vendor)"
-
-  - label: "Destination OUI"
-    tshark_field: "eth.dst.oui"
-    description: "Destination MAC OUI (vendor)"
-
-  - label: "EtherType"
-    tshark_field: "eth.type"
-    description: "EtherType: 0x0800=IPv4, 0x0806=ARP, 0x8100=VLAN, 0x86DD=IPv6"
-
-  - label: "Frame Length"
-    tshark_field: "frame.len"
-    description: "Frame length in bytes"
-
-  - label: "Captured Length"
-    tshark_field: "frame.cap_len"
-    description: "Captured length"
-
-  - label: "FCS"
-    tshark_field: "eth.fcs"
-    description: "Frame check sequence"
-
-  - label: "FCS Status"
-    tshark_field: "eth.fcs.status"
-    description: "FCS verification status"
-
-  - label: "Padding"
-    tshark_field: "eth.padding"
-    description: "Ethernet padding (minimum 64 byte frame)"
-
-  - label: "Destination LG bit"
-    tshark_field: "eth.dst.lg"
-    description: "Destination MAC locally administered flag"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Source MAC
+  tshark_field: eth.src
+  description: Source MAC address
+- label: Destination MAC
+  tshark_field: eth.dst
+  description: Destination MAC address
+- label: Source OUI
+  tshark_field: eth.src.oui
+  description: Source MAC OUI (vendor)
+- label: Destination OUI
+  tshark_field: eth.dst.oui
+  description: Destination MAC OUI (vendor)
+- label: EtherType
+  tshark_field: eth.type
+  description: 'EtherType: 0x0800=IPv4, 0x0806=ARP, 0x8100=VLAN, 0x86DD=IPv6'
+- label: Frame Length
+  tshark_field: frame.len
+  description: Frame length in bytes
+- label: Captured Length
+  tshark_field: frame.cap_len
+  description: Captured length
+- label: FCS
+  tshark_field: eth.fcs
+  description: Frame check sequence
+- label: FCS Status
+  tshark_field: eth.fcs.status
+  description: FCS verification status
+- label: Padding
+  tshark_field: eth.padding
+  description: Ethernet padding (minimum 64 byte frame)
+- label: Destination LG bit
+  tshark_field: eth.dst.lg
+  description: Destination MAC locally administered flag
 filter_examples:
-  - name: "Broadcast MAC"
-    filter: "eth.dst == ff:ff:ff:ff:ff:ff"
-    description: "Filter for broadcast Ethernet frames"
-
-  - name: "Multicast MAC"
-    filter: "eth.dst[0] & 1 != 0"
-    description: "Filter for multicast MAC addresses"
-
-  - name: "Specific source MAC"
-    filter: "eth.src == 00:11:22:33:44:55"
-    description: "Filter for frames from specific MAC"
-
-  - name: "Specific vendor"
-    filter: "eth.src.oui == 00:1C:73"
-    description: "Filter for specific vendor OUI (00:1C:73=Meraki)"
-
-  - name: "Unicast MAC"
-    filter: "eth.dst[0] & 1 == 0"
-    description: "Filter for unicast frames"
-
-  - name: "Jumbo frames"
-    filter: "frame.len > 1518"
-    description: "Filter for jumbo frames (MTU > 1500)"
-
+- name: Broadcast MAC
+  filter: eth.dst == ff:ff:ff:ff:ff:ff
+  description: Filter for broadcast Ethernet frames
+- name: Multicast MAC
+  filter: eth.dst[0] & 1 != 0
+  description: Filter for multicast MAC addresses
+- name: Specific source MAC
+  filter: eth.src == 00:11:22:33:44:55
+  description: Filter for frames from specific MAC
+- name: Specific vendor
+  filter: eth.src.oui == 00:1C:73
+  description: Filter for specific vendor OUI (00:1C:73=Meraki)
+- name: Unicast MAC
+  filter: eth.dst[0] & 1 == 0
+  description: Filter for unicast frames
+- name: Jumbo frames
+  filter: frame.len > 1518
+  description: Filter for jumbo frames (MTU > 1500)
 checks:
-  - name: "eth_broadcast_storm"
-    severity: major
-    message: "Ethernet broadcast storm: {count} broadcasts in 1 second"
-    condition: "More than 50 broadcast frames (eth.dst == ff:ff:ff:ff:ff:ff) within 1 second"
-
-  - name: "eth_fcs_error"
-    severity: major
-    message: "Ethernet FCS error in frame from {eth.src}"
-    condition: "eth.fcs.status != 0"
-
-  - name: "eth_mac_flapping"
-    severity: major
-    message: "MAC flapping: {eth.src} seen on multiple interfaces"
-    condition: "Same eth.src from different source switch ports"
-
-  - name: "eth_jumbo_frame"
-    severity: minor
-    message: "Jumbo frame: {frame.len} bytes from {eth.src}"
-    condition: "frame.len > 1518"
-
-  - name: "eth_small_frame"
-    severity: minor
-    message: "Runt frame: {frame.len} bytes from {eth.src}"
-    condition: "frame.len < 64"
-
-  - name: "eth_unsupported_type"
-    severity: minor
-    message: "Unsupported EtherType: {eth.type}"
-    condition: "eth.type not commonly recognized"
+- name: eth_broadcast_storm
+  severity: major
+  message: 'Ethernet broadcast storm: {count} broadcasts in 1 second'
+  description: More than 50 broadcast frames (eth.dst == ff:ff:ff:ff:ff:ff) within 1 second
+  condition: null
+- name: eth_fcs_error
+  severity: major
+  message: Ethernet FCS error in frame from {eth.src}
+  condition: eth.fcs.status != 0
+- name: eth_mac_flapping
+  severity: major
+  message: 'MAC flapping: {eth.src} seen on multiple interfaces'
+  description: Same eth.src from different source switch ports
+  condition: null
+- name: eth_jumbo_frame
+  severity: minor
+  message: 'Jumbo frame: {frame.len} bytes from {eth.src}'
+  condition: frame.len > 1518
+- name: eth_small_frame
+  severity: minor
+  message: 'Runt frame: {frame.len} bytes from {eth.src}'
+  condition: frame.len < 64
+- name: eth_unsupported_type
+  severity: minor
+  message: 'Unsupported EtherType: {eth.type}'
+  description: eth.type not commonly recognized
+  condition: null

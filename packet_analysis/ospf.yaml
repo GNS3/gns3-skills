@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: OSPF / OSPFv3 Packet Analysis
-description: OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange,
-  and routing issues
+description: OSPFv2 and OSPFv3 packet analysis for neighbor adjacency, LSA exchange, and routing issues
 protocol_key: ospf
 display_filter: ospf or ospfv3
 fields:
@@ -57,11 +49,8 @@ fields:
   tshark_field: ospf.lsa.age
   description: LSA age in seconds (max 3600)
 - label: LSA Sequence
-  tshark_field: ospf.db.dd_sequence
+  tshark_field: ospf.lsa.seqnum
   description: LSA sequence number (higher = newer)
-- label: LSA Options
-  tshark_field: ospf.v2.options
-  description: LSA options flags
 - label: OSPFv3 Source
   tshark_field: ipv6.src
   description: IPv6 source address (for OSPFv3)
@@ -81,36 +70,34 @@ filter_examples:
 checks:
 - name: hello_dead_mismatch
   severity: critical
-  message: Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.hello_interval}s,
-    dead={ospf.hello.router_dead_interval}s)
-  condition: ospf.msg == 1 and ospf.hello.hello_interval or ospf.hello.router_dead_interval
-    differs from neighbor
+  message: Hello/Dead timer mismatch between {ip.src} (hello={ospf.hello.hello_interval}s, dead={ospf.hello.router_dead_interval}s)
+  description: ospf.msg == 1 and ospf.hello.hello_interval or ospf.hello.router_dead_interval differs from neighbor
+  condition: ospf.msg == 1
 - name: area_id_mismatch
   severity: critical
-  message: 'Area ID mismatch: Router {ospf.srcrouter} area {ospf.area_id} vs neighbor
-    area'
-  condition: ospf.msg == 1 and ospf.area_id differs from neighbor router's area id
+  message: 'Area ID mismatch: Router {ospf.srcrouter} area {ospf.area_id} vs neighbor area'
+  description: ospf.msg == 1 and ospf.area_id differs from neighbor router's area id
+  condition: ospf.msg == 1
 - name: router_id_conflict
   severity: critical
   message: 'Router ID conflict detected: {ospf.srcrouter} appears from multiple sources'
-  condition: Same ospf.srcrouter from different ip.src addresses
+  description: Same ospf.srcrouter from different ip.src addresses
+  condition: null
 - name: mtu_mismatch_dbd
   severity: major
   message: 'MTU mismatch: router {ip.src} advertises MTU {ospf.db.interface_mtu} in DBD'
-  condition: ospf.msg == 2 and ospf.db.interface_mtu differs between neighbors (ospf.db.interface_mtu
-    shows different values)
+  description: ospf.msg == 2 and ospf.db.interface_mtu differs between neighbors (ospf.db.interface_mtu shows different values)
+  condition: ospf.msg == 2
 - name: dbd_stuck_exstart
   severity: major
-  message: 'Neighbor stuck in EXSTART: DBD negotiation failed between {ip.src} and
-    neighbor'
-  condition: ospf.msg == 2 with I-bit set and repeated DBD retransmissions without
-    state progression
+  message: 'Neighbor stuck in EXSTART: DBD negotiation failed between {ip.src} and neighbor'
+  description: ospf.msg == 2 with I-bit set and repeated DBD retransmissions without state progression
+  condition: ospf.msg == 2
 - name: stuck_in_init
   severity: major
-  message: 'Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast
-    not in neighbor''s hello'
-  condition: ospf.msg == 1 and ospf.hello.active_neighbor does not contain the expected
-    neighbor router-id
+  message: 'Neighbor stuck in INIT: {ip.src} sees hello from neighbor but unicast not in neighbor''s hello'
+  description: ospf.msg == 1 and ospf.hello.active_neighbor does not contain the expected neighbor router-id
+  condition: ospf.msg == 1
 - name: lsa_aged_out
   severity: minor
   message: 'LSA approaching max age: ID {ospf.lsa.id}, age {ospf.lsa.age}'
@@ -118,4 +105,5 @@ checks:
 - name: lsa_flooding_high_rate
   severity: minor
   message: 'Excessive LSA flooding from {ip.src}: {count} LSUs in short interval'
-  condition: More than 10 LSU (ospf.msg == 4) from same source within 1 second
+  description: More than 10 LSU (ospf.msg == 4) from same source within 1 second
+  condition: null

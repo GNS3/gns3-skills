@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: LLDP Packet Analysis
-description: LLDP (Link Layer Discovery Protocol) packet analysis for neighbor discovery
-  and topology mapping
+description: LLDP (Link Layer Discovery Protocol) packet analysis for neighbor discovery and topology mapping
 protocol_key: lldp
 display_filter: lldp
 fields:
@@ -22,8 +14,7 @@ fields:
   description: Chassis identifier (usually MAC address)
 - label: Port ID Subtype
   tshark_field: lldp.port.subtype
-  description: 'Port ID subtype: 1=Interface Alias, 2=Port Component, 3=MAC, 5=Interface
-    Name, etc.'
+  description: 'Port ID subtype: 1=Interface Alias, 2=Port Component, 3=MAC, 5=Interface Name, etc.'
 - label: Port ID
   tshark_field: lldp.port.id
   description: Port identifier
@@ -50,8 +41,7 @@ fields:
   description: VLAN name
 - label: TLV Type
   tshark_field: lldp.tlv.type
-  description: 'TLV type: 0=End, 1=Chassis, 2=Port, 3=TTL, 4=System Name, 5=System
-    Desc, etc.'
+  description: 'TLV type: 0=End, 1=Chassis, 2=Port, 3=TTL, 4=System Name, 5=System Desc, etc.'
 - label: TLV Length
   tshark_field: lldp.tlv.len
   description: TLV length
@@ -75,18 +65,19 @@ checks:
 - name: lldp_neighbor_timeout
   severity: minor
   message: 'LLDP neighbor timeout: no LLDP from {lldp.tlv.system.name} within TTL'
-  condition: No LLDP frames from neighbor within lldp.ttl seconds
+  description: No LLDP frames from neighbor within lldp.ttl seconds
+  condition: null
 - name: lldp_capability_mismatch
   severity: minor
-  message: 'LLDP capability mismatch: advertised {lldp.tlv.system_cap} but enabled
-    {lldp.tlv.enable_system_cap}'
+  message: 'LLDP capability mismatch: advertised {lldp.tlv.system_cap} but enabled {lldp.tlv.enable_system_cap}'
   condition: lldp.tlv.system_cap != lldp.tlv.enable_system_cap
 - name: lldp_loop_detected
   severity: critical
   message: 'LLDP loop detected: same chassis {lldp.chassis.id} seen on multiple ports'
-  condition: Same lldp.chassis.id from different source ports
+  description: Same lldp.chassis.id from different source ports
+  condition: null
 - name: lldp_vlan_mismatch
   severity: major
-  message: 'LLDP VLAN mismatch: port VLAN {lldp.ieee.802_1.port_vlan.id} differs from local
-    configuration'
-  condition: lldp.tlv.port_vlan_id differs from expected native VLAN
+  message: 'LLDP VLAN mismatch: port VLAN {lldp.ieee.802_1.port_vlan.id} differs from local configuration'
+  description: lldp.tlv.port_vlan_id differs from expected native VLAN
+  condition: null

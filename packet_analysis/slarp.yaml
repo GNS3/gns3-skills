@@ -1,69 +1,46 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for SLARP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "SLARP Packet Analysis"
-description: "SLARP (Serial Line ARP) packet analysis for Cisco serial link address resolution"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "slarp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "slarp"
-
-# tshark fields that LLM can use for analysis
+name: SLARP Packet Analysis
+description: SLARP (Serial Line ARP) packet analysis for Cisco serial link address resolution
+protocol_key: slarp
+display_filter: slarp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Packet Type"
-    tshark_field: "slarp.ptype"
-    description: "SLARP packet type: 0=Address request, 1=Address reply, 2=Address assign, 4=Keepalive"
-
-  - label: "IP Address"
-    tshark_field: "slarp.address"
-    description: "IP address assigned"
-
-  - label: "Netmask"
-    tshark_field: "slarp.netmask"
-    description: "Subnet mask"
-
-  - label: "Outgoing Sequence"
-    tshark_field: "slarp.mysequence"
-    description: "Outgoing keepalive sequence number"
-
-  - label: "Returned Sequence"
-    tshark_field: "slarp.yoursequence"
-    description: "Returned keepalive sequence number"
-
-  - label: "Reliability"
-    tshark_field: "slarp.reliability"
-    description: "Keepalive reliability (0xFFFF=OK)"
-
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Packet Type
+  tshark_field: slarp.ptype
+  description: 'SLARP packet type: 0=Address request, 1=Address reply, 2=Address assign, 4=Keepalive'
+- label: IP Address
+  tshark_field: slarp.address
+  description: IP address assigned
+- label: Netmask
+  tshark_field: slarp.netmask
+  description: Subnet mask
+- label: Outgoing Sequence
+  tshark_field: slarp.mysequence
+  description: Outgoing keepalive sequence number
+- label: Returned Sequence
+  tshark_field: slarp.yoursequence
+  description: Returned keepalive sequence number
+- label: Reliability
+  tshark_field: slarp.reliability
+  description: Keepalive reliability (0xFFFF=OK)
 filter_examples:
-  - name: "SLARP Address Reply"
-    filter: "slarp.ptype == 1"
-    description: "Filter for SLARP address reply"
-
-  - name: "SLARP Keepalive"
-    filter: "slarp.ptype == 4"
-    description: "Filter for SLARP keepalive"
-
-  - name: "SLARP Address Assign"
-    filter: "slarp.ptype == 2"
-    description: "Filter for SLARP address assignment"
-
+- name: SLARP Address Reply
+  filter: slarp.ptype == 1
+  description: Filter for SLARP address reply
+- name: SLARP Keepalive
+  filter: slarp.ptype == 4
+  description: Filter for SLARP keepalive
+- name: SLARP Address Assign
+  filter: slarp.ptype == 2
+  description: Filter for SLARP address assignment
 checks:
-  - name: "slarp_keepalive_failed"
-    severity: major
-    message: "SLARP keepalive failed: reliability {slarp.reliability} not 0xFFFF"
-    condition: "slarp.ptype == 4 and slarp.reliability != 0xFFFF"
-
-  - name: "slarp_sequence_error"
-    severity: minor
-    message: "SLARP sequence error: outgoing {slarp.mysequence}, return {slarp.yoursequence}"
-    condition: "slarp.ptype == 4 and slarp.yoursequence != expected"
+- name: slarp_keepalive_failed
+  severity: major
+  message: 'SLARP keepalive failed: reliability {slarp.reliability} not 0xFFFF'
+  condition: slarp.ptype == 4 and slarp.reliability != 0xFFFF
+- name: slarp_sequence_error
+  severity: minor
+  message: 'SLARP sequence error: outgoing {slarp.mysequence}, return {slarp.yoursequence}'
+  description: slarp.ptype == 4 and slarp.yoursequence != expected
+  condition: slarp.ptype == 4

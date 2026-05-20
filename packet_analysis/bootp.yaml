@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: BOOTP Packet Analysis
-description: BOOTP (Bootstrap Protocol) packet analysis for legacy IP assignment and
-  PXE boot
+description: BOOTP (Bootstrap Protocol) packet analysis for legacy IP assignment and PXE boot
 protocol_key: bootp
 display_filter: bootp
 fields:
@@ -73,8 +65,10 @@ checks:
 - name: bootp_no_reply
   severity: major
   message: 'BOOTP request without reply: XID {dhcp.id}'
-  condition: bootp.type == 1 and no matching bootp.type == 2 within timeout
+  description: bootp.type == 1 and no matching bootp.type == 2 within timeout
+  condition: bootp.type == 1
 - name: bootp_relay_mismatch
   severity: minor
   message: 'BOOTP relay mismatch: giaddr {dhcp.ip.relay} different from source'
-  condition: bootp.ip.relay is set and doesn't match client subnet
+  description: bootp.ip.relay is set and doesn't match client subnet
+  condition: null

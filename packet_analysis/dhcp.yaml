@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: DHCP Packet Analysis
-description: DHCP (Dynamic Host Configuration Protocol) packet analysis for IP assignment
-  troubleshooting
+description: DHCP (Dynamic Host Configuration Protocol) packet analysis for IP assignment troubleshooting
 protocol_key: dhcp
 display_filter: bootp
 fields:
@@ -16,8 +8,7 @@ fields:
   description: Packet sequence number in capture
 - label: Message Type
   tshark_field: dhcp.type
-  description: 'DHCP message type: 1=Discover, 2=Offer, 3=Request, 4=Decline, 5=ACK,
-    6=NAK, 7=Release, 8=Inform'
+  description: 'DHCP message type: 1=Discover, 2=Offer, 3=Request, 4=Decline, 5=ACK, 6=NAK, 7=Release, 8=Inform'
 - label: Hardware Type
   tshark_field: dhcp.hw.type
   description: 'Hardware type: 1=Ethernet'
@@ -78,9 +69,6 @@ fields:
 - label: Requested IP Address
   tshark_field: dhcp.option.requested_ip_address
   description: Requested IP address option
-- label: Message Type
-  tshark_field: dhcp.type
-  description: DHCP message type option
 filter_examples:
 - name: DHCP Discover
   filter: dhcp.option.message_type == 1
@@ -110,8 +98,8 @@ checks:
 - name: dhcp_no_offer
   severity: major
   message: 'DHCP Discover without Offer: client {dhcp.hw.mac_addr} (XID: {dhcp.id})'
-  condition: dhcp.option.message_type == 1 and no matching dhcp.option.message_type
-    == 2 with same dhcp.id
+  description: dhcp.option.message_type == 1 and no matching dhcp.option.message_type == 2 with same dhcp.id
+  condition: dhcp.option.message_type == 1
 - name: dhcp_nak
   severity: major
   message: 'DHCP NAK: server rejected request for {dhcp.option.requested_ip_address}'
@@ -123,12 +111,15 @@ checks:
 - name: dhcp_relay_issue
   severity: minor
   message: 'DHCP relay issue: giaddr {dhcp.ip.relay} but no response'
-  condition: dhcp.ip.relay is set and no matching response
+  description: dhcp.ip.relay is set and no matching response
+  condition: dhcp.ip.relay
 - name: dhcp_duplicate_ip
   severity: critical
   message: 'DHCP duplicate IP detected: {dhcp.ip.your} already assigned'
-  condition: dhcp.option.message_type == 4 (Decline)
+  description: dhcp.option.message_type == 4 (Decline)
+  condition: dhcp.option.message_type == 4
 - name: dhcp_server_unresponsive
   severity: major
   message: 'DHCP server unresponsive: {count} timeouts for client {dhcp.hw.mac_addr}'
-  condition: Multiple DHCP requests without response from same server
+  description: Multiple DHCP requests without response from same server
+  condition: null

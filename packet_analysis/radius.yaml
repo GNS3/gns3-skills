@@ -1,154 +1,111 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for RADIUS
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "RADIUS Packet Analysis"
-description: "RADIUS (Remote Authentication Dial-In User Service) packet analysis for AAA troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "radius"
-
-# tshark display filter - used for -Y parameter
-display_filter: "radius"
-
-# tshark fields that LLM can use for analysis
+name: RADIUS Packet Analysis
+description: RADIUS (Remote Authentication Dial-In User Service) packet analysis for AAA troubleshooting
+protocol_key: radius
+display_filter: radius
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Request"
-    tshark_field: "radius.req"
-    description: "RADIUS request packet"
-
-  - label: "Response"
-    tshark_field: "radius.rsp"
-    description: "RADIUS response packet"
-
-  - label: "Code"
-    tshark_field: "radius.code"
-    description: "RADIUS code: 1=Access-Request, 2=Access-Accept, 3=Access-Reject, 4=Accounting-Request, 5=Accounting-Response"
-
-  - label: "Identifier"
-    tshark_field: "radius.id"
-    description: "RADIUS identifier for matching request/response"
-
-  - label: "Length"
-    tshark_field: "radius.length"
-    description: "RADIUS packet length"
-
-  - label: "Authenticator"
-    tshark_field: "radius.authenticator"
-    description: "RADIUS authenticator (16 bytes)"
-
-  - label: "Authenticator Valid"
-    tshark_field: "radius.authenticator.valid"
-    description: "Authenticator validation passed"
-
-  - label: "Authenticator Invalid"
-    tshark_field: "radius.authenticator.invalid"
-    description: "Authenticator validation failed"
-
-  - label: "Request Frame"
-    tshark_field: "radius.reqframe"
-    description: "Frame number of matching request"
-
-  - label: "Response Frame"
-    tshark_field: "radius.rspframe"
-    description: "Frame number of matching response"
-
-  - label: "Time from Request"
-    tshark_field: "radius.time"
-    description: "Time delta between request and response"
-
-  - label: "Username"
-    tshark_field: "radius.User_Name"
-    description: "Username attribute"
-
-  - label: "Framed IP Address"
-    tshark_field: "radius.Framed_IP_Address"
-    description: "Framed IP address attribute"
-
-  - label: "NAS IP Address"
-    tshark_field: "radius.NAS_IP_Address"
-    description: "NAS IP address attribute"
-
-  - label: "NAS Port"
-    tshark_field: "radius.NAS_Port"
-    description: "NAS port attribute"
-
-  - label: "Service Type"
-    tshark_field: "radius.Service_Type"
-    description: "Service type attribute"
-
-  - label: "Called Station Id"
-    tshark_field: "radius.Called_Station_Id"
-    description: "Called station ID attribute"
-
-  - label: "Calling Station Id"
-    tshark_field: "radius.Calling_Station_Id"
-    description: "Calling station ID attribute"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Request
+  tshark_field: radius.req
+  description: RADIUS request packet
+- label: Response
+  tshark_field: radius.rsp
+  description: RADIUS response packet
+- label: Code
+  tshark_field: radius.code
+  description: 'RADIUS code: 1=Access-Request, 2=Access-Accept, 3=Access-Reject, 4=Accounting-Request, 5=Accounting-Response'
+- label: Identifier
+  tshark_field: radius.id
+  description: RADIUS identifier for matching request/response
+- label: Length
+  tshark_field: radius.length
+  description: RADIUS packet length
+- label: Authenticator
+  tshark_field: radius.authenticator
+  description: RADIUS authenticator (16 bytes)
+- label: Authenticator Valid
+  tshark_field: radius.authenticator.valid
+  description: Authenticator validation passed
+- label: Authenticator Invalid
+  tshark_field: radius.authenticator.invalid
+  description: Authenticator validation failed
+- label: Request Frame
+  tshark_field: radius.reqframe
+  description: Frame number of matching request
+- label: Response Frame
+  tshark_field: radius.rspframe
+  description: Frame number of matching response
+- label: Time from Request
+  tshark_field: radius.time
+  description: Time delta between request and response
+- label: Username
+  tshark_field: radius.User_Name
+  description: Username attribute
+- label: Framed IP Address
+  tshark_field: radius.Framed_IP_Address
+  description: Framed IP address attribute
+- label: NAS IP Address
+  tshark_field: radius.NAS_IP_Address
+  description: NAS IP address attribute
+- label: NAS Port
+  tshark_field: radius.NAS_Port
+  description: NAS port attribute
+- label: Service Type
+  tshark_field: radius.Service_Type
+  description: Service type attribute
+- label: Called Station Id
+  tshark_field: radius.Called_Station_Id
+  description: Called station ID attribute
+- label: Calling Station Id
+  tshark_field: radius.Calling_Station_Id
+  description: Calling station ID attribute
 filter_examples:
-  - name: "RADIUS Access Request"
-    filter: "radius.code == 1"
-    description: "Filter for RADIUS Access-Request"
-
-  - name: "RADIUS Access Accept"
-    filter: "radius.code == 2"
-    description: "Filter for RADIUS Access-Accept"
-
-  - name: "RADIUS Access Reject"
-    filter: "radius.code == 3"
-    description: "Filter for RADIUS Access-Reject"
-
-  - name: "RADIUS Accounting Request"
-    filter: "radius.code == 4"
-    description: "Filter for RADIUS Accounting-Request"
-
-  - name: "RADIUS Accounting Response"
-    filter: "radius.code == 5"
-    description: "Filter for RADIUS Accounting-Response"
-
-  - name: "Specific Username"
-    filter: "radius.User_Name == \"testuser\""
-    description: "Filter for RADIUS from specific user"
-
-  - name: "RADIUS Response Time"
-    filter: "radius.time > 2"
-    description: "Filter for RADIUS with response time > 2 seconds"
-
+- name: RADIUS Access Request
+  filter: radius.code == 1
+  description: Filter for RADIUS Access-Request
+- name: RADIUS Access Accept
+  filter: radius.code == 2
+  description: Filter for RADIUS Access-Accept
+- name: RADIUS Access Reject
+  filter: radius.code == 3
+  description: Filter for RADIUS Access-Reject
+- name: RADIUS Accounting Request
+  filter: radius.code == 4
+  description: Filter for RADIUS Accounting-Request
+- name: RADIUS Accounting Response
+  filter: radius.code == 5
+  description: Filter for RADIUS Accounting-Response
+- name: Specific Username
+  filter: radius.User_Name == "testuser"
+  description: Filter for RADIUS from specific user
+- name: RADIUS Response Time
+  filter: radius.time > 2
+  description: Filter for RADIUS with response time > 2 seconds
 checks:
-  - name: "radius_access_reject"
-    severity: major
-    message: "RADIUS access reject: user {radius.User_Name} denied"
-    condition: "radius.code == 3"
-
-  - name: "radius_no_response"
-    severity: major
-    message: "RADIUS request timeout: no response for request ID {radius.id}"
-    condition: "radius.code == 1 and no matching radius.code == 2 or radius.code == 3 within timeout"
-
-  - name: "radius_slow_response"
-    severity: minor
-    message: "RADIUS slow response: {radius.time} seconds for user {radius.User_Name}"
-    condition: "radius.time > 3"
-
-  - name: "radius_authenticator_error"
-    severity: major
-    message: "RADIUS authenticator error: invalid response from server"
-    condition: "radius.authenticator.invalid == 1"
-
-  - name: "radius_malformed_packet"
-    severity: major
-    message: "RADIUS malformed packet: length {radius.length} doesn't match actual"
-    condition: "radius.length differs from actual packet length"
-
-  - name: "radius_secret_mismatch"
-    severity: critical
-    message: "RADIUS secret mismatch: authenticator validation failed"
-    condition: "radius.authenticator.invalid == 1"
+- name: radius_access_reject
+  severity: major
+  message: 'RADIUS access reject: user {radius.User_Name} denied'
+  condition: radius.code == 3
+- name: radius_no_response
+  severity: major
+  message: 'RADIUS request timeout: no response for request ID {radius.id}'
+  description: radius.code == 1 and no matching radius.code == 2 or radius.code == 3 within timeout
+  condition: radius.code == 1
+- name: radius_slow_response
+  severity: minor
+  message: 'RADIUS slow response: {radius.time} seconds for user {radius.User_Name}'
+  condition: radius.time > 3
+- name: radius_authenticator_error
+  severity: major
+  message: 'RADIUS authenticator error: invalid response from server'
+  condition: radius.authenticator.invalid == 1
+- name: radius_malformed_packet
+  severity: major
+  message: 'RADIUS malformed packet: length {radius.length} doesn''t match actual'
+  description: radius.length differs from actual packet length
+  condition: null
+- name: radius_secret_mismatch
+  severity: critical
+  message: 'RADIUS secret mismatch: authenticator validation failed'
+  condition: radius.authenticator.invalid == 1

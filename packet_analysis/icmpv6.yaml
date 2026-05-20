@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: ICMPv6 Packet Analysis
-description: ICMPv6 (Internet Control Message Protocol for IPv6) packet analysis for
-  neighbor discovery and connectivity
+description: ICMPv6 (Internet Control Message Protocol for IPv6) packet analysis for neighbor discovery and connectivity
 protocol_key: icmpv6
 display_filter: icmpv6
 fields:
@@ -16,8 +8,8 @@ fields:
   description: Packet sequence number in capture
 - label: ICMPv6 Type
   tshark_field: icmpv6.type
-  description: 'ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 4=ParamProblem,
-    128=EchoReq, 129=EchoRep, 133=RS, 134=RA, 135=NS, 136=NA, 137=Redirect'
+  description: 'ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 4=ParamProblem, 128=EchoReq, 129=EchoRep, 133=RS, 134=RA,
+    135=NS, 136=NA, 137=Redirect'
 - label: ICMPv6 Code
   tshark_field: icmpv6.code
   description: ICMPv6 code (sub-type)
@@ -44,8 +36,7 @@ fields:
   description: 'NDP option: prefix information'
 - label: Option Type
   tshark_field: icmpv6.opt.type
-  description: 'NDP option type: 1=Source LL, 2=Target LL, 3=Prefix, 4=Redirected,
-    5=MTU, 7=ADV, 25=RDNSS'
+  description: 'NDP option type: 1=Source LL, 2=Target LL, 3=Prefix, 4=Redirected, 5=MTU, 7=ADV, 25=RDNSS'
 - label: Router Lifetime
   tshark_field: icmpv6.nd.ra.router_lifetime
   description: Router advertisement lifetime
@@ -90,24 +81,30 @@ checks:
 - name: icmpv6_ra_attack
   severity: critical
   message: 'ICMPv6 RA attack: multiple router advertisements from {ipv6.src}'
-  condition: icmpv6.type == 134 and multiple sources
+  description: icmpv6.type == 134 and multiple sources
+  condition: icmpv6.type == 134
 - name: icmpv6_dad_failure
   severity: major
   message: 'ICMPv6 DAD failure: {icmpv6.nd.ns.target_address} may be in use'
-  condition: icmpv6.type == 135 (NS with unspecified source) and matching NA received
+  description: icmpv6.type == 135 (NS with unspecified source) and matching NA received
+  condition: icmpv6.type == 135
 - name: icmpv6_ns_flood
   severity: minor
   message: 'ICMPv6 NS flood: {icmpv6.nd.ns.target_address} targeted multiple times'
-  condition: More than 20 NS for same target within 1 second
+  description: More than 20 NS for same target within 1 second
+  condition: null
 - name: icmpv6_redirect_attack
   severity: major
   message: 'ICMPv6 redirect attack: {ipv6.src} redirecting traffic'
-  condition: icmpv6.type == 137 and not from current first-hop router
+  description: icmpv6.type == 137 and not from current first-hop router
+  condition: icmpv6.type == 137
 - name: icmpv6_pmtu_mutation
   severity: minor
   message: 'ICMPv6 PMTU mutation: MTU changed from {prev} to {icmpv6.mtu}'
-  condition: icmpv6.type == 2 and icmpv6.mtu < prev_mtu
+  description: icmpv6.type == 2 and icmpv6.mtu < prev_mtu
+  condition: icmpv6.type == 2
 - name: icmpv6_ping_timeout
   severity: minor
   message: 'ICMPv6 ping timeout: no echo reply for seq {icmpv6.echo.sequence_number}'
-  condition: icmpv6.type == 128 and no matching icmpv6.type == 129
+  description: icmpv6.type == 128 and no matching icmpv6.type == 129
+  condition: icmpv6.type == 128

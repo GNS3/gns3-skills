@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
 name: ICMP / ICMPv6 Packet Analysis
-description: ICMP (Internet Control Message Protocol) v4 and v6 packet analysis for
-  connectivity and PMTUD troubleshooting
+description: ICMP (Internet Control Message Protocol) v4 and v6 packet analysis for connectivity and PMTUD troubleshooting
 protocol_key: icmp
 display_filter: icmp or icmpv6
 fields:
@@ -28,8 +20,7 @@ fields:
   description: IPv6 destination address
 - label: ICMP Type (v4)
   tshark_field: icmp.type
-  description: 'ICMPv4 type: 0=Echo Reply, 3=Dest Unreachable, 8=Echo, 11=TTL Exceeded,
-    5=Redirect'
+  description: 'ICMPv4 type: 0=Echo Reply, 3=Dest Unreachable, 8=Echo, 11=TTL Exceeded, 5=Redirect'
 - label: ICMP Code (v4)
   tshark_field: icmp.code
   description: ICMPv4 code (sub-type for each type)
@@ -38,8 +29,7 @@ fields:
   description: ICMPv4 echo request/reply sequence number
 - label: ICMPv6 Type
   tshark_field: icmpv6.type
-  description: 'ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 128=EchoReq,
-    129=EchoRep'
+  description: 'ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 128=EchoReq, 129=EchoRep'
 - label: ICMPv6 Code
   tshark_field: icmpv6.code
   description: ICMPv6 code (sub-type for each type)
@@ -78,11 +68,11 @@ checks:
 - name: ping_timeout
   severity: minor
   message: 'Ping timeout: no echo reply for seq {icmp.seq} from {ip.dst}'
-  condition: icmp.type == 8 and no matching icmp.type == 0 within expected window
+  description: icmp.type == 8 and no matching icmp.type == 0 within expected window
+  condition: icmp.type == 8
 - name: icmp_unreachable_network
   severity: major
-  message: 'Network unreachable: {ip.src} cannot reach {ip.dst} (ICMP type 3 code
-    0)'
+  message: 'Network unreachable: {ip.src} cannot reach {ip.dst} (ICMP type 3 code 0)'
   condition: icmp.type == 3 and icmp.code == 0
 - name: icmp_unreachable_host
   severity: major
@@ -90,8 +80,7 @@ checks:
   condition: icmp.type == 3 and icmp.code == 1
 - name: icmp_unreachable_protocol
   severity: major
-  message: 'Protocol unreachable: {ip.dst} does not support protocol requested by
-    {ip.src} (ICMP type 3 code 2)'
+  message: 'Protocol unreachable: {ip.dst} does not support protocol requested by {ip.src} (ICMP type 3 code 2)'
   condition: icmp.type == 3 and icmp.code == 2
 - name: icmp_unreachable_port
   severity: major
@@ -107,13 +96,11 @@ checks:
   condition: icmp.type == 5
 - name: icmp_ttl_exceeded
   severity: minor
-  message: 'TTL exceeded in transit: packet from {ip.src} to {ip.dst} expired at intermediate
-    router'
+  message: 'TTL exceeded in transit: packet from {ip.src} to {ip.dst} expired at intermediate router'
   condition: icmp.type == 11 and icmp.code == 0
 - name: icmpv6_unreachable_network
   severity: major
-  message: 'IPv6 network unreachable: {ipv6.src} to {ipv6.dst} (ICMPv6 type 1 code
-    0)'
+  message: 'IPv6 network unreachable: {ipv6.src} to {ipv6.dst} (ICMPv6 type 1 code 0)'
   condition: icmpv6.type == 1 and icmpv6.code == 0
 - name: icmpv6_unreachable_port
   severity: major
@@ -125,12 +112,10 @@ checks:
   condition: icmpv6.type == 2
 - name: icmpv6_ttl_exceeded
   severity: minor
-  message: 'IPv6 Hop Limit exceeded: packet from {ipv6.src} to {ipv6.dst} expired
-    in transit'
+  message: 'IPv6 Hop Limit exceeded: packet from {ipv6.src} to {ipv6.dst} expired in transit'
   condition: icmpv6.type == 3
 - name: consecutive_ping_loss
   severity: minor
-  message: 'Consecutive ping loss detected: {count} echo requests with no reply from
-    {ip.dst}'
-  condition: icmp.type == 8 and more than 3 consecutive seq numbers without matching
-    icmp.type == 0
+  message: 'Consecutive ping loss detected: {count} echo requests with no reply from {ip.dst}'
+  description: icmp.type == 8 and more than 3 consecutive seq numbers without matching icmp.type == 0
+  condition: icmp.type == 8

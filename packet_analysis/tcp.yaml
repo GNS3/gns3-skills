@@ -1,192 +1,157 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for TCP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "TCP Packet Analysis"
-description: "TCP (Transmission Control Protocol) packet analysis for connection establishment, flow control, and troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "tcp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "tcp"
-
-# tshark fields that LLM can use for analysis
+name: TCP Packet Analysis
+description: TCP (Transmission Control Protocol) packet analysis for connection establishment, flow control, and troubleshooting
+protocol_key: tcp
+display_filter: tcp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Source Port"
-    tshark_field: "tcp.srcport"
-    description: "TCP source port"
-
-  - label: "Destination Port"
-    tshark_field: "tcp.dstport"
-    description: "TCP destination port"
-
-  - label: "Stream Index"
-    tshark_field: "tcp.stream"
-    description: "TCP stream identifier for grouping related packets"
-
-  - label: "Sequence Number"
-    tshark_field: "tcp.seq"
-    description: "TCP sequence number"
-
-  - label: "Next Sequence Number"
-    tshark_field: "tcp.nxtseq"
-    description: "Expected next sequence number"
-
-  - label: "Acknowledgment Number"
-    tshark_field: "tcp.ack"
-    description: "TCP acknowledgment number (next byte expected)"
-
-  - label: "Window Size"
-    tshark_field: "tcp.window_size"
-    description: "TCP window size (flow control)"
-
-  - label: "Window Size Value"
-    tshark_field: "tcp.window_size_value"
-    description: "Raw window size value from TCP header"
-
-  - label: "SYN Flag"
-    tshark_field: "tcp.flags.syn"
-    description: "Synchronize sequence numbers flag"
-
-  - label: "ACK Flag"
-    tshark_field: "tcp.flags.ack"
-    description: "Acknowledgment field significant flag"
-
-  - label: "FIN Flag"
-    tshark_field: "tcp.flags.fin"
-    description: "No more data from sender flag"
-
-  - label: "RST Flag"
-    tshark_field: "tcp.flags.reset"
-    description: "Reset connection flag"
-
-  - label: "PSH Flag"
-    tshark_field: "tcp.flags.push"
-    description: "Push function flag"
-
-  - label: "URG Flag"
-    tshark_field: "tcp.flags.urg"
-    description: "Urgent pointer field significant flag"
-
-  - label: "ECE Flag"
-    tshark_field: "tcp.flags.ece"
-    description: "ECN-Echo flag (congestion experienced)"
-
-  - label: "CWR Flag"
-    tshark_field: "tcp.flags.cwr"
-    description: "Congestion window reduced flag"
-
-  - label: "TCP Flags"
-    tshark_field: "tcp.flags.str"
-    description: "TCP flags as string (e.g., 'APRSF')"
-
-  - label: "Header Length"
-    tshark_field: "tcp.hdr_len"
-    description: "TCP header length in bytes"
-
-  - label: "Checksum"
-    tshark_field: "tcp.checksum"
-    description: "TCP checksum"
-
-  - label: "Checksum Status"
-    tshark_field: "tcp.checksum.status"
-    description: "Checksum verification status"
-
-  - label: "Relative Time"
-    tshark_field: "frame.time_relative"
-    description: "Time relative to first packet in capture"
-
-  - label: "Time Delta"
-    tshark_field: "frame.time_delta"
-    description: "Time delta from previous frame"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Source Port
+  tshark_field: tcp.srcport
+  description: TCP source port
+- label: Destination Port
+  tshark_field: tcp.dstport
+  description: TCP destination port
+- label: Stream Index
+  tshark_field: tcp.stream
+  description: TCP stream identifier for grouping related packets
+- label: Sequence Number
+  tshark_field: tcp.seq
+  description: TCP sequence number
+- label: Next Sequence Number
+  tshark_field: tcp.nxtseq
+  description: Expected next sequence number
+- label: Acknowledgment Number
+  tshark_field: tcp.ack
+  description: TCP acknowledgment number (next byte expected)
+- label: Window Size
+  tshark_field: tcp.window_size
+  description: TCP window size (flow control)
+- label: Window Size Value
+  tshark_field: tcp.window_size_value
+  description: Raw window size value from TCP header
+- label: SYN Flag
+  tshark_field: tcp.flags.syn
+  description: Synchronize sequence numbers flag
+- label: ACK Flag
+  tshark_field: tcp.flags.ack
+  description: Acknowledgment field significant flag
+- label: FIN Flag
+  tshark_field: tcp.flags.fin
+  description: No more data from sender flag
+- label: RST Flag
+  tshark_field: tcp.flags.reset
+  description: Reset connection flag
+- label: PSH Flag
+  tshark_field: tcp.flags.push
+  description: Push function flag
+- label: URG Flag
+  tshark_field: tcp.flags.urg
+  description: Urgent pointer field significant flag
+- label: ECE Flag
+  tshark_field: tcp.flags.ece
+  description: ECN-Echo flag (congestion experienced)
+- label: CWR Flag
+  tshark_field: tcp.flags.cwr
+  description: Congestion window reduced flag
+- label: TCP Flags
+  tshark_field: tcp.flags.str
+  description: TCP flags as string (e.g., 'APRSF')
+- label: Header Length
+  tshark_field: tcp.hdr_len
+  description: TCP header length in bytes
+- label: Checksum
+  tshark_field: tcp.checksum
+  description: TCP checksum
+- label: Checksum Status
+  tshark_field: tcp.checksum.status
+  description: Checksum verification status
+- label: Relative Time
+  tshark_field: frame.time_relative
+  description: Time relative to first packet in capture
+- label: Time Delta
+  tshark_field: frame.time_delta
+  description: Time delta from previous frame
+- label: Retransmission
+  tshark_field: tcp.analysis.retransmission
+  description: TCP retransmission flag
+- label: Out of Order
+  tshark_field: tcp.analysis.out_of_order
+  description: TCP out-of-order packet flag
+- label: Duplicate ACK
+  tshark_field: tcp.analysis.duplicate_ack
+  description: TCP duplicate acknowledgment flag
+- label: Zero Window
+  tshark_field: tcp.analysis.zero_window
+  description: TCP zero window flag
+- label: Window Full
+  tshark_field: tcp.analysis.window_full
+  description: TCP window full flag
 filter_examples:
-  - name: "TCP SYN packets"
-    filter: "tcp.flags.syn == 1 and tcp.flags.ack == 0"
-    description: "Filter for TCP connection initiation packets"
-
-  - name: "TCP SYN-ACK packets"
-    filter: "tcp.flags.syn == 1 and tcp.flags.ack == 1"
-    description: "Filter for TCP connection acknowledgment"
-
-  - name: "TCP RST packets"
-    filter: "tcp.flags.reset == 1"
-    description: "Filter for TCP connection resets"
-
-  - name: "TCP retransmissions"
-    filter: "tcp.analysis.retransmission"
-    description: "Filter for TCP retransmitted packets"
-
-  - name: "TCP out-of-order"
-    filter: "tcp.analysis.out_of_order"
-    description: "Filter for TCP out-of-order packets"
-
-  - name: "TCP dup ACK"
-    filter: "tcp.analysis.duplicate_ack"
-    description: "Filter for TCP duplicate acknowledgments"
-
-  - name: "TCP Zero Window"
-    filter: "tcp.analysis.zero_window"
-    description: "Filter for TCP zero window probes"
-
-  - name: "TCP Window Full"
-    filter: "tcp.analysis.window_full"
-    description: "Filter for TCP window full condition"
-
-  - name: "Specific TCP port"
-    filter: "tcp.port == 80 or tcp.port == 443"
-    description: "Filter for HTTP/HTTPS traffic"
-
-  - name: "TCP stream"
-    filter: "tcp.stream == 0"
-    description: "Filter for specific TCP stream"
-
+- name: TCP SYN packets
+  filter: tcp.flags.syn == 1 and tcp.flags.ack == 0
+  description: Filter for TCP connection initiation packets
+- name: TCP SYN-ACK packets
+  filter: tcp.flags.syn == 1 and tcp.flags.ack == 1
+  description: Filter for TCP connection acknowledgment
+- name: TCP RST packets
+  filter: tcp.flags.reset == 1
+  description: Filter for TCP connection resets
+- name: TCP retransmissions
+  filter: tcp.analysis.retransmission
+  description: Filter for TCP retransmitted packets
+- name: TCP out-of-order
+  filter: tcp.analysis.out_of_order
+  description: Filter for TCP out-of-order packets
+- name: TCP dup ACK
+  filter: tcp.analysis.duplicate_ack
+  description: Filter for TCP duplicate acknowledgments
+- name: TCP Zero Window
+  filter: tcp.analysis.zero_window
+  description: Filter for TCP zero window probes
+- name: TCP Window Full
+  filter: tcp.analysis.window_full
+  description: Filter for TCP window full condition
+- name: Specific TCP port
+  filter: tcp.port == 80 or tcp.port == 443
+  description: Filter for HTTP/HTTPS traffic
+- name: TCP stream
+  filter: tcp.stream == 0
+  description: Filter for specific TCP stream
 checks:
-  - name: "tcp_three_way_handshake_incomplete"
-    severity: major
-    message: "Incomplete TCP 3-way handshake: SYN from {ip.src}:{tcp.srcport} to {ip.dst}:{tcp.dstport} without SYN-ACK"
-    condition: "tcp.flags.syn == 1 and tcp.flags.ack == 0 and no matching SYN-ACK within expected time"
-
-  - name: "tcp_connection_reset"
-    severity: major
-    message: "TCP connection reset: RST from {ip.src}:{tcp.srcport} to {ip.dst}:{tcp.dstport}"
-    condition: "tcp.flags.reset == 1"
-
-  - name: "tcp_retransmission_high_rate"
-    severity: major
-    message: "High TCP retransmission rate: {count} retransmissions from {ip.src} to {ip.dst}"
-    condition: "More than 5 retransmissions in same stream within 10 seconds"
-
-  - name: "tcp_out_of_order"
-    severity: minor
-    message: "TCP out-of-order packets detected in stream {tcp.stream}"
-    condition: "tcp.analysis.out_of_order is set"
-
-  - name: "tcp_zero_window"
-    severity: major
-    message: "TCP zero window: receiver {ip.dst} cannot accept more data"
-    condition: "tcp.window_size == 0"
-
-  - name: "tcp_duplicate_ack"
-    severity: minor
-    message: "TCP duplicate ACK: sender {ip.dst} expecting missing data"
-    condition: "tcp.analysis.duplicate_ack is set"
-
-  - name: "tcp_checksum_error"
-    severity: major
-    message: "TCP checksum error in packet from {ip.src} to {ip.dst}"
-    condition: "tcp.checksum.status != 0"
-
-  - name: "tcp_connection_refused"
-    severity: major
-    message: "TCP connection refused: RST from {ip.dst}:{tcp.dstport} (port may be closed)"
-    condition: "tcp.flags.reset == 1 and tcp.flags.ack == 1"
+- name: tcp_three_way_handshake_incomplete
+  severity: major
+  message: 'Incomplete TCP 3-way handshake: SYN from {ip.src}:{tcp.srcport} to {ip.dst}:{tcp.dstport} without SYN-ACK'
+  description: tcp.flags.syn == 1 and tcp.flags.ack == 0 and no matching SYN-ACK within expected time
+  condition: tcp.flags.syn == 1
+- name: tcp_connection_reset
+  severity: major
+  message: 'TCP connection reset: RST from {ip.src}:{tcp.srcport} to {ip.dst}:{tcp.dstport}'
+  condition: tcp.flags.reset == 1
+- name: tcp_retransmission_high_rate
+  severity: major
+  message: 'High TCP retransmission rate: {count} retransmissions from {ip.src} to {ip.dst}'
+  description: More than 5 retransmissions in same stream within 10 seconds
+  condition: null
+- name: tcp_out_of_order
+  severity: minor
+  message: TCP out-of-order packets detected in stream {tcp.stream}
+  description: tcp.analysis.out_of_order is set
+  condition: tcp.analysis.out_of_order
+- name: tcp_zero_window
+  severity: major
+  message: 'TCP zero window: receiver {ip.dst} cannot accept more data'
+  condition: tcp.window_size == 0
+- name: tcp_duplicate_ack
+  severity: minor
+  message: 'TCP duplicate ACK: sender {ip.dst} expecting missing data'
+  description: tcp.analysis.duplicate_ack is set
+  condition: tcp.analysis.duplicate_ack
+- name: tcp_checksum_error
+  severity: major
+  message: TCP checksum error in packet from {ip.src} to {ip.dst}
+  condition: tcp.checksum.status != 0
+- name: tcp_connection_refused
+  severity: major
+  message: 'TCP connection refused: RST from {ip.dst}:{tcp.dstport} (port may be closed)'
+  condition: tcp.flags.reset == 1 and tcp.flags.ack == 1

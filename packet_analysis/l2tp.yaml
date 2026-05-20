@@ -1,144 +1,105 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# GNS3-Skills - Packet analysis rules for L2TP
-#
-# Copyright (C) 2025 Yue Guobin
-#
-
-name: "L2TP Packet Analysis"
-description: "L2TP (Layer 2 Tunneling Protocol) packet analysis for VPN tunnel troubleshooting"
-
-# Protocol identifier - LLM uses this to query the protocol definition
-protocol_key: "l2tp"
-
-# tshark display filter - used for -Y parameter
-display_filter: "l2tp"
-
-# tshark fields that LLM can use for analysis
+name: L2TP Packet Analysis
+description: L2TP (Layer 2 Tunneling Protocol) packet analysis for VPN tunnel troubleshooting
+protocol_key: l2tp
+display_filter: l2tp
 fields:
-  - label: "Frame Number"
-    tshark_field: "frame.number"
-    description: "Packet sequence number in capture"
-
-  - label: "Flags"
-    tshark_field: "l2tp.flags"
-    description: "L2TP flags"
-
-  - label: "Type"
-    tshark_field: "l2tp.type"
-    description: "L2TP message type bit"
-
-  - label: "Length Bit"
-    tshark_field: "l2tp.length_bit"
-    description: "Length field present flag"
-
-  - label: "Sequence Bit"
-    tshark_field: "l2tp.seq_bit"
-    description: "Sequence numbers present flag"
-
-  - label: "Offset Bit"
-    tshark_field: "l2tp.offset_bit"
-    description: "Offset field present flag"
-
-  - label: "Priority"
-    tshark_field: "l2tp.priority"
-    description: "Priority bit"
-
-  - label: "Version"
-    tshark_field: "l2tp.version"
-    description: "L2TP version (usually 2)"
-
-  - label: "Length"
-    tshark_field: "l2tp.length"
-    description: "L2TP packet length"
-
-  - label: "Tunnel ID"
-    tshark_field: "l2tp.tunnel"
-    description: "L2TP tunnel identifier"
-
-  - label: "Session ID"
-    tshark_field: "l2tp.session"
-    description: "L2TP session identifier"
-
-  - label: "Ns (Sequence)"
-    tshark_field: "l2tp.Ns"
-    description: "Sequence number (Ns)"
-
-  - label: "Nr (Ack)"
-    tshark_field: "l2tp.Nr"
-    description: "Acknowledgment number (Nr)"
-
-  - label: "Offset"
-    tshark_field: "l2tp.offset"
-    description: "Offset to payload data"
-
-  - label: "AVP Mandatory"
-    tshark_field: "l2tp.avp.mandatory"
-    description: "Mandatory AVP flag"
-
-  - label: "AVP Hidden"
-    tshark_field: "l2tp.avp.hidden"
-    description: "Hidden AVP flag"
-
-  - label: "AVP Vendor ID"
-    tshark_field: "l2tp.avp.vendor_id"
-    description: "AVP vendor ID"
-
-  - label: "AVP Type"
-    tshark_field: "l2tp.avp.type"
-    description: "AVP attribute type"
-
-# Common filter examples to help LLM construct tshark commands
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Flags
+  tshark_field: l2tp.flags
+  description: L2TP flags
+- label: Type
+  tshark_field: l2tp.type
+  description: L2TP message type bit
+- label: Length Bit
+  tshark_field: l2tp.length_bit
+  description: Length field present flag
+- label: Sequence Bit
+  tshark_field: l2tp.seq_bit
+  description: Sequence numbers present flag
+- label: Offset Bit
+  tshark_field: l2tp.offset_bit
+  description: Offset field present flag
+- label: Priority
+  tshark_field: l2tp.priority
+  description: Priority bit
+- label: Version
+  tshark_field: l2tp.version
+  description: L2TP version (usually 2)
+- label: Length
+  tshark_field: l2tp.length
+  description: L2TP packet length
+- label: Tunnel ID
+  tshark_field: l2tp.tunnel
+  description: L2TP tunnel identifier
+- label: Session ID
+  tshark_field: l2tp.session
+  description: L2TP session identifier
+- label: Ns (Sequence)
+  tshark_field: l2tp.Ns
+  description: Sequence number (Ns)
+- label: Nr (Ack)
+  tshark_field: l2tp.Nr
+  description: Acknowledgment number (Nr)
+- label: Offset
+  tshark_field: l2tp.offset
+  description: Offset to payload data
+- label: AVP Mandatory
+  tshark_field: l2tp.avp.mandatory
+  description: Mandatory AVP flag
+- label: AVP Hidden
+  tshark_field: l2tp.avp.hidden
+  description: Hidden AVP flag
+- label: AVP Vendor ID
+  tshark_field: l2tp.avp.vendor_id
+  description: AVP vendor ID
+- label: AVP Type
+  tshark_field: l2tp.avp.type
+  description: AVP attribute type
 filter_examples:
-  - name: "L2TP SCCRQ"
-    filter: "l2tp.message_type == 0"
-    description: "Filter for L2TP Start-Control-Connection-Request"
-
-  - name: "L2TP SCCRP"
-    filter: "l2tp.message_type == 1"
-    description: "Filter for L2TP Start-Control-Connection-Reply"
-
-  - name: "L2TP SCCCN"
-    filter: "l2tp.message_type == 2"
-    description: "Filter for L2TP Start-Control-Connection-Connected"
-
-  - name: "L2TP ICRQ"
-    filter: "l2tp.message_type == 3"
-    description: "Filter for L2TP Incoming-Call-Request"
-
-  - name: "L2TP ICRP"
-    filter: "l2tp.message_type == 4"
-    description: "Filter for L2TP Incoming-Call-Reply"
-
-  - name: "L2TP ICCN"
-    filter: "l2tp.message_type == 5"
-    description: "Filter for L2TP Incoming-Call-Connected"
-
-  - name: "L2TP StopCCN"
-    filter: "l2tp.message_type == 6"
-    description: "Filter for L2TP Stop-Control-Connection-Notification"
-
-  - name: "Specific Tunnel"
-    filter: "l2tp.tunnel == 12345"
-    description: "Filter for specific L2TP tunnel"
-
+- name: L2TP SCCRQ
+  filter: l2tp.message_type == 0
+  description: Filter for L2TP Start-Control-Connection-Request
+- name: L2TP SCCRP
+  filter: l2tp.message_type == 1
+  description: Filter for L2TP Start-Control-Connection-Reply
+- name: L2TP SCCCN
+  filter: l2tp.message_type == 2
+  description: Filter for L2TP Start-Control-Connection-Connected
+- name: L2TP ICRQ
+  filter: l2tp.message_type == 3
+  description: Filter for L2TP Incoming-Call-Request
+- name: L2TP ICRP
+  filter: l2tp.message_type == 4
+  description: Filter for L2TP Incoming-Call-Reply
+- name: L2TP ICCN
+  filter: l2tp.message_type == 5
+  description: Filter for L2TP Incoming-Call-Connected
+- name: L2TP StopCCN
+  filter: l2tp.message_type == 6
+  description: Filter for L2TP Stop-Control-Connection-Notification
+- name: Specific Tunnel
+  filter: l2tp.tunnel == 12345
+  description: Filter for specific L2TP tunnel
 checks:
-  - name: "l2tp_tunnel_timeout"
-    severity: major
-    message: "L2TP tunnel timeout: no Hello on tunnel {l2tp.tunnel}"
-    condition: "No L2TP Hello messages within expected timeout"
-
-  - name: "l2tp_tunnel_mismatch"
-    severity: major
-    message: "L2TP tunnel mismatch: different l2tp.tunnel values from peer"
-    condition: "Different l2tp.tunnel in response to request"
-
-  - name: "l2tp_session_timeout"
-    severity: major
-    message: "L2TP session timeout: session {l2tp.session} on tunnel {l2tp.tunnel}"
-    condition: "No L2TP activity for session within timeout"
-
-  - name: "l2tp_sequence_error"
-    severity: minor
-    message: "L2TP sequence error: Ns {l2tp.Ns} not monotonically increasing"
-    condition: "l2tp.Ns not incrementing properly"
+- name: l2tp_tunnel_timeout
+  severity: major
+  message: 'L2TP tunnel timeout: no Hello on tunnel {l2tp.tunnel}'
+  description: No L2TP Hello messages within expected timeout
+  condition: null
+- name: l2tp_tunnel_mismatch
+  severity: major
+  message: 'L2TP tunnel mismatch: different l2tp.tunnel values from peer'
+  description: Different l2tp.tunnel in response to request
+  condition: null
+- name: l2tp_session_timeout
+  severity: major
+  message: 'L2TP session timeout: session {l2tp.session} on tunnel {l2tp.tunnel}'
+  description: No L2TP activity for session within timeout
+  condition: null
+- name: l2tp_sequence_error
+  severity: minor
+  message: 'L2TP sequence error: Ns {l2tp.Ns} not monotonically increasing'
+  description: l2tp.Ns not incrementing properly
+  condition: null

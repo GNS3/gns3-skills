@@ -1,14 +1,19 @@
 # GNS3-Skills
 
-Network troubleshooting skills repository for GNS3 Copilot.
+Domain knowledge repository for [GNS3 Copilot](https://github.com/yueguobin/gns3-copilot) — an AI-powered network lab assistant built on LangGraph.
 
-This repository contains **50 YAML-formatted skill definitions** with **815 fault injection scenarios** covering 60+ networking protocols and technologies — from PPP serial links to SRv6 and EVPN.
+> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/yueguobin/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
+>
+> For the full architecture: [Architecture Overview](#architecture)
+
+This repository currently contains **50 YAML-formatted skill definitions** with **815 fault injection scenarios** covering 60+ networking protocols and technologies — from PPP serial links to SRv6 and EVPN.
 
 > 📊 See [SKILLS_SUMMARY.md](SKILLS_SUMMARY.md) for full statistics.
 
 ## Table of Contents
 
 - [Directory Structure](#directory-structure)
+- [Architecture](#architecture)
 - [Skill Format](#skill-format)
   - [Injection Skills](#injection-skills)
   - [Device Skills](#device-skills)
@@ -54,6 +59,54 @@ GNS3-Skills/
 │   └── pre-commit
 └── SKILLS_SUMMARY.md  # Full statistics and breakdown
 ```
+
+## Architecture
+
+This repository forms the **knowledge layer** of GNS3 Copilot. The skills defined here are not standalone executable units — they are structured domain knowledge consumed by LangChain tools registered in the `gns3_copilot` agent module.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    GNS3 Copilot (LangGraph Agent)                │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │               LLM (with System Prompt)                    │   │
+│  │  prompts/troubleshooting_injection.md  ←  loaded via     │   │
+│  │  prompts/lab_automation_assistant.md      prompt_loader   │   │
+│  └───────────────┬──────────────────────────────────────────┘   │
+│                  │                                               │
+│    ┌─────────────┼──────────────┬──────────────────┐            │
+│    ▼             ▼              ▼                  ▼            │
+│ ┌─────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────────┐ │
+│ │injection│ │device    │ │packet_       │ │GNS3 operation    │ │
+│ │_skills  │ │_skills   │ │analysis_     │ │tools             │ │
+│ │(Tool)   │ │(Tool)    │ │skills (Tool) │ │(tp. GNS3Create-  │ │
+│ │         │ │          │ │              │ │ NodeTool, etc.)  │ │
+│ └────┬────┘ └────┬─────┘ └──────┬───────┘ └──────────────────┘ │
+│      │           │              │                               │
+└──────┼───────────┼──────────────┼───────────────────────────────┘
+       │           │              │
+       ▼           ▼              ▼
+┌────────────┐ ┌────────┐ ┌──────────────┐
+│ injection/ │ │device/ │ │packet_       │
+│ ospf_      │ │vpcs    │ │analysis/     │
+│ issues.yaml│ │.yaml   │ │ospf.yaml     │
+│ bgp_       │ │        │ │bgp.yaml      │
+│ issues.yaml│ │feature/│ │arp.yaml      │
+│ ... (50)   │ │topology│ │... (60)      │
+└────────────┘ │_planner│ └──────────────┘
+               │.yaml   │
+               └────────┘
+```
+
+**Data flow:**
+
+1. GNS3 Copilot starts → `SkillsManager` clones/pulls this repo → `SkillsLoader` parses YAML files
+2. Parsed data populates three in-memory registries: `INJECTION_SKILLS_REGISTRY`, `SKILLS_REGISTRY`, `PACKET_ANALYSIS_REGISTRY`
+3. Three LangChain tools (`InjectionSkillsTool`, `DeviceSkillsTool`, `PacketAnalysisSkillsTool`) expose these registries to the LLM via tool calls
+4. Separate executable tools (e.g., `PacketAnalysisTool` → tshark, `ExecuteMultipleDeviceConfigCommands` → network devices) perform the actual actions
+5. Agent prompts (`prompts/*.md`) are loaded directly into the LLM's system message to define role and workflow
+
+In Claude Code terms, this architecture is analogous to having **references/** data and **scripts/** executables in separate repositories, wired together by a custom agent framework rather than by the Claude Code runtime.
 
 ## Skill Format
 
@@ -139,7 +192,15 @@ command_aliases:            # LLM command mapping
 
 ## Usage with GNS3 Copilot
 
-Skills are automatically loaded from this repository by the GNS3 Copilot agent.
+Skills are automatically loaded from this repository by the GNS3 Copilot agent into three in-memory registries:
+
+| Registry | Source Directory | Exposed Via | Purpose |
+|---|---|---|---|
+| `INJECTION_SKILLS_REGISTRY` | `injection/` | `injection_skills` tool | Fault injection scenarios |
+| `SKILLS_REGISTRY` | `device/`, `feature/` | `device_skills` tool | Device commands, topology planning |
+| `PACKET_ANALYSIS_REGISTRY` | `packet_analysis/` | `packet_analysis_skills` tool | Protocol tshark field definitions |
+
+The LLM queries these registries at runtime via tool calls, then acts on the returned knowledge using separate executable tools (e.g., `PacketAnalysisTool` for running tshark, `ExecuteMultipleDeviceConfigCommands` for configuring devices).
 
 ### Configuration
 
@@ -168,9 +229,15 @@ curl -X POST http://localhost:3080/api/skills/update
 
 ### Loading Behavior
 
-Skills are loaded from the `injection/` and `device/` directories at startup. The loader (in `gns3server/agent/gns3_copilot/skills/loader.py`) maps filenames to skill keys:
-- `injection/ospf_issues.yaml` → key: `injection_ospf`
-- `device/vpcs.yaml` → key: value of `device_type` field
+At startup, `SkillsManager` clones or pulls this repository, then `SkillsLoader` parses YAML files into the registries:
+
+- `injection/ospf_issues.yaml` → `INJECTION_SKILLS_REGISTRY["injection_ospf"]`
+- `device/vpcs.yaml` → `SKILLS_REGISTRY["gns3_vpcs_telnet"]` (key from `device_type` field)
+- `packet_analysis/ospf.yaml` → `PACKET_ANALYSIS_REGISTRY["ospf"]` (key from `protocol_key` field)
+
+Prompts in `prompts/` are loaded separately into the agent's system message via `prompt_loader.py`.
+
+The registries support hot reload (`POST /api/skills/update`) without restarting the server.
 
 ## CI/CD Validation
 

@@ -86,7 +86,7 @@ issues:
     symptoms:
       - "Applications timeout or become unusable"
       - "Real-time applications (voice, video) completely fail"
-      "TCP connections may time out during establishment"
+      - "TCP connections may time out during establishment"
       - "File transfers extremely slow or fail"
       - "User experience is severely impacted"
     troubleshooting_hints:
@@ -226,7 +226,7 @@ issues:
       - performance
     symptoms:
       - "No connectivity across the link"
-      "All pings fail with 100% packet loss"
+      - "All pings fail with 100% packet loss"
       - "Routing protocols lose adjacency"
       - "Applications show 'network unreachable'"
       - "Interface may show 'up' but no traffic passes"

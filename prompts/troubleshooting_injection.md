@@ -35,11 +35,17 @@ select and inject realistic network faults to help users practice troubleshootin
 ## Step 2: Select Fault Type (TOKEN-EFFICIENT)
 
 Based on topology and configuration, **intelligently select** the most appropriate fault.
+
+**Fault Injection Methods:**
+- **Configuration-based**: Device configuration faults (interface shutdown, protocol misconfig, etc.)
+- **Network-level**: Link packet filtering (latency, packet loss, corruption, BPF blocking)
+
 Consider:
 - Device types (routers/switches/VPCS)
 - Current configuration state
 - Fault realism and troubleshootability
 - Difficulty level (user-specified or default medium)
+- **NEW**: Network conditions vs. configuration issues
 
 **Use `injection_skills` tool to query injection faults:**
 
@@ -60,7 +66,15 @@ Consider:
 
 ## Step 3: Inject Fault
 
-Use `execute_multiple_device_config_commands` to inject the fault.
+**Choose Injection Method:**
+
+- **Configuration faults** → `execute_multiple_device_config_commands`
+  - Device configuration issues (protocols, interfaces, routing, etc.)
+
+- **Network conditions** → `manage_gns3_packet_filter`
+  - Link-level filtering (latency, packet loss, corruption, service blocking)
+
+Inject the selected fault using the appropriate method.
 
 ## Step 4: Document Fault
 
@@ -78,6 +92,10 @@ When injecting multiple faults, output multiple tables sequentially with increme
 3. **Document Everything**: Must record fault details for each injected fault
 4. **Ensure Recoverability**: Provide restore commands to fully revert changes
 5. **CRITICAL - NEVER use 'exit' command**: This disconnects the session and breaks subsequent commands
+6. **Fault Injection Methods**: Choose appropriate method
+   - Configuration issues → `execute_multiple_device_config_commands`
+   - Network conditions → `manage_gns3_packet_filter`
+   - Can combine both methods for complex scenarios
 
 ---
 
@@ -109,9 +127,7 @@ Injecting fault...
 
 ## 4. Fault Documentation (REQUIRED)
 
-Fault successfully injected!
-
-### Fault Injection Report #1
+### Fault Injection Report #[N]
 
 | Field | Value |
 |-------|-------|
@@ -120,24 +136,44 @@ Fault successfully injected!
 | **Severity** | [low/medium/high] |
 | **Difficulty** | [beginner/intermediate/advanced] |
 | **Protocols** | [protocol1, protocol2] |
+| **Injection Method** | [Configuration-based / Packet Filter (Link-Level)] |
 
-**Affected Nodes:**
-- [Node Name] ([device type], id: [node_id])
-- [Node Name] ([device type], id: [node_id])
+**Affected Resources:**
+- **Nodes**: [Node Name] ([device type], id: [node_id]) - *for configuration faults*
+- **Link**: Link ID: [link_id], [Node1] ↔ [Node2] ([type]) - *for packet filter faults*
 
-**Configuration Changes:**
+**Fault Configuration:**
+
+*For configuration-based faults:*
 ```
 [Node Name]# conf t
 [Node Name](config)# [command1]
 [Node Name](config)# [command2]
 ```
 
+*For packet filter faults:*
+
+| Filter Type | Configuration | Notes |
+|--------------|--------------|-------|
+| delay | [100, 10] | 100ms latency ± 10ms jitter |
+| packet_loss | [5] | 5% packet loss |
+| corrupt | [3] | 3% packet corruption |
+| frequency_drop | [10] | Drop every 10th packet |
+| frequency_drop | [-1] | Complete link failure |
+| bpf | ["tcp port 22"] | Block SSH traffic |
+
 **Restore Commands:**
+
+*For configuration-based faults:*
 ```
 [Node Name]# conf t
 [Node Name](config)# [restore_command1]
 [Node Name](config)# [restore_command2]
 ```
+
+*For packet filter faults:*
+- **Web UI**: Right-click on the affected link → "Packet Filter" → "Clear Filters"
+- **Alternative**: Use GNS3 Web UI to navigate to the link and remove packet filters
 
 **Expected Symptoms:**
 - [symptom1]

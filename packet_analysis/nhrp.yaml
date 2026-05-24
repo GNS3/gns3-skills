@@ -48,9 +48,6 @@ fields:
 - label: Source Protocol Address
   tshark_field: nhrp.src.prot.addr
   description: Source protocol (tunnel inner) address
-- label: Destination Protocol Address (IPv6)
-  tshark_field: nhrp.dst.prot.addr.ipv6
-  description: Destination protocol address (IPv6)
 - label: Destination Protocol Address
   tshark_field: nhrp.dst.prot.addr
   description: Destination protocol address

@@ -137,4 +137,4 @@ All field names are verified against `tshark -G fields` via CI/CD. Run `python .
 
 ---
 
-**Repository**: https://github.com/yueguobin/GNS3-Skills
+**Repository**: https://github.com/GNS3/gns3-skills

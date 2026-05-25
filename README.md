@@ -1,8 +1,8 @@
 # GNS3-Skills
 
-Domain knowledge repository for [GNS3 Copilot](https://github.com/GNS3/gns3-copilot) — an AI-powered network lab assistant built on LangGraph.
+Domain knowledge repository for GNS3 — comprehensive network fault injection scenarios, protocol analysis rules, and device command references for AI-powered network lab assistance integrated into GNS3 server.
 
-> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository.
+> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
 >
 > For the full architecture: [Architecture Overview](#architecture)
 

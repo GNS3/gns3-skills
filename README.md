@@ -1,8 +1,8 @@
 # GNS3-Skills
 
-Domain knowledge repository for [GNS3 Copilot](https://github.com/yueguobin/gns3-copilot) — an AI-powered network lab assistant built on LangGraph.
+Domain knowledge repository for GNS3 — comprehensive network fault injection scenarios, protocol analysis rules, and device command references for AI-powered network lab assistance integrated into GNS3 server.
 
-> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/yueguobin/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
+> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
 >
 > For the full architecture: [Architecture Overview](#architecture)
 
@@ -64,38 +64,42 @@ GNS3-Skills/
 
 This repository forms the **knowledge layer** of GNS3 Copilot. The skills defined here are not standalone executable units — they are structured domain knowledge consumed by LangChain tools registered in the `gns3_copilot` agent module.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    GNS3 Copilot (LangGraph Agent)                │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │               LLM (with System Prompt)                    │   │
-│  │  prompts/troubleshooting_injection.md  ←  loaded via     │   │
-│  │  prompts/lab_automation_assistant.md      prompt_loader   │   │
-│  └───────────────┬──────────────────────────────────────────┘   │
-│                  │                                               │
-│    ┌─────────────┼──────────────┬──────────────────┐            │
-│    ▼             ▼              ▼                  ▼            │
-│ ┌─────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────────┐ │
-│ │injection│ │device    │ │packet_       │ │GNS3 operation    │ │
-│ │_skills  │ │_skills   │ │analysis_     │ │tools             │ │
-│ │(Tool)   │ │(Tool)    │ │skills (Tool) │ │(tp. GNS3Create-  │ │
-│ │         │ │          │ │              │ │ NodeTool, etc.)  │ │
-│ └────┬────┘ └────┬─────┘ └──────┬───────┘ └──────────────────┘ │
-│      │           │              │                               │
-└──────┼───────────┼──────────────┼───────────────────────────────┘
-       │           │              │
-       ▼           ▼              ▼
-┌────────────┐ ┌────────┐ ┌──────────────┐
-│ injection/ │ │device/ │ │packet_       │
-│ ospf_      │ │vpcs    │ │analysis/     │
-│ issues.yaml│ │.yaml   │ │ospf.yaml     │
-│ bgp_       │ │        │ │bgp.yaml      │
-│ issues.yaml│ │feature/│ │arp.yaml      │
-│ ... (50)   │ │topology│ │... (60)      │
-└────────────┘ │_planner│ └──────────────┘
-               │.yaml   │
-               └────────┘
+```mermaid
+graph TB
+    subgraph GNS3_Copilot["GNS3 Copilot (LangGraph Agent)"]
+        LLM["LLM (with System Prompt)<br/>prompts/troubleshooting_injection.md<br/>prompts/lab_automation_assistant.md"]
+
+        subgraph Skills_Tools["LangChain Skills Tools"]
+            Injection_Tools["injection_skills (Tool)"]
+            Device_Tools["device_skills (Tool)"]
+            Packet_Tools["packet_analysis_skills (Tool)"]
+        end
+
+        subgraph GNS3_Tools["GNS3 Operation Tools"]
+            GNS3_Ops["GNS3CreateNode, GNS3StartNode<br/>PacketAnalysis, etc."]
+        end
+
+        LLM --> Skills_Tools
+        LLM --> GNS3_Tools
+    end
+
+    subgraph Skills_Repo["GNS3-Skills Repository"]
+        Injection_Files["injection/<br/>ospf_issues.yaml<br/>bgp_issues.yaml<br/>... (50 files)"]
+        Device_Files["device/<br/>vpcs.yaml<br/>feature/topology_planner.yaml"]
+        Packet_Files["packet_analysis/<br/>ospf.yaml<br/>bgp.yaml<br/>arp.yaml<br/>... (60 files)"]
+    end
+
+    Injection_Tools --> Injection_Files
+    Device_Tools --> Device_Files
+    Packet_Tools --> Packet_Files
+
+    classDef llmStyle fill:#f9f,stroke:#333,stroke-width:2px
+    classDef toolsStyle fill:#bbf,stroke:#333,stroke-width:1px
+    classDef repoStyle fill:#bfb,stroke:#333,stroke-width:1px
+
+    class LLM llmStyle
+    class Injection_Tools,Device_Tools,Packet_Tools,GNS3_Ops toolsStyle
+    class Injection_Files,Device_Files,Packet_Files repoStyle
 ```
 
 **Data flow:**
@@ -208,7 +212,7 @@ In `gns3server/agent/gns3_copilot/configs/skills_config.py`:
 
 ```python
 SKILLS_CONFIG = {
-    "repo_url": "https://github.com/yueguobin/GNS3-Skills.git",
+    "repo_url": "https://github.com/GNS3/gns3-skills.git",
     "branch": "main",
     "auto_update": True,
     "enabled": True,

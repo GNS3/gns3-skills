@@ -1,8 +1,8 @@
 # GNS3-Skills
 
-Domain knowledge repository for GNS3 — comprehensive network fault injection scenarios, protocol analysis rules, and device command references for AI-powered network lab assistance.
+Domain knowledge repository for [GNS3 Copilot](https://github.com/GNS3/gns3-copilot) — an AI-powered network lab assistant built on LangGraph.
 
-> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** for GNS3 AI assistance. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository.
+> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository.
 >
 > For the full architecture: [Architecture Overview](#architecture)
 
@@ -18,7 +18,7 @@ This repository currently contains **50 YAML-formatted skill definitions** with 
   - [Injection Skills](#injection-skills)
   - [Device Skills](#device-skills)
 - [Severity & Difficulty Levels](#severity--difficulty-levels)
-- [Usage with GNS3](#usage-with-gns3)
+- [Usage with GNS3 Copilot](#usage-with-gns3-copilot)
 - [CI/CD Validation](#cicd-validation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -62,11 +62,11 @@ GNS3-Skills/
 
 ## Architecture
 
-This repository forms the **knowledge layer** for GNS3 AI assistance. The skills defined here are not standalone executable units — they are structured domain knowledge that can be consumed by AI agents and tools.
+This repository forms the **knowledge layer** of GNS3 Copilot. The skills defined here are not standalone executable units — they are structured domain knowledge consumed by LangChain tools registered in the `gns3_copilot` agent module.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    GNS3 AI Agent (LangGraph)                      │
+│                    GNS3 Copilot (LangGraph Agent)                │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │               LLM (with System Prompt)                    │   │
@@ -100,7 +100,7 @@ This repository forms the **knowledge layer** for GNS3 AI assistance. The skills
 
 **Data flow:**
 
-1. GNS3 AI agent starts → `SkillsManager` clones/pulls this repo → `SkillsLoader` parses YAML files
+1. GNS3 Copilot starts → `SkillsManager` clones/pulls this repo → `SkillsLoader` parses YAML files
 2. Parsed data populates three in-memory registries: `INJECTION_SKILLS_REGISTRY`, `SKILLS_REGISTRY`, `PACKET_ANALYSIS_REGISTRY`
 3. Three LangChain tools (`InjectionSkillsTool`, `DeviceSkillsTool`, `PacketAnalysisSkillsTool`) expose these registries to the LLM via tool calls
 4. Separate executable tools (e.g., `PacketAnalysisTool` → tshark, `ExecuteMultipleDeviceConfigCommands` → network devices) perform the actual actions
@@ -190,9 +190,9 @@ command_aliases:            # LLM command mapping
 | **intermediate** | Requires solid networking knowledge |
 | **advanced** | Requires deep protocol expertise |
 
-## Usage with GNS3
+## Usage with GNS3 Copilot
 
-Skills are automatically loaded from this repository by GNS3 AI agents into three in-memory registries:
+Skills are automatically loaded from this repository by the GNS3 Copilot agent into three in-memory registries:
 
 | Registry | Source Directory | Exposed Via | Purpose |
 |---|---|---|---|

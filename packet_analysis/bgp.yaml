@@ -2,7 +2,7 @@
 #
 # GNS3-Skills - Packet analysis rules
 #
-# Copyright (C) 2025 Yue Guobin
+# Copyright (C) 2025 GNS3 Contributors
 #
 
 name: BGP Packet Analysis

@@ -2,7 +2,7 @@
 #
 # GNS3-Skills - Packet analysis rules for DEC DNA
 #
-# Copyright (C) 2025 Yue Guobin
+# Copyright (C) 2025 GNS3 Contributors
 #
 
 name: "DEC DNA Packet Analysis"

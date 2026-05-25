@@ -3,7 +3,7 @@
 #
 # GNS3-Skills - Network troubleshooting skills repository
 #
-# Copyright (C) 2025 Yue Guobin
+# Copyright (C) 2025 GNS3 Contributors
 #
 
 """

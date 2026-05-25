@@ -1,0 +1,101 @@
+name: ISAKMP/IKE Packet Analysis
+description: ISAKMP (Internet Security Association and Key Management Protocol) packet analysis for IPsec VPN negotiation
+protocol_key: isakmp
+display_filter: isakmp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Initiator SPI
+  tshark_field: isakmp.ispi
+  description: Initiator security parameter index
+- label: Responder SPI
+  tshark_field: isakmp.rspi
+  description: Responder security parameter index
+- label: Payload Type
+  tshark_field: isakmp.typepayload
+  description: 'ISAKMP payload type: 1=SA, 2=Proposal, 3=Transform, 5=KE, 6=ID, 7=Cert, 8=CertReq, 10=Nonce, etc.'
+- label: Next Payload
+  tshark_field: isakmp.nextpayload
+  description: Next payload type in chain
+- label: Version
+  tshark_field: isakmp.version
+  description: ISAKMP version
+- label: Major Version
+  tshark_field: isakmp.mjver
+  description: Major version (usually 1 for IKEv1)
+- label: Minor Version
+  tshark_field: isakmp.mnver
+  description: Minor version (usually 0 or 2)
+- label: Exchange Type
+  tshark_field: isakmp.exchangetype
+  description: 'Exchange type: 1=Base, 2=Identity, 3=Auth, 4=Aggressive, 5=Informational'
+- label: Flags
+  tshark_field: isakmp.flags
+  description: ISAKMP flags
+- label: Encryption Flag
+  tshark_field: isakmp.flag_e
+  description: Encryption flag (payloads encrypted)
+- label: Commit Flag
+  tshark_field: isakmp.flag_c
+  description: Commit flag
+- label: Authentication Flag
+  tshark_field: isakmp.flag_a
+  description: Authentication flag
+- label: Initiator Flag
+  tshark_field: isakmp.flag_i
+  description: Initiator flag
+- label: Response Flag
+  tshark_field: isakmp.flag_r
+  description: Response flag
+- label: Message ID
+  tshark_field: isakmp.messageid
+  description: ISAKMP message ID
+- label: Length
+  tshark_field: isakmp.length
+  description: ISAKMP message length
+- label: DOI
+  tshark_field: isakmp.sa.doi
+  description: Domain of Interpretation (1=IPsec)
+- label: Situation
+  tshark_field: isakmp.sa.situation
+  description: SA situation (SIT_IDENTITY_ONLY)
+filter_examples:
+- name: IKE Main Mode
+  filter: isakmp.exchangetype == 2
+  description: Filter for IKE main mode (identity protection)
+- name: IKE Aggressive Mode
+  filter: isakmp.exchangetype == 4
+  description: Filter for IKE aggressive mode
+- name: IKE Informational
+  filter: isakmp.exchangetype == 5
+  description: Filter for IKE informational (delete/notify)
+- name: IKE Encrypted Payload
+  filter: isakmp.flag_e == 1
+  description: Filter for encrypted ISAKMP payloads
+- name: IKEv1
+  filter: isakmp.mjver == 1 and isakmp.mnver == 0
+  description: Filter for IKEv1
+- name: IKEv2
+  filter: isakmp.version == 0x20
+  description: Filter for IKEv2
+checks:
+- name: ike_negotiation_timeout
+  severity: major
+  message: 'IKE negotiation timeout: no response from {ip.dst}'
+  description: No ISAKMP response within expected window
+  condition: null
+- name: ike_invalid_cookie
+  severity: major
+  message: 'IKE invalid cookie: session may be spoofed'
+  description: Inconsistent ISAKMP SPI pairs
+  condition: null
+- name: ike_aggressive_mode
+  severity: minor
+  message: IKE aggressive mode used from {ip.src} (less secure)
+  condition: isakmp.exchangetype == 4
+- name: ike_delete
+  severity: major
+  message: 'IKE delete: SA removal for SPI {isakmp.messageid}'
+  description: isakmp.exchangetype == 5 and isakmp.typepayload indicates delete
+  condition: isakmp.exchangetype == 5

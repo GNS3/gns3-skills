@@ -1,0 +1,79 @@
+name: NBNS Packet Analysis
+description: NBNS (NetBIOS Name Service) packet analysis for Windows name resolution
+protocol_key: nbns
+display_filter: nbns
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Transaction ID
+  tshark_field: nbns.id
+  description: NBNS transaction ID
+- label: Query/Response
+  tshark_field: nbns.flags.response
+  description: 0=query, 1=response
+- label: Opcode
+  tshark_field: nbns.flags.opcode
+  description: 'Operation code: 0=Query, 5=Registration, 6=Release, 7=WACK'
+- label: Authoritative
+  tshark_field: nbns.flags.authoritative
+  description: Authoritative answer flag
+- label: Truncated
+  tshark_field: nbns.flags.truncated
+  description: Truncated message flag
+- label: Recursion Desired
+  tshark_field: nbns.flags.recdesired
+  description: Recursion desired flag
+- label: Recursion Available
+  tshark_field: nbns.flags.recavail
+  description: Recursion available flag
+- label: Broadcast
+  tshark_field: nbns.flags.broadcast
+  description: Broadcast flag
+- label: Reply Code
+  tshark_field: nbns.flags.rcode
+  description: 'Response code: 0=OK, 3=Name Error (not found)'
+- label: Question Count
+  tshark_field: nbns.count.queries
+  description: Number of questions
+- label: Answer Count
+  tshark_field: nbns.count.answers
+  description: Number of answers
+- label: Name Flags
+  tshark_field: nbns.name_flags
+  description: Name flags
+- label: Name Type
+  tshark_field: nbns.name_flags.group
+  description: Name type (0=unique, 1=group)
+- label: Name in Conflict
+  tshark_field: nbns.name_flags.cnf
+  description: Name conflict flag
+filter_examples:
+- name: NBNS Query
+  filter: nbns.flags.response == 0
+  description: Filter for NBNS name queries
+- name: NBNS Response
+  filter: nbns.flags.response == 1
+  description: Filter for NBNS responses
+- name: NBNS Registration
+  filter: nbns.flags.opcode == 5
+  description: Filter for NetBIOS name registration
+- name: NBNS Name Release
+  filter: nbns.flags.opcode == 6
+  description: Filter for NetBIOS name release
+- name: NBNS Name Conflict
+  filter: nbns.name_flags.cnf == 1 or nbns.flags.rcode == 3
+  description: Filter for NBNS name conflict
+- name: NBNS Name Error
+  filter: nbns.flags.response == 1 and nbns.flags.rcode == 3
+  description: Filter for NBNS name not found
+checks:
+- name: nbns_name_conflict
+  severity: major
+  message: 'NBNS name conflict: name was denied or in conflict'
+  condition: nbns.flags.response == 1 and nbns.flags.rcode == 3
+- name: nbns_no_response
+  severity: minor
+  message: 'NBNS query timeout: no response'
+  description: nbns.flags.response == 0 and no matching response
+  condition: nbns.flags.response == 0

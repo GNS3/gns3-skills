@@ -1,0 +1,286 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "SD-WAN Issues Injection"
+description: "SD-WAN fabric, OMP, TLOC, vSmart/vEdge configuration related network faults"
+category: "injection"
+protocols:
+  - sdwan
+  - omp
+  - tloc
+  - vmanage
+  - vsmart
+  - vedge
+
+issues:
+  # Control Plane / Orchestration Issues
+
+  sdwan_vmanage_connect:
+    name: "vManage / vSmart Control Connection Failure"
+    description: "Configure SD-WAN but vEdge/cEdge cannot establish control connection to vManage or vSmart"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+      - vmanage
+      - vsmart
+    symptoms:
+      - "vEdge shows 'control-down' status"
+      - "vManage lists device as unreachable"
+      - "DTLS/TLS connection to vSmart fails"
+      - "Device not visible in vManage inventory"
+    troubleshooting_hints:
+      - "Check control connection: 'show control-connections' on vEdge"
+      - "vSmart IP must be reachable from vEdge transport interface"
+      - "DTLS uses UDP 12346, TLS uses TCP 443"
+      - "Authentication: 'organization-name' must match on all controllers"
+      - "Certificate validation: verify root CA certificate"
+      - "Verify firewall permits DTLS/TLS between vEdge and controllers"
+    applicability: "SD-WAN fabric bringup and control plane"
+
+  sdwan_omp_peer:
+    name: "OMP (Overlay Management Protocol) Session Failure"
+    description: "Configure OMP but session between vEdge and vSmart not established"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+      - omp
+    symptoms:
+      - "OMP session shows 'down'"
+      - "No routes exchanged via OMP"
+      - "Site prefixes not advertised to fabric"
+      - "Remote site routes missing from routing table"
+    troubleshooting_hints:
+      - "Check 'show omp peers' for OMP session status"
+      - "OMP runs over DTLS between vEdge and vSmart"
+      - "Ensure DTLS control connection is up first"
+      - "OMP peering initiated automatically by vSmart"
+      - "Check 'show omp sessions' for session state"
+      - "Reconnect: 'request control-connect' on vEdge"
+    applicability: "SD-WAN OMP-based route exchange"
+
+  sdwan_omp_route:
+    name: "OMP Route Advertisement / Withdrawal Issue"
+    description: "Configure OMP route policies incorrectly causing routes not to be advertised or accepted"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+      - omp
+    symptoms:
+      - "Site routes not advertised via OMP"
+      - "Remote prefixes not received at site"
+      - "OMP route filtering blocking legitimate routes"
+      - "Some sites have partial routing information"
+    troubleshooting_hooks:
+      - "Check 'show omp routes' for advertised/received routes"
+      - "OMP route policy: 'site-list' and 'vpn-list' determine route distribution"
+      - "Use 'show omp routes received' to see accepted routes"
+      - "OMP admin distance: default 250 (can be overridden)"
+      - "Check 'omp advertise-connected' or 'omp advertise-static' settings"
+      - "vSmart route policies can filter OMP routes"
+    applicability: "SD-WAN OMP route advertisement"
+
+  # TLOC / Transport Issues
+
+  sdwan_tloc_down:
+    name: "TLOC (Transport Locator) Unreachable"
+    description: "Configure SD-WAN TLOC but BFD session between TLOCs not established"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+      - tloc
+    symptoms:
+      - "Remote TLOC shown as 'down'"
+      - "BFD sessions between vEdges not established"
+      - "IPsec tunnels between sites not formed"
+      - "Site-to-site connectivity broken"
+    troubleshooting_hooks:
+      - "TLOC = transport interface + IP + color (e.g., tloc-ip, color biz-internet)"
+      - "Check 'show bfd sessions' for BFD state between TLOCs"
+      - "BFD runs over IPsec tunnels between vEdges"
+      - "Check 'show ipsec kma' for IPsec SA status"
+      - "Color must match the transport type on both ends"
+      - "Verify underlay connectivity between TLOC IPs"
+    applicability: "SD-WAN transport / TLOC connectivity"
+
+  sdwan_color_mismatch:
+    name: "SD-WAN Color / Transport Type Mismatch"
+    description: "Configure different TLOC colors on transport interfaces causing hub-spoke tunnel failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+      - tloc
+    symptoms:
+      - "vEdge-to-vEdge IPsec tunnel not forming"
+      - "TLOC color mismatch between hub and spoke"
+      - "Spoke cannot establish tunnel to hub with different color"
+      - "Transport preference configured but not working"
+    troubleshooting_hooks:
+      - "Color identifies transport type: biz-internet, mpls, metro-ethernet, 3g, lte, private1-6, public1-6"
+      - "Check 'show running-config vpn 0 interface <intf>' for color"
+      - "Tunnel color must match or be configured in allow-list"
+      - "Hub may accept multiple colors from spokes"
+      - "Use 'vpn 0 interface ge0/0 color mpls' on transport interface"
+      - "Color affects tunnel preference and circuit affinity"
+    applicability: "Multi-transport SD-WAN deployments"
+
+  sdwan_bfd_hello:
+    name: "SD-WAN BFD / Hello Timer Misconfiguration"
+    description: "Configure SD-WAN BFD timers too aggressively causing false failure detection"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+    symptoms:
+      - "BFD sessions flapping between vEdges"
+      - "False positive link failure detection"
+      - "BFD hello timer too short for link latency"
+      - "App-route policy switching paths unnecessarily"
+    troubleshooting_hooks:
+      - "SD-WAN BFD: 'bfd interval <ms> multiplier <count>'"
+      - "Default: 1000ms interval, 7 multiplier (7s detection)"
+      - "Sub-second BFD: 300ms interval, 3 multiplier (900ms detection)"
+      - "Aggressive timers may trigger false failover on congested links"
+      - "Check 'show bfd all' for BFD session timers"
+      - "Adjust based on link latency and jitter characteristics"
+    applicability: "SD-WAN BFD-based path monitoring"
+
+  # Data Policy / App-Route Issues
+
+  sdwan_app_route:
+    name: "SD-WAN App-Route Policy / Traffic Steering Misconfiguration"
+    description: "Configure App-Route policy but traffic not directed to intended transport"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+    symptoms:
+      - "Application traffic not using designated transport"
+      - "App-route policy match counters showing no hits"
+      - "Traffic load-balanced across unexpected transports"
+      - "Application SLA not met due to wrong path selection"
+    troubleshooting_hooks:
+      - "App-route policy: data-policy with vpn-list + app-list + path-preference"
+      - "Check 'show app-route statistics' for application classification"
+      - "Verify NBAR or application visibility is enabled"
+      - "Use 'show app-route collected-stats' for path performance metrics"
+      - "App-route policy order matters: first match wins"
+      - "Check 'show policy ' for applied policy counters"
+    applicability: "SD-WAN application-aware routing"
+
+  sdwan_data_policy:
+    name: "SD-WAN Data Policy / Centralized Policy Misconfiguration"
+    description: "Configure vSmart centralized data policy but not applied to correct site-list or VPN-list"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+      - vsmart
+    symptoms:
+      - "Centralized data policy not taking effect"
+      - "Site-list or VPN-list not matching expected sites"
+      - "Policy direction (inbound/outbound) incorrect"
+      - "Traffic not matching policy match criteria"
+    troubleshooting_hooks:
+      - "Centralized data policy: defined on vSmart, applied to vEdges"
+      - "Check 'show policy from-vsmart' on vEdge for received policies"
+      - "Use 'show policy' to see active policy counters"
+      - "Sequence type must match: route vs acl vs app-route (each has specific match)"
+      - "Default-action: drop (must explicitly allow)"
+      - "Verify site-list and vpn-list definitions match actual site IDs"
+    applicability: "SD-WAN centralized policy deployments"
+
+  sdwan_vpn_separation:
+    name: "SD-WAN VPN / Service VPN Configuration Error"
+    description: "Configure SD-WAN service VPN with incorrect interface or route leaking between VPNs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+    symptoms:
+      - "Service VPN (vpn 1-511) not forwarding traffic"
+      - "VPN interface not configured or attached to wrong VPN"
+      - "Route leaking between service VPNs not working"
+      - "Traffic in one VPN cannot reach another VPN"
+    troubleshooting_hooks:
+      - "vpn 0 = transport, vpn 512 = management, vpn 1-511 = service"
+      - "Check 'show vpn interface' for interface-to-VPN mapping"
+      - "Route leaking between VPNs: 'ip route vrf <vpn-id> <prefix> <nexthop' (Cisco)"
+      - "Use 'show ip route vpn <vpn-id>' to verify VRF routing table"
+      - "Service VPNs are isolated by default"
+      - "Leak routes via: OMP inter-vpn or static routes with vrf forwarding"
+    applicability: "SD-WAN multi-tenant service VPN deployments"
+
+  sdwan_site_id:
+    name: "SD-WAN Site-ID / System-IP Duplicate"
+    description: "Configure duplicate system-IP or site-ID across SD-WAN fabric causing route confusion"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - sdwan
+    symptoms:
+      - "Duplicate System-IP detected in fabric"
+      - "vSmart sees multiple vEdges with same System-IP"
+      - "OMP routes from one site interfering with another"
+      - "Site-ID mismatch causing TLOC affinity issues"
+    troubleshooting_hooks:
+      - "System-IP must be unique across entire SD-WAN fabric"
+      - "Site-ID identifies the geographic/logical site"
+      - "Check 'show omp summary' for duplicate System-IP detection"
+      - "Use 'show bfd sessions' to see TLOC conflicts"
+      - "Duplicate System-IP: verify vEdge configuration"
+      - "Duplicate Site-ID: sites may receive wrong route policies"
+    applicability: "SD-WAN fabric bringup and provisioning"
+
+  sdwan_vsmart_policy:
+    name: "SD-WAN vSmart Policy / Centralized Policy Not Applied"
+    description: "Configure vSmart centralized policy but vEdges not receiving or applying it"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+      - vsmart
+    symptoms:
+      - "vEdge shows no policy received from vSmart"
+      - "Policy configured on vSmart but no effect in network"
+      - "Centralized policy not pushed to specific vEdge"
+      - "Policy mismatch between vSmart and vEdge versions"
+    troubleshooting_hooks:
+      - "Centralized policies: control-policy, data-policy, app-route-policy, cflowd-policy"
+      - "Check 'show policy from-vsmart' on vEdge for received policies"
+      - "Check 'show omp peers' to verify vEdge-vSmart connectivity"
+      - "Policy activated on vSmart: 'apply-policy <name> site-list <list>'"
+      - "Direction: 'from-tunnel' or 'from-service' for data-policy"
+      - "Use 'show running-config policy' to verify policy definition"
+    applicability: "SD-WAN centralized policy management"
+
+  sdwan_secure_fabric:
+    name: "SD-WAN Secure Fabric / Control/Data Plane Authentication"
+    description: "Configure SD-WAN control and data plane authentication with incorrect parameters"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - sdwan
+    symptoms:
+      - "vEdge cannot join fabric - control authentication failure"
+      - "IPsec tunnel between vEdges not forming (data auth fail)"
+      - "Organization name mismatch"
+      - "Certificate validation fails for vEdge"
+    troubleshooting_hooks:
+      - "Control plane auth: DTLS/TLS with organization-name and certificates"
+      - "Organization name must match on all devices in fabric"
+      - "Data plane auth: IPsec using pre-shared-keys or certificates"
+      - "Check 'show control-connections' for DTLS/TLS status"
+      - "Check 'show ipsec kma' for IPsec SA negotiation"
+      - "vEdge requires valid certificate signed by fabric root CA"
+    applicability: "SD-WAN fabric bringup with authentication"

@@ -1,0 +1,286 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "LISP Issues Injection"
+description: "LISP (Locator/ID Separation Protocol) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - lisp
+  - lisp-mr
+  - lisp-ms
+  - lisp-etr
+  - lisp-itr
+
+issues:
+  # Map-Server / Mapping System Issues
+
+  lisp_map_server_not_reachable:
+    name: "LISP Map-Server / Map-Resolver Unreachable"
+    description: "Configure LISP with incorrect Map-Server/Map-Resolver address preventing EID registration"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+      - lisp-ms
+    symptoms:
+      - "ETR cannot register EID prefixes with Map-Server"
+      - "Map-Resolver not responding to Map-Requests from ITR"
+      - "LISP mapping database empty on Map-Server"
+      - "EID-to-RLOC mapping not available for remote sites"
+    troubleshooting_hints:
+      - "Check LISP configuration with 'show lisp session'"
+      - "Verify 'lisp map-server <ip>' points to correct MS IP"
+      - "Verify 'lisp map-resolver <ip>' points to correct MR IP"
+      - "Ensure TCP 4342 (LISP control) reachable between ETR and MS"
+      - "Check MS/MR reachability: 'ping <ms-ip>' from ETR"
+      - "MS/MR must have routes back to all LISP sites"
+    applicability: "LISP deployments with centralized mapping system"
+
+  lisp_eid_not_registered:
+    name: "LISP EID Prefix Not Registered with Map-Server"
+    description: "Configure EID prefix but registration to Map-Server fails or is rejected"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+      - lisp-etr
+    symptoms:
+      - "EID prefix not appearing in Map-Server database"
+      - "Remote ITR cannot resolve EID-to-RLOC mapping"
+      - "LISP traffic blackholed to site"
+      - "Site connectivity completely broken"
+    troubleshooting_hints:
+      - "Check EID registration: 'show lisp eid-table <id> map-cache'"
+      - "Check MS database: 'show lisp database' on Map-Server"
+      - "Verify 'eid-prefix <prefix>' under LISP site configuration"
+      - "MS must have the site configured: 'site <name>' 'eid-prefix <prefix>'"
+      - "Check 'show lisp server summary' for registered EIDs"
+      - "Authentication key must match between ETR and MS"
+    applicability: "LISP site registration"
+
+  lisp_auth_key:
+    name: "LISP Map-Server Authentication Key Mismatch"
+    description: "Configure LISP with mismatched authentication key between ETR and Map-Server"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - lisp
+      - lisp-ms
+      - lisp-etr
+    symptoms:
+      - "ETR registration rejected by Map-Server"
+      - "Authentication errors in LISP logs"
+      - "EID-to-RLOC mapping not created in MS database"
+      - "LISP mapping lookup fails for the site"
+    troubleshooting_hints:
+      - "Check 'show lisp server detail' for site registration errors"
+      - "Verify 'authentication-key <key>' under site configuration on MS"
+      - "Verify 'key <key>' under ETR site configuration"
+      - "Key must match exactly on both sides (case-sensitive)"
+      - "Default key: none (no authentication if not configured)"
+      - "Key change requires re-registration"
+    applicability: "LISP sites with authentication"
+
+  lisp_it_notr:
+    name: "LISP ITR Not Performing Map-Request"
+    description: "Configure LISP ITR but Map-Request not sent for EID destinations"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+      - lisp-itr
+    symptoms:
+      - "ITR not encapsulating traffic to remote EIDs"
+      - "Map-Cache empty for destination prefixes"
+      - "Traffic sent natively (not LISP-encapsulated)"
+      - "LISP traffic not reaching remote site"
+    troubleshooting_hints:
+      - "Check 'show lisp map-cache' for cached mappings"
+      - "Verify 'itr' and 'itr enable' are configured on the router"
+      - "ITR triggers Map-Request when EID traffic matches"
+      - "Check 'show lisp stats' for Map-Request counters"
+      - "Default: ITR sends Map-Request to configured Map-Resolver"
+      - "Negative map-cache entry = ITR tried but no mapping received"
+    applicability: "LISP ITR-capable routers"
+
+  # RLOC / Locator Issues
+
+  lisp_rloc_down:
+    name: "LISP RLOC (Locator) Unreachable"
+    description: "Configure LISP RLOC address but RLOC interface is down or unreachable"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - lisp
+    symptoms:
+      - "LISP EID traffic not forwarded"
+      - "RLOC interface down or not reachable from remote sites"
+      - "LISP encapsulation fails - no valid RLOC"
+      - "Map-Server shows RLOC as unreachable"
+    troubleshooting_hints:
+      - "Check 'show lisp interface' for RLOC status"
+      - "Verify 'lisp rloc <interface>' points to a loopback or physical"
+      - "RLOC must be reachable from other LISP sites via underlay"
+      - "Check 'show ip route <rloc-ip>' for underlay reachability"
+      - "Multiple RLOCs provide redundancy: 'lisp rloc <intf1> <intf2>'"
+      - "RLOC reachability test: ping from remote RLOC"
+    applicability: "All LISP deployments"
+
+  lisp_rloc_probe:
+    name: "LISP RLOC Probing / Locator Reachability Failure"
+    description: "Configure RLOC probing but probe fails causing RLOC marked as down"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - lisp
+    symptoms:
+      - "RLOC incorrectly marked as down due to probe failure"
+      - "LISP traffic fails over to backup RLOC unexpectedly"
+      - "RLOC probe interval too short causing false negatives"
+      - "RLOC flapping between up/down states"
+    troubleshooting_hints:
+      - "Check 'show lisp rloc-probe' for probing status"
+      - "RLOC probe: ETR sends probe to Map-Server to verify locator reachability"
+      - "Probe passed: RLOC considered reachable by Map-Server"
+      - "Probe failed: Map-Server marks RLOC as down"
+      - "Configure probe frequency: 'lisp rloc-probe interval <seconds>'"
+      - "Default interval: 30 seconds"
+    applicability: "Multi-RLOC LISP deployments"
+
+  lisp_multihoming:
+    name: "LISP Multi-Homing / Multiple RLOC Priority Issue"
+    description: "Configure LISP multi-homing with multiple RLOCs but priority/weight misconfigured"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+    symptoms:
+      - "Traffic enters site through non-optimal RLOC"
+      - "RLOC priority/weight not influencing traffic path"
+      - "Backup path never used when primary fails"
+      - "Uneven load distribution across RLOCs"
+    troubleshooting_hints:
+      - "Check RLOC priorities: 'show lisp session'"
+      - "Priority 1-255 (lower = more preferred)"
+      - "Weight 0-100 (distributes load among same-priority RLOCs)"
+      - "Configure: 'locator-set <name> <intf> priority <p> weight <w>'"
+      - "Priority affects which RLOC is primary for incoming traffic"
+      - "Weight affects how traffic is split among equal-priority RLOCs"
+    applicability: "Multi-homed LISP site deployments"
+
+  # LISP Proxy / PxTR Issues
+
+  lisp_pxtr_no_proxy:
+    name: "LISP Proxy Tunnel Router (PxTR) / Proxy ETR Failure"
+    description: "Configure LISP PxTR or PETR but non-LISP sites cannot reach LISP sites"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - lisp
+    symptoms:
+      - "Non-LISP sites cannot reach LISP site EID prefixes"
+      - "PxTR not replying to Map-Requests from ITRs"
+      - "PETR not encapsulating traffic to LISP sites"
+      - "Non-LISP to LISP communication broken"
+    troubleshooting_hints:
+      - "PxTR: acts as both proxy-ITR and proxy-ETR"
+      - "PETR: proxy-ETR only (not proxy-ITR)"
+      - "Check 'show lisp proxy-etr' for PETR status"
+      - "Check 'show lisp proxy-itr' for PITR status"
+      - "PxTR must have route to non-LISP destinations"
+      - "PETR needed when LISP site has no native connectivity to non-LISP"
+    applicability: "LISP/non-LISP interworking deployments"
+
+  lisp_pitr_map_req:
+    name: "LISP PITR Map-Request Handling Failure"
+    description: "Configure LISP PITR but incoming Map-Requests not processed correctly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - lisp
+    symptoms:
+      - "PITR receives Map-Requests but does not respond"
+      - "Non-LISP hosts cannot initiate traffic to LISP destinations"
+      - "PITR not advertising aggregate EID prefixes in BGP"
+      - "Map-Resolver forwarding Map-Request to wrong PITR"
+    troubleshooting_hooks:
+      - "PITR accepts Map-Requests for non-LISP destinations"
+      - "PITR returns non-LISP RLOC in Map-Reply"
+      - "Check 'show lisp pitr' for PITR operational status"
+      - "PITR may need BGP advertisement of EID prefix aggregate"
+      - "Default: PITR uses route table longest match for non-LISP"
+      - "Ensure PITR has routing to the destination"
+    applicability: "LISP/PITR deployments for non-LISP internet connectivity"
+
+  # LISP Data Plane Issues
+
+  lisp_encapsulation:
+    name: "LISP UDP Encapsulation / MTU Issue"
+    description: "Configure LISP encapsulation but UDP overhead causes MTU/fragmentation issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+    symptoms:
+      - "Large packets dropped across LISP fabric"
+      - "LISP encapsulation adds overhead exceeding path MTU"
+      - "DF bit packets fragmented or dropped"
+      - "TCP connections stall across LISP interface"
+    troubleshooting_hints:
+      - "LISP encapsulation adds: 8 bytes UDP + 20 bytes IP = 28 bytes overhead"
+      - "LISP data: outer UDP (4341) + outer IP + inner packet"
+      - "Set interface MTU to account for LISP overhead"
+      - "TCP MSS adjustment: 'ip tcp adjust-mss <size>' on LISP interface"
+      - "Use path-mtu-discovery across LISP network"
+      - "Check 'show lisp stats' for encapsulation errors"
+    applicability: "LISP data plane deployments"
+
+  lisp_instance_id:
+    name: "LISP Instance-ID / Virtual Network Mismatch"
+    description: "Configure LISP Instance-ID (IID) incorrectly causing L2/L3 network separation issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - lisp
+    symptoms:
+      - "EID traffic in wrong virtual network"
+      - "Instance-ID mismatch between sites"
+      - "LISP map-cache not matching expected IID"
+      - "Tenant traffic mixing across virtual networks"
+    troubleshooting_hooks:
+      - "Instance-ID (IID): 24-bit identifier for LISP virtual network"
+      - "Each tenant/site gets unique IID"
+      - "Check 'show lisp eid-table <iid>' for instance-specific mappings"
+      - "IID mismatch causes traffic to be delivered to wrong virtual network"
+      - "Use 'eid-table instance-id <id>' to configure"
+      - "Both ETR and ITR must agree on IID for prefix"
+    applicability: "Multi-tenant LISP deployments"
+
+  # LISP Mobility Issues
+
+  lisp_vm_mobility:
+    name: "LISP VM Mobility / Host Move Registration Failure"
+    description: "Configure LISP VM mobility but host move not detected or mapping not updated"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - lisp
+    symptoms:
+      - "VM moves to new location but traffic still sent to old RLOC"
+      - "Map-Server mapping not updated after host move"
+      - "Stale map-cache on remote ITRs"
+      - "Traffic blackholed for moved host"
+    troubleshooting_hints:
+      - "VM mobility: new ETR detects host and re-registers"
+      - "Map-Server records new mapping with higher TTL"
+      - "Check 'show lisp eid-table <iid> dynamic-eid' for learned EIDs"
+      - "Map-Versioning ensures ITRs have latest mapping"
+      - "Use 'dynamic-eid <name>' for mobile hosts"
+      - "Negative map-cache entry causes ITR to re-query"
+    applicability: "LISP host mobility / data center VM mobility"

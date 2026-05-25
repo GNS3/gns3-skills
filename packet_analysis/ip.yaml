@@ -1,0 +1,104 @@
+name: IP Packet Analysis
+description: IPv4 (Internet Protocol version 4) packet analysis for basic network layer troubleshooting
+protocol_key: ip
+display_filter: ip
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Version
+  tshark_field: ip.version
+  description: IP version (should be 4)
+- label: Header Length
+  tshark_field: ip.hdr_len
+  description: IP header length in 32-bit words
+- label: DSCP
+  tshark_field: ip.dsfield.dscp
+  description: Differentiated Services Codepoint
+- label: ECN
+  tshark_field: ip.dsfield.ecn
+  description: Explicit Congestion Notification
+- label: Total Length
+  tshark_field: ip.len
+  description: Total IP packet length
+- label: Identification
+  tshark_field: ip.id
+  description: IP identification field
+- label: Flags
+  tshark_field: ip.flags
+  description: IP flags
+- label: More Fragments
+  tshark_field: ip.flags.mf
+  description: More fragments flag
+- label: Don't Fragment
+  tshark_field: ip.flags.df
+  description: Don't fragment flag
+- label: Fragment Offset
+  tshark_field: ip.frag_offset
+  description: Fragment offset
+- label: TTL
+  tshark_field: ip.ttl
+  description: Time to live
+- label: Protocol
+  tshark_field: ip.proto
+  description: 'Upper layer protocol: 1=ICMP, 6=TCP, 17=UDP, 88=EIGRP, 89=OSPF'
+- label: Checksum
+  tshark_field: ip.checksum
+  description: IP header checksum
+- label: Checksum Status
+  tshark_field: ip.checksum.status
+  description: Checksum verification status
+- label: Source Address
+  tshark_field: ip.src
+  description: IPv4 source address
+- label: Destination Address
+  tshark_field: ip.dst
+  description: IPv4 destination address
+- label: Reassembled Length
+  tshark_field: ip.reassembled.length
+  description: Reassembled IP packet length
+filter_examples:
+- name: Private source IPs
+  filter: ip.src == 10.0.0.0/8 or ip.src == 172.16.0.0/12 or ip.src == 192.168.0.0/16
+  description: Filter for private source addresses
+- name: Fragmented packets
+  filter: ip.flags.mf == 1 or ip.frag_offset > 0
+  description: Filter for fragmented IP packets
+- name: TTL low
+  filter: ip.ttl < 5
+  description: Filter for packets with low TTL (near exhaustion)
+- name: Specific protocol
+  filter: ip.proto == 6
+  description: Filter for TCP (protocol 6)
+- name: Multicast destination
+  filter: ip.dst == 224.0.0.0/4
+  description: Filter for multicast destination addresses
+- name: Broadcast
+  filter: ip.dst == 255.255.255.255 or ip.dst == 0.0.0.0
+  description: Filter for broadcast addresses
+- name: IP checksum error
+  filter: ip.checksum.status != 0
+  description: Filter for checksum errors
+checks:
+- name: ip_ttl_exceeded
+  severity: minor
+  message: 'IP TTL exceeded: packet from {ip.src} to {ip.dst} with TTL {ip.ttl}'
+  condition: ip.ttl == 0 or icmp.type == 11
+- name: ip_fragmentation
+  severity: minor
+  message: 'IP fragmentation: ID {ip.id} offset {ip.frag_offset}'
+  condition: ip.flags.mf == 1 or ip.frag_offset > 0
+- name: ip_fragment_missing
+  severity: major
+  message: 'IP fragment missing: incomplete reassembly for ID {ip.id} from {ip.src}'
+  description: ip.flags.mf == 1 and no remaining fragments within timeout
+  condition: ip.flags.mf == 1
+- name: ip_checksum_error
+  severity: major
+  message: IP checksum error from {ip.src}
+  condition: ip.checksum.status != 0
+- name: ip_ttl_anomaly
+  severity: minor
+  message: 'IP TTL anomaly: TTL {ip.ttl} seems unusual'
+  description: ip.ttl < 64 and ip.ttl not in [1, 255]
+  condition: ip.ttl < 64

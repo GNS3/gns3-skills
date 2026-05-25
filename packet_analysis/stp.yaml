@@ -1,0 +1,118 @@
+name: STP Packet Analysis
+description: STP/RSTP/MSTP (Spanning Tree Protocol) packet analysis for loop prevention troubleshooting
+protocol_key: stp
+display_filter: stp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Protocol Version
+  tshark_field: stp.version
+  description: 'STP version: 0=STP, 2=Rapid STP, 3=Multiple STP'
+- label: BPDU Type
+  tshark_field: stp.type
+  description: 'BPDU type: 0=Config, 80=TCN'
+- label: Flags
+  tshark_field: stp.flags
+  description: BPDU flags
+- label: Topology Change
+  tshark_field: stp.flags.tc
+  description: Topology change flag
+- label: Topology Change Acknowledgment
+  tshark_field: stp.flags.tcack
+  description: Topology change acknowledgment flag
+- label: Agreement
+  tshark_field: stp.flags.agreement
+  description: RSTP agreement flag
+- label: Forwarding
+  tshark_field: stp.flags.forwarding
+  description: Forwarding flag
+- label: Learning
+  tshark_field: stp.flags.learning
+  description: Learning flag
+- label: Port Role
+  tshark_field: stp.flags.port_role
+  description: 'RSTP port role: 0=Unknown, 1=Alternate, 2=Root, 3=Designated'
+- label: Proposal
+  tshark_field: stp.flags.proposal
+  description: RSTP proposal flag
+- label: Root Bridge Priority
+  tshark_field: stp.root.prio
+  description: Root bridge priority
+- label: Root Bridge MAC
+  tshark_field: stp.root.hw
+  description: Root bridge MAC address
+- label: Root Path Cost
+  tshark_field: stp.root.cost
+  description: Root path cost
+- label: Bridge Priority
+  tshark_field: stp.bridge.prio
+  description: Local bridge priority
+- label: Bridge MAC
+  tshark_field: stp.bridge.hw
+  description: Local bridge MAC address
+- label: Port ID
+  tshark_field: stp.port
+  description: Port identifier
+- label: Message Age
+  tshark_field: stp.msg_age
+  description: Message age in seconds
+- label: Max Age
+  tshark_field: stp.max_age
+  description: Maximum age in seconds
+- label: Hello Time
+  tshark_field: stp.hello
+  description: Hello time in seconds
+- label: Forward Delay
+  tshark_field: stp.forward
+  description: Forward delay in seconds
+- label: PVST VLAN
+  tshark_field: stp.pvst.origvlan
+  description: PVST originating VLAN
+filter_examples:
+- name: STP Configuration BPDU
+  filter: stp.type == 0
+  description: Filter for STP configuration BPDUs
+- name: STP TCN BPDU
+  filter: stp.type == 80
+  description: Filter for STP topology change notification BPDUs
+- name: Topology Change Flag
+  filter: stp.flags.tc == 1
+  description: Filter for BPDUs with topology change flag set
+- name: Root Bridge
+  filter: stp.bridge.prio == stp.root.prio and stp.bridge.hw == stp.root.hw
+  description: Filter for root bridge BPDUs
+- name: PVST
+  filter: stp.pvst.origvlan
+  description: Filter for PVST+ BPDUs
+- name: RSTP
+  filter: stp.version == 2
+  description: Filter for Rapid STP BPDUs
+- name: MSTP
+  filter: stp.version == 3
+  description: Filter for Multiple STP BPDUs
+checks:
+- name: stp_root_bridge_change
+  severity: critical
+  message: 'STP root bridge change: new root {stp.root.hw} (priority {stp.root.prio})'
+  description: Different stp.root.hw values in BPDUs from same segment
+  condition: null
+- name: stp_topology_change
+  severity: major
+  message: STP topology change detected from {stp.bridge.hw}
+  condition: stp.flags.tc == 1
+- name: stp_tc_n_storm
+  severity: major
+  message: 'STP TCN storm: {count} topology change notifications in short interval'
+  description: More than 5 stp.type == 80 within 10 seconds
+  condition: null
+- name: stp_timer_mismatch
+  severity: major
+  message: 'STP timer mismatch: hello={stp.hello}s, max_age={stp.max_age}s, forward_delay={stp.forward}s'
+  description: STP timer values don't match default (hello=2, max_age=20, forward=15)
+  condition: null
+- name: stp_inconsistent_vlan
+  severity: minor
+  message: 'STP inconsistent VLAN: {stp.pvst.origvlan} has different root'
+  description: Different stp.root.hw for same stp.root.prio across PVST VLANs
+  condition: null

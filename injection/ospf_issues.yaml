@@ -1,0 +1,1108 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "OSPF Issues Injection"
+description: "OSPF protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ospf
+  - ospfv2
+  - ospfv3
+
+issues:
+  ospf_area_mismatch:
+    name: "OSPF Area Mismatch"
+    description: "Configure interfaces in different OSPF areas than their neighbors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails"
+      - "Routes not exchanged between areas"
+      - "OSPF stuck in INIT or DOWN state"
+      - "Area border router issues"
+    troubleshooting_hints:
+      - "Check OSPF neighbor status with 'show ip ospf neighbor'"
+      - "Verify OSPF area configuration on interfaces"
+      - "Check OSPF database with 'show ip ospf database'"
+      - "Look for 'mismatched area' error messages"
+      - "Ensure all interfaces in a segment are in same area (unless using virtual links)"
+    applicability: "OSPF routers, multi-area OSPF designs"
+
+  ospf_authentication_mismatch:
+    name: "OSPF Authentication Mismatch"
+    description: "Configure OSPF authentication on one side but not the other, or use different keys or auth types"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails"
+      - "Authentication mismatch errors in logs"
+      - "OSPF stuck in DOWN or ATTEMPT state"
+    troubleshooting_hints:
+      - "Check OSPF interface configuration for authentication"
+      - "Verify authentication type (null, clear text, MD5, SHA)"
+      - "Check key strings match exactly"
+      - "Look for 'authentication failure' messages"
+      - "Ensure key IDs match for MD5/SHA authentication"
+      - "For OSPFv3, verify IPsec authentication settings"
+    applicability: "OSPF routers with authentication configured"
+
+  ospf_hello_dead_mismatch:
+    name: "OSPF Hello/Dead Timer Mismatch"
+    description: "Configure mismatched OSPF hello or dead interval timers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency fails to form"
+      - "Neighbors stuck in INIT state"
+      - "Adjacency flaps intermittently"
+    troubleshooting_hints:
+      - "Check OSPF interface timers with 'show ip ospf interface detail'"
+      - "Hello and dead timers must match on both sides"
+      - "Default hello is 10s, dead is 40s on broadcast"
+      - "Default hello is 30s, dead is 120s on point-to-point"
+      - "Dead interval should be 4x hello interval"
+    applicability: "All OSPF configurations"
+
+  ospf_passive_interface:
+    name: "OSPF Passive Interface Blocking Neighbors"
+    description: "Configure passive-interface on an interface where OSPF neighbor needs to form"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency doesn't form on specific interface"
+      - "No OSPF hellos sent on the interface"
+      - "Routes missing only on one segment"
+      - "Other interfaces form adjacencies normally"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for passive status"
+      - "Verify interface is not listed as passive"
+      - "Check OSPF configuration for 'passive-interface default'"
+      - "Use 'no passive-interface <intf>' to allow adjacency"
+      - "Check 'show run | section router ospf' for passive statements"
+    applicability: "OSPF routers with selective passive interface configuration"
+
+  # Neighbor Establishment Issues
+
+  ospf_network_type_mismatch:
+    name: "OSPF Network Type Mismatch"
+    description: "Configure different network types (broadcast, point-to-point, non-broadcast) on connected interfaces"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF neighbor adjacency fails"
+      - "Neighbors stuck in 2-WAY state on broadcast networks"
+      - "DR/BDR election issues"
+      - "Routes not exchanged properly"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for network type"
+      - "Ensure both sides use same network type"
+      - "Broadcast networks typically use DR/BDR model"
+      - "Point-to-point networks don't elect DR/BDR"
+      - "Mismatched network types prevent proper adjacency"
+    applicability: "OSPF routers with manual network type configuration"
+
+  ospf_mtu_mismatch:
+    name: "OSPF MTU Mismatch"
+    description: "Configure interface MTU larger on one side, causing DBD exchange to fail and neighbors stuck in EXSTART state"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbors stuck in EXSTART state"
+      - "Database exchange fails repeatedly"
+      - "Adjacency never reaches FULL state"
+      - "MTU mismatch error messages in logs"
+    troubleshooting_hints:
+      - "Check 'show ip ospf neighbor' - neighbors stuck in EXSTART"
+      - "Verify interface MTU with 'show interface'"
+      - "MTU must match on both sides for DBD exchange"
+      - "Use 'ip ospf mtu-ignore' as workaround (not recommended)"
+      - "Common issue with VLAN interfaces and trunking"
+    applicability: "OSPF routers with mismatched interface MTU sizes"
+
+  ospf_router_id_conflict:
+    name: "OSPF Router ID Conflict"
+    description: "Configure duplicate OSPF router IDs on different routers in the same area"
+    severity: "critical"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF adjacency instability"
+      - "LSA origination conflicts"
+      - "Routing loops or black holes"
+      - "Repeated OSPF process restarts"
+      - "LSA database corruption warnings"
+    troubleshooting_hints:
+      - "Check 'show ip ospf' for router ID"
+      - "Ensure all routers have unique router IDs"
+      - "Use 'router-id <x.x.x.x>' command to set manually"
+      - "Router ID is typically the highest loopback or interface IP"
+      - "Duplicate router IDs cause severe routing problems"
+    applicability: "All OSPF deployments, especially when adding new routers"
+
+  ospf_subnet_mismatch:
+    name: "OSPF Subnet Mask Mismatch on Broadcast Networks"
+    description: "Configure interfaces in same subnet but with different subnet masks, preventing adjacency on broadcast networks"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF neighbor adjacency fails on broadcast segment"
+      - "Neighbors not discovered despite Layer 2 connectivity"
+      - "OSPF hellos sent but not received"
+    troubleshooting_hints:
+      - "Check interface IP configuration with 'show ip interface brief'"
+      - "Verify subnet masks match on all routers in same segment"
+      - "OSPF on broadcast networks requires exact subnet match"
+      - "Point-to-point links more forgiving with subnet mismatches"
+      - "Ensure IP addresses and masks are correct"
+    applicability: "OSPF on broadcast networks (Ethernet, VLAN)"
+
+  ospf_instance_id_mismatch:
+    name: "OSPFv3 Instance ID Mismatch"
+    description: "Configure different OSPFv3 instance IDs on interfaces in the same segment"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospfv3
+    symptoms:
+      - "OSPFv3 neighbor adjacency fails"
+      - "Multiple OSPFv3 instances on same link not forming"
+      - "IPv6 routes not exchanged"
+    troubleshooting_hints:
+      - "Check 'show ipv6 ospf interface' for instance ID"
+      - "Instance ID must match on both sides (default is 0)"
+      - "Use 'ipv6 ospf <process-id> instance <instance-id>' command"
+      - "Different instance IDs are treated as separate OSPF processes"
+      - "Verify instance ID configuration on all interfaces"
+    applicability: "OSPFv3 deployments with multiple instances"
+
+  ospf_linklocal_missing:
+    name: "OSPFv3 Missing Link-Local Address"
+    description: "Remove or misconfigure link-local address on OSPFv3 interface, preventing neighbor formation"
+    severity: "critical"
+    difficulty: "beginner"
+    protocols:
+      - ospfv3
+    symptoms:
+      - "OSPFv3 adjacency fails to form"
+      - "OSPFv3 process not running on interface"
+      - "IPv6 routing not functioning"
+      - "Link-local address required error messages"
+    troubleshooting_hints:
+      - "Check 'show ipv6 interface' for link-local address (FE80::/10)"
+      - "OSPFv3 requires link-local address for neighbor communication"
+      - "Link-local auto-generated but can be manually configured"
+      - "Verify 'ipv6 enable' is configured on interface"
+      - "Link-local address must be in same subnet (FE80::/10)"
+    applicability: "OSPFv3 deployments"
+
+  # LSA and Route Propagation Issues
+
+  ospf_lsa_filter_config:
+    name: "OSPF LSA Filtering Configuration Error"
+    description: "Configure incorrect LSA filtering preventing legitimate routes from being advertised"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Specific routes missing from OSPF database"
+      - "Partial routing table in an area"
+      - "Filtered routes affect network reachability"
+      - "Asymmetric routing behavior"
+    troubleshooting_hints:
+      - "Check 'show ip ospf database' for missing LSAs"
+      - "Look for 'distribute-list' or 'filter-list' commands"
+      - "LSA filtering typically done on ABRs or ASBRs"
+      - "Verify area ranges and summary LSA filtering"
+      - "Check 'ip ospf database-filter all out' on interfaces"
+    applicability: "OSPF networks with LSA filtering for route control"
+
+  ospf_external_route_missing:
+    name: "OSPF External Route Redistribution Missing"
+    description: "Fail to redistribute external routes (static, connected, BGP) into OSPF or configure incorrect redistribute parameters"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "External routes not appearing in OSPF domain"
+      - "Type 5 or Type 7 LSAs missing from database"
+      - "ASBR not generating external LSAs"
+      - "Connectivity to external networks lost"
+    troubleshooting_hints:
+      - "Check 'show ip ospf database external' for Type 5 LSAs"
+      - "Verify 'redistribute' command under OSPF process"
+      - "Check route maps and distribute lists"
+      - "Ensure external routes exist in routing table"
+      - "Verify 'subnets' keyword for OSPFv2 redistribution"
+      - "Check OSPFv3 external LSA types (E-routes)"
+    applicability: "OSPF autonomous system boundary routers (ASBRs)"
+
+  ospf_default_route_missing:
+    name: "OSPF Default Originate Not Configured"
+    description: "Fail to configure 'default-information originate' on ASBR, causing default route to be missing from OSPF domain"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "No default route (0.0.0.0/0) in OSPF domain"
+      - "Internet connectivity lost for internal routers"
+      - "Only static default on edge router, not propagated"
+      - "Routers can't reach unknown networks"
+    troubleshooting_hints:
+      - "Check 'show ip route ospf' for default route"
+      - "Configure 'default-information originate' on ASBR"
+      - "Use 'always' keyword to advertise even without default route"
+      - "Verify default route exists in ASBR's routing table"
+      - "Check for 'default-information originate' in OSPF config"
+    applicability: "OSPF networks with internet or external connectivity"
+
+  ospf_route_summary_config:
+    name: "OSPF Route Summarization Configuration Error"
+    description: "Configure incorrect route summarization on ABR causing suboptimal routing or black holes"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Suboptimal routing paths"
+      - "Traffic black holes to summarized subnets"
+      - "Route flapping when subnets within summary go down"
+      - "Specific routes missing from routing table"
+    troubleshooting_hints:
+      - "Check 'show ip ospf border-routers' for ABR information"
+      - "Verify 'area range' configuration on ABRs"
+      - "Ensure summary address includes all component subnets"
+      - "Check for overlapping summary addresses"
+      - "Use 'area X range <network> <mask> not-advertise' carefully"
+      - "Verify summary LSA (Type 3) in OSPF database"
+    applicability: "Multi-area OSPF deployments with route summarization"
+
+  ospf_lsa_flooding_blocked:
+    name: "OSPF LSA Flooding Blocked"
+    description: "Configure interface to block LSA flooding, preventing OSPF database synchronization"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF database not synchronized across areas"
+      - "Routes missing in some routers"
+      - "Inconsistent routing tables"
+      - "LSAs not reaching all routers"
+    troubleshooting_hints:
+      - "Check 'show ip ospf database' for inconsistencies"
+      - "Look for 'database-filter all out' on interfaces"
+      - "Verify flooding is enabled on all interfaces"
+      - "Check for ACLs blocking OSPF multicast (224.0.0.5/6)"
+      - "Ensure OSPF network type allows proper flooding"
+      - "Verify interface is not in passive mode incorrectly"
+    applicability: "OSPF networks with LSA filtering or transport issues"
+
+  # Area Design Issues
+
+  ospf_virtual_link_misconfig:
+    name: "OSPF Virtual Link Misconfiguration"
+    description: "Configure OSPF virtual link incorrectly or fail to configure when needed to connect disconnected areas"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Disconnected area cannot reach backbone (Area 0)"
+      - "Virtual link not establishing"
+      - "Area 0 must be contiguous for proper OSPF operation"
+      - "Inter-area routes missing"
+    troubleshooting_hints:
+      - "Check 'show ip ospf virtual-links' for virtual link status"
+      - "Virtual link must transit through non-backbone area"
+      - "Configure 'area <transit-area-id> virtual-link <router-id>'"
+      - "Both ends must configure virtual link with each other's Router ID"
+      - "Virtual link requires full OSPF adjacency over transit area"
+      - "Verify Router IDs are correct and reachable"
+    applicability: "OSPF networks with areas not directly connected to Area 0"
+
+  ospf_stub_area_misconfig:
+    name: "OSPF Stub Area Configuration Error"
+    description: "Configure stub area incorrectly or fail to configure all routers in area as stub, causing routing failures"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Type 5 external LSAs blocked in stub area"
+      - "No external routes in stub area routers"
+      - "Adjacency fails if stub configuration mismatch"
+      - "Default summary route missing from stub area"
+    troubleshooting_hints:
+      - "All routers in stub area must have 'area X stub' configured"
+      - "Stub areas block Type 5 LSAs but allow Type 3 summary LSAs"
+      - "ABR automatically generates default route into stub area"
+      - "Use 'area X stub no-summary' for totally stubby area"
+      - "Virtual links cannot traverse stub areas"
+      - "Check 'show ip ospf' for stub area status"
+    applicability: "OSPF networks using stub areas to reduce LSDB size"
+
+  ospf_nssa_area_misconfig:
+    name: "OSPF NSSA Area Configuration Error"
+    description: "Configure NSSA (Not-So-Stubby Area) incorrectly, causing external route translation or propagation issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Type 7 LSAs not translated to Type 5 at ABR"
+      - "External routes not propagated beyond NSSA"
+      - "NSSA external routes (N1/N2) missing"
+      - "P-bit not set correctly for LSA translation"
+    troubleshooting_hints:
+      - "All routers in NSSA must have 'area X nssa' configured"
+      - "NSSA allows Type 7 LSAs which ABR translates to Type 5"
+      - "Use 'area X nssa no-redistribution' to prevent external injection"
+      - "Use 'area X nssa no-summary' for totally stubby NSSA"
+      - "Check 'show ip ospf database nssa-external' for Type 7 LSAs"
+      - "Verify ABR is configured to translate Type 7 to Type 5"
+    applicability: "OSPF networks requiring local external routes but not backbone external routes"
+
+  ospf_abr_missing:
+    name: "OSPF Area Border Router Missing"
+    description: "Fail to configure ABR functionality, causing routes from one area to not reach another area"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Routes not exchanged between areas"
+      - "Inter-area communication fails"
+      - "Summary LSAs (Type 3) missing from OSPF database"
+      - "Routers in different areas cannot communicate"
+    troubleshooting_hints:
+      - "ABR must have interfaces in multiple areas including Area 0"
+      - "Check 'show ip ospf border-routers' for ABR information"
+      - "Ensure at least one interface is in Area 0 (backbone)"
+      - "ABR generates Type 3 summary LSAs between areas"
+      - "Verify OSPF is enabled on interfaces in each area"
+      - "Check for 'area X range' summarization on ABR"
+    applicability: "Multi-area OSPF deployments"
+
+  ospf_cross_area_unreachable:
+    name: "OSPF Cross-Area Route Unreachable"
+    description: "Configure inter-area path incorrectly or ABR fails to propagate summary LSAs, causing cross-area connectivity failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Routes in one area not reachable from another area"
+      - "Type 3 summary LSAs missing from OSPF database"
+      - "Asymmetric routing between areas"
+      - "Traffic follows suboptimal path or black holes"
+    troubleshooting_hints:
+      - "Check 'show ip ospf database summary' for Type 3 LSAs"
+      - "Verify ABR is properly configured and functional"
+      - "Ensure all areas connect to Area 0 directly or via virtual links"
+      - "Check for 'area X range' filtering specific networks"
+      - "Verify routing table on ABR contains routes from all areas"
+      - "Check for route filtering preventing LSA generation"
+    applicability: "Multi-area OSPF networks"
+
+  # Network Type Issues
+
+  ospf_broadcast_as_p2p:
+    name: "OSPF Broadcast Network Configured as Point-to-Point"
+    description: "Configure OSPF network type as point-to-point on broadcast segment with multiple routers, causing DR/BDR election failure"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Multiple adjacencies formed instead of DR/BDR model"
+      - "Suboptimal routing on broadcast segment"
+      - "Excessive LSA flooding on segment"
+      - "Potential routing loops or confusion"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for network type"
+      - "Broadcast networks (Ethernet) should use default network type"
+      - "Point-to-point type only for actual point-to-point links"
+      - "DR/BDR election only occurs on broadcast/NBMA network types"
+      - "Use 'ip ospf network broadcast' to correct"
+      - "Multiple routers on same subnet need DR/BDR model"
+    applicability: "OSPF on broadcast networks (Ethernet, VLAN)"
+
+  ospf_nbma_neighbor_missing:
+    name: "OSPF NBMA Neighbor Not Configured"
+    description: "Fail to configure OSPF neighbor statements on NBMA network (Frame Relay, ATM), preventing neighbor formation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF neighbors not forming on NBMA network"
+      - "No DR/BDR election on NBMA segment"
+      - "OSPF hellos not reaching all neighbors"
+      - "Partial mesh connectivity issues"
+    troubleshooting_hints:
+      - "NBMA networks require manual neighbor configuration"
+      - "Use 'neighbor <ip-address>' command for OSPF neighbors"
+      - "Ensure OSPF network type is set to non-broadcast"
+      - "Configure priority and poll interval as needed"
+      - "Consider using point-to-multipoint as alternative"
+      - "Check 'show ip ospf neighbor' for missing adjacencies"
+    applicability: "OSPF on NBMA networks (Frame Relay, ATM, X.25)"
+
+  ospf_dr_bdr_election_issue:
+    name: "OSPF DR/BDR Election Issues"
+    description: "Configure OSPF priorities incorrectly or manipulate DR/BDR election causing suboptimal DR/BDR placement"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Suboptimal router elected as DR/BDR"
+      - "Low-performance router overwhelmed with DR duties"
+      - "Router with OSPF priority 0 becomes ineligible"
+      - "Frequent DR/BDR changes causing instability"
+    troubleshooting_hints:
+      - "Check 'show ip ospf neighbor' for DR/BDR status"
+      - "Highest router ID (not priority) becomes DR if priority ties"
+      - "Use 'ip ospf priority <0-255>' to influence election"
+      - "Priority 0 means router cannot become DR/BDR"
+      - "DR/BDR election is non-preemptive"
+      - "Highest priority router should be DR for stability"
+    applicability: "OSPF broadcast and NBMA network types"
+
+  ospf_priority_misconfig:
+    name: "OSPF Priority Misconfiguration"
+    description: "Set OSPF interface priority to 0 on all routers, preventing any DR/BDR election"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "No DR or BDR elected on broadcast segment"
+      - "OSPF neighbors stuck in 2-WAY state"
+      - "Routes not exchanged on multi-access segment"
+      - "Network partition in broadcast domain"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface detail' for interface priority"
+      - "Priority 0 means router ineligible for DR/BDR"
+      - "At least two routers must have priority > 0 for election"
+      - "Default priority is 1 on most interfaces"
+      - "Use 'ip ospf priority <1-255>' to restore eligibility"
+      - "Higher priority value preferred for DR/BDR"
+    applicability: "OSPF broadcast networks requiring DR/BDR election"
+
+  # Performance and Resource Issues
+
+  ospf_lsa_storm:
+    name: "OSPF LSA Storm (Flooding)"
+    description: "Trigger excessive LSA generation and flooding due to flapping links or unstable network, overwhelming OSPF process"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Excessive OSPF LSA flooding and retransmission"
+      - "High CPU utilization on OSPF routers"
+      - "OSPF database constantly changing"
+      - "SPF calculations running continuously"
+      - "Network-wide OSPF instability"
+    troubleshooting_hints:
+      - "Check 'show ip ospf traffic' for LSA counts"
+      - "Look for flapping interfaces or unstable links"
+      - "Implement OSPF throttling and timers"
+      - "Use 'ip ospf retransmit-interval' and 'transmit-delay'"
+      - "Check for LSA origination rate limiting"
+      - "Identify source of LSA churn with 'show ip ospf database'"
+    applicability: "OSPF networks with unstable links or frequent topology changes"
+
+  ospf_spf_throttling_issue:
+    name: "OSPF SPF Throttling Issues"
+    description: "Configure incorrect SPF throttling parameters causing excessive SPF calculations or slow convergence"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Excessive SPF calculations consuming CPU"
+      - "Slow OSPF convergence after topology changes"
+      - "SPF scheduled but not running or running too frequently"
+      - "Routing instability after LSA changes"
+    troubleshooting_hints:
+      - "Check 'show ip ospf' for SPF statistics"
+      - "Review SPF timers: 'timers throttle spf <spf-start> <spf-hold> <spf-max-wait>'"
+      - "Default: SPF delay 5s, hold time 10s, max wait 5s"
+      - "Tune for balance between convergence speed and stability"
+      - "Frequent SPF indicates network instability or LSA storms"
+      - "Check for LSA generation rate with 'show ip ospf database'"
+    applicability: "OSPF networks with frequent topology changes"
+
+  ospf_route_limit_exceeded:
+    name: "OSPF Route Limit Exceeded"
+    description: "OSPF router exceeds maximum route capacity, causing routes to be missing or OSPF process to fail"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Routes missing from routing table despite being in OSPF database"
+      - "OSPF process crashes or restarts"
+      - "Memory exhaustion on router"
+      - "Route installation failures in logs"
+    troubleshooting_hints:
+      - "Check 'show ip ospf' for route counts and limits"
+      - "Verify router memory and TCAM capacity"
+      - "Implement route summarization to reduce route count"
+      - "Use 'max-metric router-lsa' to temporarily stop routing"
+      - "Filter unnecessary routes with distribute-lists"
+      - "Consider upgrading hardware or redistributing load"
+    applicability: "OSPF routers with large routing tables or limited resources"
+
+  ospf_interface_bandwidth:
+    name: "OSPF Interface Bandwidth Limitation"
+    description: "Configure OSPF reference bandwidth incorrectly, causing improper cost calculation and suboptimal routing"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Traffic follows suboptimal path"
+      - "High-speed links not preferred over low-speed links"
+      - "OSPF cost calculation incorrect"
+      - "Unequal load balancing not working"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for OSPF cost and bandwidth"
+      - "OSPF cost = reference-bandwidth / interface-bandwidth"
+      - "Default reference bandwidth is 100 Mbps"
+      - "Use 'auto-cost reference-bandwidth <Mbps>' to adjust"
+      - "For 10G+ networks, set reference to 10000 or higher"
+      - "Manual cost with 'ip ospf cost <value>' overrides calculation"
+    applicability: "OSPF networks with mixed link speeds or high-speed interfaces"
+
+  # Configuration Errors
+
+  ospf_interface_not_enabled:
+    name: "OSPF Not Enabled on Interface"
+    description: "Interface configured with IP address but OSPF not enabled, preventing neighbor formation and route advertisement"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF not running on interface despite IP configuration"
+      - "Interface not listed in 'show ip ospf interface'"
+      - "No OSPF hellos sent on interface"
+      - "Network not advertised to OSPF neighbors"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' - interface missing from list"
+      - "For OSPFv2: Ensure 'network <network> wildmask area <area>' includes interface"
+      - "Or use 'ip ospf <process-id> area <area>' under interface"
+      - "For OSPFv3: Use 'ipv6 ospf <process-id> area <area>' under interface"
+      - "Verify interface is not in passive mode unintentionally"
+      - "Check interface is 'up/up' with 'show ip interface brief'"
+    applicability: "All OSPF deployments, especially when adding new interfaces"
+
+  ospf_network_cmd_wrong:
+    name: "OSPF Network Command Configuration Error"
+    description: "Configure incorrect network statement or wildcard mask, causing interfaces to not join OSPF process"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Interfaces not included in OSPF process"
+      - "Network statement doesn't match interface IP"
+      - "Wrong wildcard mask in network command"
+      - "OSPF not running on expected interfaces"
+    troubleshooting_hints:
+      - "Check 'show running-config | section router ospf' for network statements"
+      - "Network command: 'network <IP> <wildcard> area <area>'"
+      - "Wildcard mask is inverse of subnet mask (0.0.0.255 for /24)"
+      - "Use 'network 0.0.0.0 255.255.255.255 area <area>' to match all"
+      - "More specific network statements take precedence"
+      - "Verify interface IP is within network statement range"
+    applicability: "OSPFv2 deployments using network command"
+
+  ospf_redistribute_wrong:
+    name: "OSPF Redistribution Configuration Error"
+    description: "Configure incorrect redistribution (wrong protocol, missing route-map, missing subnets keyword), causing external routes to not appear"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Redistributed routes not appearing in OSPF domain"
+      - "External routes not generated by ASBR"
+      - "Route filtering not working as expected"
+      - "Missing 'subnets' keyword for OSPFv2"
+    troubleshooting_hints:
+      - "Check 'show ip ospf database external' for Type 5 LSAs"
+      - "OSPFv2 requires 'subnets' keyword to redistribute subnet routes"
+      - "Verify 'redistribute <protocol> metric <value> metric-type <type>'"
+      - "Use route-map to filter or modify redistributed routes"
+      - "Ensure redistributed routes exist in routing table"
+      - "Check for 'redistribute' configuration under OSPF process"
+    applicability: "OSPF ASBRs redistributing other routing protocols"
+
+  ospf_cost_misconfig:
+    name: "OSPF Interface Cost Misconfiguration"
+    description: "Configure incorrect OSPF interface cost, causing suboptimal routing or unequal load balancing issues"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Traffic follows suboptimal path"
+      - "High-cost path preferred over low-cost path"
+      - "Unequal load balancing not working"
+      - "Manual cost overrides automatic calculation"
+    troubleshooting_hints:
+      - "Check 'show ip ospf interface' for interface cost"
+      - "Lower cost = preferred path in OSPF"
+      - "Default cost calculated from interface bandwidth"
+      - "Manual cost set with 'ip ospf cost <value>' command"
+      - "For equal-cost load balancing, ensure costs match"
+      - "Remove manual cost to use auto-cost based on bandwidth"
+    applicability: "OSPF networks with manual cost configuration or traffic engineering"
+
+  ospf_loopback_advertise:
+    name: "OSPF Loopback Interface Advertisement"
+    description: "Configure loopback interface as host route (/32) instead of actual subnet, causing routing issues"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Loopback advertised as /32 host route"
+      - "Routes to loopback subnet not working"
+      - "OSPF advertises loopback as host regardless of subnet mask"
+      - "Unexpected /32 routes in routing table"
+    troubleshooting_hints:
+      - "OSPF advertises loopback as /32 by default"
+      - "Use 'ip ospf network point-to-point' to advertise actual subnet"
+      - "Check 'show ip ospf interface loopback<id>' for network type"
+      - "Loopback networks commonly used for Router ID or management"
+      - "/32 advertisement is normal behavior, not necessarily an error"
+      - "Change to point-to-point only if subnet advertisement needed"
+    applicability: "OSPF routers with loopback interfaces"
+
+  ospf_process_id_mismatch:
+    name: "OSPF Process ID Mismatch"
+    description: "Configure different OSPF process IDs on interfaces that should be in same OSPF domain"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF neighbors not forming across interfaces"
+      - "Separate OSPF processes on same router"
+      - "Routes not exchanged between OSPF processes"
+      - "Multiple OSPF databases on same router"
+    troubleshooting_hints:
+      - "OSPF process ID is locally significant, doesn't need to match"
+      - "But all interfaces in same area should use same process"
+      - "Check 'show ip ospf' for process ID and interfaces"
+      - "Multiple processes require redistribution to exchange routes"
+      - "Single process recommended unless multi-vendor isolation needed"
+      - "Process ID is just a local identifier (1-65535)"
+    applicability: "OSPF routers with multiple OSPF processes"
+
+  # Virtual Link Extended Issues
+
+  ospf_virtual_link_auth:
+    name: "OSPF Virtual Link Authentication Mismatch"
+    description: "Configure authentication on a virtual link that does not match the transit area's authentication"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF virtual link fails to establish"
+      - "Virtual link neighbor stuck in DOWN state"
+      - "Authentication works on physical interfaces but fails on virtual link"
+      - "Disconnected area cannot reach backbone"
+    troubleshooting_hints:
+      - "Virtual link inherits transit area's authentication settings"
+      - "If transit area uses MD5 auth: virtual link must also use MD5"
+      - "Check 'show ip ospf virtual-links' for virtual link state"
+      - "Virtual link authentication in 'area <id> virtual-link <rid> authentication'"
+      - "Key and auth type must match on both ends of the virtual link"
+      - "Different from interface auth: virtual link auth is per-area"
+    applicability: "Multi-area OSPF with virtual links and authentication"
+
+  ospf_virtual_link_transit:
+    name: "OSPF Virtual Link Transit Area Not Reachable"
+    description: "Configure virtual link but the transit area has no working path between the two endpoints"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Virtual link stays down"
+      - "Virtual link endpoint router-id not reachable via transit area"
+      - "Transit area routing incomplete"
+      - "Area 0 disconnection despite virtual link configured"
+    troubleshooting_hints:
+      - "Virtual link requires the two endpoint Router-IDs to be reachable within transit area"
+      - "Check 'show ip ospf border-routers' for ABR reachability"
+      - "Transit area must have full connectivity between the two ABRs"
+      - "Use 'show ip route <peer-router-id>' from each ABR"
+      - "If transit area is a stub area: virtual links NOT allowed"
+      - "Verify: 'area <id> virtual-link <rid>' on both ABRs with matching Router-ID"
+    applicability: "Multi-area OSPF with virtual link transit areas"
+
+  # OSPF Filtering Extended Issues
+
+  ospf_distribute_list_in:
+    name: "OSPF Distribute-List In / Route Suppression Misconfiguration"
+    description: "Configure distribute-list in on OSPF that filters legitimate intra-area or inter-area routes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF routes not installed in routing table despite being in database"
+      - "Distribute-list in blocking specific routes"
+      - "Intra-area routes missing on specific routers"
+      - "Access control filtering too broad"
+    troubleshooting_hints:
+      - "Distribute-list in: 'distribute-list <acl> in [<intf>]'"
+      - "OSPF installs routes from LSDB to RIB, distribute-list blocks installation"
+      - "Route still in LSDB ('show ip ospf database') but not in RIB ('show ip route')"
+      - "ACL permit/deny controls which prefixes get installed"
+      - "Implicit deny at end of ACL blocks all unpermitted prefixes"
+      - "Check 'show ip ospf distribute-list' for active filters"
+    applicability: "OSPF route filtering without LSA suppression"
+
+  ospf_filter_list:
+    name: "OSPF Filter-List on ABR / Area Prefix Suppression"
+    description: "Configure filter-list on ABR blocking Type 3 summary LSAs for specific prefixes between areas"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Specific prefixes not crossing area boundary"
+      - "ABR not generating Type 3 summary LSAs for filtered prefixes"
+      - "Inter-area routes missing in non-backbone areas"
+      - "Filter-list ACL matching wrong prefixes"
+    troubleshooting_hints:
+      - "Filter-list: 'area <id> filter-list prefix <name> in|out' on ABR"
+      - "Out = prefixes filtered before being advertised into the area"
+      - "In = prefixes filtered when received from the area"
+      - "Type 3 LSAs are suppressed entirely (not in LSDB either)"
+      - "Check 'show ip ospf database summary' for missing Type 3 LSAs"
+      - "Different from distribute-list: filter-list prevents LSA generation, not RIB install"
+    applicability: "Multi-area OSPF with inter-area route control"
+
+  ospf_interface_filter:
+    name: "OSPF Interface LSA Filter / Outbound LSA Suppression"
+    description: "Configure ip ospf database-filter on interface blocking all outbound LSAs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "OSPF neighbor adjacency up but no LSAs received"
+      - "Database not synchronized across the link"
+      - "One side has complete database, other has empty database"
+      - "Routes not advertised across specific interface only"
+    troubleshooting_hints:
+      - "'ip ospf database-filter all out' blocks all outgoing LSAs on an interface"
+      - "Neighbor adjacency stays up (Hellos still exchanged)"
+      - "LSDB never synchronizes: missing Type 1, 2, 3, 4, 5 LSAs"
+      - "Check 'show ip ospf interface <intf>' for database-filter status"
+      - "Router can receive LSAs but never sends any"
+      - "Common misconfiguration when trying to optimize LSA flooding"
+    applicability: "OSPF interfaces with LSA flooding restrictions"
+
+  # OSPF Default Route Extended Issues
+
+  ospf_default_always:
+    name: "OSPF Default-Information Originate Always / Conditional Issue"
+    description: "Configure default-information originate without 'always' keyword when no default in routing table"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Default route not advertised by ASBR"
+      - "Default-information originate configured but OSPF default missing"
+      - "No default route in routing table on ASBR itself"
+      - "Other routers have no 0.0.0.0/0 in OSPF"
+    troubleshooting_hints:
+      - "'default-information originate' requires a default route in routing table"
+      - "Without 'always': OSPF does not generate default if no 0.0.0.0/0 exists"
+      - "With 'always': OSPF always advertises default (even without one in RIB)"
+      - "Check 'show ip route' for 0.0.0.0/0 on the ASBR"
+      - "Use 'default-information originate always' for forced advertisement"
+      - "Set metric and metric-type: 'default-information originate always metric <n> metric-type 1|2'"
+    applicability: "OSPF autonomous system boundary routers"
+
+  ospf_default_metric_type:
+    name: "OSPF Default Route Metric / Type Mismatch"
+    description: "Configure OSPF default route with incorrect metric type (E1 vs E2) or metric value"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Default route received but path selection suboptimal"
+      - "E1 vs E2 confusion causing routing asymmetry"
+      - "Default route metric too high (unreachable) or too low"
+      - "Multiple default routes not selecting best path"
+    troubleshooting_hints:
+      - "Metric-type E1 (external + internal cost), E2 (external cost only)"
+      - "In 'show ip route': 'E1' or 'E2' after OSPF code"
+      - "E2 default: routers closest to ASBR get same cost as far routers"
+      - "E1 default: cost accumulates as distance from ASBR increases"
+      - "Use 'default-information originate metric-type 1|2'"
+      - "Default metric: 'metric <value>' (default 10 for external routes)"
+    applicability: "Multi-homed OSPF default route deployments"
+
+  # OSPF Authentication Extended Issues
+
+  ospf_auth_key_chain:
+    name: "OSPF Key-Chain Authentication Rollover Failure"
+    description: "Configure OSPF MD5/SHA authentication with key-chain but key rollover causes adjacency flap"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF adjacency flapping during key rollover"
+      - "Authentication failure with new or old key"
+      - "Key send-time mismatch between neighbors"
+      - "Brief OSPF outage during rolling key update"
+    troubleshooting_hints:
+      - "Key-chain: multiple keys with send-lifetime/accept-lifetime"
+      - "Both ends must have overlapping accept periods for old and new keys"
+      - "Send-lifetime: when router starts sending with new key"
+      - "Accept-lifetime: when router accepts old key (should overlap with peer's send)"
+      - "Higher key-ID preferred for sending"
+      - "Use 'debug ip ospf packet' to see auth key-ID during rollover"
+    applicability: "OSPF with managed key rotation"
+
+  ospf_auth_type_null:
+    name: "OSPF Null Authentication / Authentication Migration Issue"
+    description: "Configure 'ip ospf authentication null' on an interface that needs authentication"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "OSPF adjacency fails due to authentication type mismatch"
+      - "One side uses null auth, other uses MD5"
+      - "Authentication migration from null to MD5 incomplete"
+      - "Temporary adjacency loss during auth transition"
+    troubleshooting_hints:
+      - "OSPF auth types: 0 (null), 1 (simple password), 2 (MD5 cryptographic)"
+      - "'ip ospf authentication null' disables auth on that interface"
+      - "Auth type mismatch: both sides must agree on same auth type"
+      - "Migration: 'ip ospf authentication message-digest' on both sides"
+      - "Use 'ip ospf message-digest-key <id> md5 <key>' for MD5"
+      - "During transition: both sides should have matching key first"
+    applicability: "OSPF authentication migration deployments"
+
+  ospf_auth_area_vs_interface:
+    name: "OSPF Area-Level vs Interface-Level Authentication Conflict"
+    description: "Configure OSPF authentication at area level but override at interface level inconsistently"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Some interfaces in the same area have different auth settings"
+      - "Area authentication enabled but specific interface not matching"
+      - "OSPF adjacency works on some links but not others in same area"
+      - "Inconsistent authentication across area causing partial connectivity"
+    troubleshooting_hints:
+      - "Area auth: 'area <id> authentication [message-digest]'"
+      - "Interface auth: 'ip ospf authentication [message-digest|null]'"
+      - "Interface setting overrides area setting"
+      - "If area auth enabled but interface uses null auth: adjacency fails"
+      - "Check 'show ip ospf interface <intf>' for effective auth mode"
+      - "All interfaces in the same area should use consistent auth"
+    applicability: "Multi-area OSPF with mixed authentication requirements"
+
+  # OSPF Area Types Extended Issues
+
+  ospf_totally_stubby:
+    name: "OSPF Totally Stubby Area / Type 3 Summary Missing"
+    description: "Configure totally stubby area but default summary route not generated by ABR"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+      - ospfv3
+    symptoms:
+      - "Totally stubby area routers have no default route"
+      - "ABR not injecting Type 3 default summary into totally stubby area"
+      - "Area routers cannot reach destinations outside the area"
+      - "No inter-area routes (as expected) but also no default"
+    troubleshooting_hints:
+      - "Totally stubby: 'area <id> stub no-summary' on ABR only"
+      - "Blocks all Type 3/4/5 LSAs into the area (including inter-area routes)"
+      - "ABR automatically injects Type 3 default (0.0.0.0/0)"
+      - "If no default: check 'area <id> stub' (without no-summary) on ABR"
+      - "Non-ABRs in area still use 'area <id> stub' (without no-summary)"
+      - "Check 'show ip ospf database summary' for default Type 3 LSA"
+    applicability: "Totally stubby area OSPF deployments"
+
+  ospf_nssa_translate:
+    name: "OSPF NSSA Type-7 to Type-5 Translation Failure"
+    description: "Configure NSSA ABR but Type-7 LSAs not translated to Type-5 for other areas"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "External routes from NSSA area not reaching other areas"
+      - "Type-7 LSAs present in NSSA but missing as Type-5 in backbone"
+      - "Translation flag not set on NSSA ABR"
+      - "P-bit incorrectly set or cleared"
+    troubleshooting_hints:
+      - "NSSA Type-7 LSAs carry external routes within the NSSA"
+      - "Only the ABR with highest Router-ID translates Type-7 to Type-5"
+      - "Translation election: 'show ip ospf' for 'NSSA Translator' status"
+      - "P-bit (propagate bit) determines which Type-7 to translate"
+      - "If P-bit not set: LSA stays within NSSA, not advertised to other areas"
+      - "Use 'area <id> nssa translate type7 suppress-fa' for forwarding address"
+    applicability: "NSSA area with external route propagation"
+
+  ospf_nssa_default:
+    name: "OSPF NSSA Default Route / No-Redistribution Flag Issue"
+    description: "Configure NSSA area with no-redistribution flag preventing Type-7 default route generation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "NSSA routers have no default route"
+      - "NSSA area with no-redistribution not getting default"
+      - "ABR not injecting Type-7 default into NSSA"
+      - "External connectivity from NSSA broken"
+    troubleshooting_hints:
+      - "'area <id> nssa [no-redistribution] [default-information-originate]'"
+      - "no-redistribution: prevents redistributed routes from entering NSSA"
+      - "default-information-originate: generates Type-7 default into NSSA"
+      - "Without 'default-information-originate': no default injected"
+      - "With 'no-redistribution': redistributed routes blocked but default still injected if configured"
+      - "Check 'show ip ospf database nssa-external' for Type-7 default"
+    applicability: "NSSA area with controlled external route distribution"
+
+  ospf_area_cost_default:
+    name: "OSPF Area Default-Cost / Summary Path Cost Misconfiguration"
+    description: "Configure area default-cost on ABR with incorrect metric for stub/NSSA default route"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ospf
+      - ospfv2
+    symptoms:
+      - "Default route cost into stub/NSSA area too high or too low"
+      - "Multiple ABRs inject default with same cost (no load balancing)"
+      - "Suboptimal exit path from the area"
+      - "Traffic always exits through same ABR regardless of cost"
+    troubleshooting_hints:
+      - "'area <id> default-cost <cost>' sets the metric of the default route into the area"
+      - "Default cost: 1 by default"
+      - "Higher cost = less preferred exit from the area"
+      - "Set different costs on different ABRs for primary/backup exit"
+      - "Only applies to stub/NSSA/totally-stubby areas"
+      - "Check 'show ip ospf database summary' for default route cost"
+    applicability: "Stub/NSSA areas with multiple ABRs"

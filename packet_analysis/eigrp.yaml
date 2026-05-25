@@ -1,0 +1,115 @@
+name: EIGRP Packet Analysis
+description: EIGRP (Enhanced Interior Gateway Routing Protocol) packet analysis for Cisco proprietary routing troubleshooting
+protocol_key: eigrp
+display_filter: eigrp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: EIGRP Version
+  tshark_field: eigrp.version
+  description: EIGRP version (usually 2)
+- label: Opcode
+  tshark_field: eigrp.opcode
+  description: 'EIGRP opcode: 1=Update, 2=Query, 3=Reply, 4=Hello, 5=Stub'
+- label: Autonomous System
+  tshark_field: eigrp.as
+  description: EIGRP autonomous system number
+- label: Virtual Router ID
+  tshark_field: eigrp.vrid
+  description: Virtual Router ID (named mode)
+- label: Sequence Number
+  tshark_field: eigrp.seq
+  description: EIGRP sequence number
+- label: Acknowledge Number
+  tshark_field: eigrp.ack
+  description: EIGRP acknowledgment number
+- label: Flags
+  tshark_field: eigrp.flags
+  description: EIGRP flags
+- label: Init Flag
+  tshark_field: eigrp.flags.init
+  description: Initialization flag (request full topology)
+- label: Conditional Receive Flag
+  tshark_field: eigrp.flags.condrecv
+  description: Conditional receive flag
+- label: Restart Flag
+  tshark_field: eigrp.flags.restart
+  description: Restart flag (NSF signaling)
+- label: End of Table Flag
+  tshark_field: eigrp.flags.eot
+  description: End of table flag (complete topology sent)
+- label: TLV Type
+  tshark_field: eigrp.tlv_type
+  description: EIGRP TLV type
+- label: K1 (Bandwidth)
+  tshark_field: eigrp.par.k1
+  description: K1 bandwidth coefficient
+- label: K2 (Load)
+  tshark_field: eigrp.par.k2
+  description: K2 load coefficient
+- label: K3 (Delay)
+  tshark_field: eigrp.par.k3
+  description: K3 delay coefficient
+- label: K4 (Reliability)
+  tshark_field: eigrp.par.k4
+  description: K4 reliability coefficient
+- label: K5 (MTU)
+  tshark_field: eigrp.par.k5
+  description: K5 MTU coefficient
+- label: Hold Time
+  tshark_field: eigrp.par.holdtime
+  description: Hello holdtime in seconds
+filter_examples:
+- name: EIGRP Hello
+  filter: eigrp.opcode == 4
+  description: Filter for EIGRP Hello packets
+- name: EIGRP Update
+  filter: eigrp.opcode == 1
+  description: Filter for EIGRP Update packets
+- name: EIGRP Query
+  filter: eigrp.opcode == 2
+  description: Filter for EIGRP Query packets
+- name: EIGRP Reply
+  filter: eigrp.opcode == 3
+  description: Filter for EIGRP Reply packets
+- name: EIGRP Stub
+  filter: eigrp.opcode == 5
+  description: Filter for EIGRP Stub messages
+- name: Specific AS
+  filter: eigrp.as == 100
+  description: Filter for specific autonomous system
+- name: EIGRP with Init flag
+  filter: eigrp.flags.init == 1
+  description: Filter for EIGRP with init flag set
+checks:
+- name: eigrp_neighbor_timeout
+  severity: major
+  message: 'EIGRP neighbor timeout: no Hello from {ip.src} within holdtime'
+  description: No EIGRP Hello from neighbor within eigrp.par.holdtime
+  condition: null
+- name: eigrp_as_mismatch
+  severity: critical
+  message: 'EIGRP AS mismatch: expected AS {expected_as}, got {eigrp.as}'
+  description: Different eigrp.as values from same segment
+  condition: null
+- name: eigrp_k_value_mismatch
+  severity: critical
+  message: 'EIGRP K-value mismatch: K values differ from {ip.src}'
+  description: Different K1-K5 values in Hello packets
+  condition: null
+- name: eigrp_stuck_active
+  severity: major
+  message: 'EIGRP stuck in active: Query for {network} with no Reply'
+  description: eigrp.opcode == 2 and no matching eigrp.opcode == 3 within expected time
+  condition: eigrp.opcode == 2
+- name: eigrp_auth_failure
+  severity: major
+  message: EIGRP authentication failure from {ip.src}
+  description: EIGRP packet with authentication mismatch
+  condition: null
+- name: eigrp_duplicate_router_id
+  severity: critical
+  message: 'EIGRP duplicate router ID: {router_id} from multiple sources'
+  description: Same EIGRP router ID from different source IPs
+  condition: null

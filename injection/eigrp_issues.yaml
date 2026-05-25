@@ -1,0 +1,724 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "EIGRP Issues Injection"
+description: "EIGRP protocol related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - eigrp
+
+issues:
+  eigrp_k_value_mismatch:
+    name: "EIGRP K-Value Mismatch"
+    description: "Configure mismatched EIGRP K-values (metrics weights) between neighbors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails"
+      - "K-value mismatch error messages"
+      - "No EIGRP routes exchanged"
+    troubleshooting_hints:
+      - "Check EIGRP K-values with 'show ip protocols'"
+      - "K-values must match on all EIGRP neighbors"
+      - "Default K-values are K1=1, K3=1, others=0"
+      - "Ensure metric weights same across AS"
+      - "Use 'metric weights <tos> <k1> <k2> <k3> <k4> <k5>' to adjust"
+    applicability: "EIGRP configurations"
+
+  eigrp_as_number:
+    name: "EIGRP Autonomous System Number Mismatch"
+    description: "Configure EIGRP with different AS numbers on neighboring routers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails to form"
+      - "No EIGRP routes exchanged"
+      - "Neighbors stuck in INIT state"
+      - "AS number mismatch errors in logs"
+    troubleshooting_hints:
+      - "Check EIGRP AS number with 'show ip eigrp interfaces'"
+      - "Verify AS number matches on all routers in the same domain"
+      - "EIGRP AS number is specified in 'router eigrp <AS>'"
+      - "All routers in the same EIGRP domain must share the same AS"
+      - "Named mode EIGRP also requires matching AS number"
+    applicability: "All EIGRP configurations"
+
+  eigrp_passive_interface:
+    name: "EIGRP Passive Interface Blocking Neighbors"
+    description: "Configure passive-interface on EIGRP interface preventing neighbor discovery"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency not forming on specific interface"
+      - "No EIGRP hellos sent on the interface"
+      - "Routes missing only on one segment"
+      - "Other interfaces form adjacencies normally"
+    troubleshooting_hints:
+      - "Check EIGRP interfaces with 'show ip eigrp interfaces'"
+      - "Passive interfaces will not appear in EIGRP interface list"
+      - "Verify 'passive-interface default' if used"
+      - "Use 'no passive-interface <intf>' to allow adjacencies"
+      - "Check 'show run | section router eigrp' for passive statements"
+    applicability: "EIGRP with selective passive interface configuration"
+
+  eigrp_authentication_mismatch:
+    name: "EIGRP Authentication Mismatch"
+    description: "Configure EIGRP MD5 authentication on one side but not the other, or use wrong key"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency fails"
+      - "Authentication errors in logs"
+      - "EIGRP neighbors stuck in INIT state"
+      - "MD5 authentication failure messages"
+    troubleshooting_hints:
+      - "Check EIGRP authentication with 'show ip eigrp interfaces detail'"
+      - "Verify key-chain configuration matches on both sides"
+      - "Use 'authentication mode md5 key-chain <key-name>'"
+      - "Key-chain key must match exactly (case-sensitive)"
+      - "Check for 'authentication failure' in debug logs"
+      - "Verify 'ip authentication key-chain' is configured"
+    applicability: "EIGRP with authentication configured"
+
+  # Neighbor Establishment Issues
+
+  eigrp_hello_hold_mismatch:
+    name: "EIGRP Hello/Hold Timer Mismatch"
+    description: "Configure mismatched EIGRP hello or hold timers between neighbors, causing adjacency instability"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor adjacency flaps intermittently"
+      - "Hold timer expired messages in logs"
+      - "Neighbor transitions up and down repeatedly"
+      - "Route flapping with EIGRP adjacency changes"
+    troubleshooting_hints:
+      - "Check 'show ip eigrp neighbor' for uptime and hold"
+      - "Default hello 5s, hold 15s (broadcast); 60s/180s (NBMA)"
+      - "Use 'ip hello-interval eigrp <as> <seconds>' to adjust"
+      - "Use 'ip hold-time eigrp <as> <seconds>' to adjust"
+      - "Hold timer should be >= 3x hello interval"
+      - "Hold timer mismatch less strict than OSPF"
+    applicability: "EIGRP deployments over slow or congested links"
+
+  eigrp_network_type:
+    name: "EIGRP Network Type Misconfiguration"
+    description: "Configure EIGRP on NBMA network without proper neighbor statements or network type mismatch"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor not forming on NBMA interface"
+      - "Hellos not reaching all neighbors on multi-access network"
+      - "Partial mesh not exchanging routing information"
+      - "Split horizon blocking routes on NBMA"
+    troubleshooting_hints:
+      - "EIGRP on NBMA may require manual neighbor definition"
+      - "Use 'neighbor <ip>' under router eigrp for static neighbors"
+      - "Frame Relay/ATM networks may need broadcast keyword on map-class"
+      - "Split horizon disabled automatically on some topologies"
+      - "Check 'show ip eigrp neighbors' for interface status"
+      - "Verify Layer 2 connectivity between EIGRP neighbors"
+    applicability: "EIGRP on NBMA or Frame Relay networks"
+
+  eigrp_split_horizon:
+    name: "EIGRP Split Horizon Blocking Route Updates"
+    description: "Configure EIGRP with split horizon enabled on hub-and-spoke network, preventing spoke-to-spoke route propagation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Routes learned from one spoke not propagated to other spokes"
+      - "Hub router has all routes but spokes have partial routes"
+      - "Spoke-to-spoke communication fails via hub"
+      - "Split horizon preventing route advertisement back to same interface"
+    troubleshooting_hints:
+      - "Split horizon prevents advertising routes out of received interface"
+      - "Use 'no ip split-horizon eigrp <as>' on hub interface"
+      - "Verify 'show ip interface <intf>' for split horizon status"
+      - "Hub-and-spoke designs require split horizon disabled on hub"
+      - "Disabling split horizon may increase loop risk"
+      - "Alternative: use next-hop-self on hub"
+    applicability: "EIGRP hub-and-spoke topologies, Frame Relay, sub-interfaces"
+
+  eigrp_interface_not_enabled:
+    name: "EIGRP Not Enabled on Interface"
+    description: "Configure interface with IP address but EIGRP not enabled, preventing neighbor formation on that interface"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP not running on interface despite correct network statement"
+      - "Interface missing from 'show ip eigrp interfaces'"
+      - "No EIGRP hellos sent on interface"
+      - "Network not advertised to EIGRP neighbors"
+    troubleshooting_hints:
+      - "Check 'show ip eigrp interfaces' - interface missing from list"
+      - "Verify 'network <network> [wildcard]' includes interface IP"
+      - "Check 'passive-interface default' may block the interface"
+      - "Use 'no passive-interface <intf>' to enable on interface"
+      - "Named mode: ensure address-family interface configuration"
+      - "Wildcard mask controls which interfaces participate"
+    applicability: "All EIGRP deployments, especially when adding new interfaces"
+
+  eigrp_multicast_unicast:
+    name: "EIGRP Multicast-to-Unicast Transport Issue"
+    description: "Configure EIGRP with unicast neighbor relationship but neighbor not reachable, or multicast blocked by ACL"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor fails to establish via multicast"
+      - "ACL blocking EIGRP multicast (224.0.0.10)"
+      - "Unicast neighbor definition missing for NBMA"
+      - "Hellos not exchanged via multicast"
+    troubleshooting_hints:
+      - "EIGRP uses multicast 224.0.0.10 for dynamic neighbor discovery"
+      - "For NBMA, use 'neighbor <ip>' to define unicast peers"
+      - "Check ACLs for 'deny 224.0.0.10' blocking EIGRP multicast"
+      - "Verify 'show ip eigrp interfaces' for multicast status"
+      - "Unicast neighbor relationships require manual configuration"
+      - "Named mode supports unicast neighbor under AF interface"
+    applicability: "EIGRP in NBMA or security-sensitive environments"
+
+  # DUAL Algorithm Issues
+
+  eigrp_stuck_in_active:
+    name: "EIGRP Stuck in Active (SIA)"
+    description: "Create conditions causing EIGRP route to remain in Active state because replies from neighbors not received in time"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP route stuck in Active state"
+      - "SIA error messages in logs"
+      - "EIGRP neighbor reset when SIA-query/SIA-reply fails"
+      - "Routing table entries missing or incomplete"
+    troubleshooting_hints:
+      - "Check 'show ip eigrp topology active' for stuck routes"
+      - "Default SIA timeout is 180 seconds (3 minutes)"
+      - "Common causes: congested links, high CPU, large network"
+      - "Use 'timers active-time <minutes>' to adjust SIA timer"
+      - "SIA query/reply mechanism prevents indefinite active state"
+      - "Check for packet drops between querier and neighbor"
+    applicability: "Large EIGRP deployments, WAN links with high latency"
+
+  eigrp_feasible_successor:
+    name: "EIGRP Feasible Successor Condition Violation"
+    description: "Configure routing policy causing feasible successor condition (FD < RD) to be violated, preventing fast convergence"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP route must go Active on successor loss (no feasible successor)"
+      - "Slow convergence after link failure"
+      - "DUAL query process triggered unnecessarily"
+      - "Feasible successor exists but condition not met"
+    troubleshooting_hints:
+      - "Feasible successor: RD < current FD of successor"
+      - "Check 'show ip eigrp topology <prefix>' for FS candidates"
+      - "Use 'metric offsets' carefully - can break FS condition"
+      - "Increasing metric on successor route may disqualify FS"
+      - "Variance and offset-list can affect FS computation"
+      - "Fast convergence depends on having at least one FS"
+    applicability: "EIGRP deployments requiring fast convergence"
+
+  eigrp_route_active_flapping:
+    name: "EIGRP Active Route Flapping"
+    description: "Configure network with route that continuously goes Active/Passive, causing routing instability"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Route continuously transitions between Active/Passive"
+      - "Routing table entry appearing and disappearing"
+      - "Network-wide route oscillations"
+      - "EIGRP query process repeatedly triggered"
+    troubleshooting_hints:
+      - "Check 'show ip eigrp topology active' for flapping routes"
+      - "Route flapping caused by unstable link or interface"
+      - "Check interface stability with 'show interface'"
+      - "Use 'show ip eigrp events' to see route history"
+      - "Implement route dampening if supported"
+      - "Feasible successors can mitigate flapping impact"
+    applicability: "EIGRP networks with unstable links"
+
+  eigrp_query_scope:
+    name: "EIGRP Query Scope Limitation"
+    description: "Configure network where EIGRP queries propagate too far, causing excessive convergence time and CPU usage"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP convergence takes excessive time"
+      - "High CPU usage during route recomputation"
+      - "Queries propagate across entire EIGRP domain"
+      - "SIA on multiple routes simultaneously"
+    troubleshooting_hints:
+      - "EIGRP queries propagate until they reach a neighbor with FS"
+      - "Use stub routers to limit query propagation"
+      - "'show ip eigrp topology active' shows query originator"
+      - "Stub routers immediately reply for all queries"
+      - "Query scoping: use stub configuration at distribution layer"
+      - "Leak-map on stub only allows selective route leaking"
+    applicability: "Large EIGRP deployments with query propagation concerns"
+
+  # Metric and Path Selection Issues
+
+  eigrp_offset_list:
+    name: "EIGRP Offset-List Metric Manipulation Error"
+    description: "Configure EIGRP offset-list incorrectly, increasing metric for routes unintentionally or filtering routes unexpectedly"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Specific routes have unexpectedly higher metric"
+      - "Offset-list adding metric to unintended routes"
+      - "Route selection changes unexpectedly"
+      - "Access list in offset-list matching wrong prefixes"
+    troubleshooting_hints:
+      - "Offset-list adds to composite metric (not just delay/bandwidth)"
+      - "Use 'offset-list <acl> {in|out} <offset> [interface]'"
+      - "Check ACL entries match intended prefixes only"
+      - "Offset applied on both incoming and outgoing updates"
+      - "High offset values can prevent routes from being selected"
+      - "Use 'show ip eigrp topology <prefix>' to verify metric changes"
+    applicability: "EIGRP deployments using offset for traffic engineering"
+
+  eigrp_bandwidth_delay:
+    name: "EIGRP Interface Bandwidth/Delay Misconfiguration"
+    description: "Configure incorrect interface bandwidth or delay values, causing suboptimal EIGRP metric calculation"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP prefers suboptimal path"
+      - "High-bandwidth link not preferred over low-bandwidth link"
+      - "Traffic engineering not working as expected"
+      - "EIGRP composite metric reflects incorrect values"
+    troubleshooting_hints:
+      - "EIGRP metric = bandwidth + delay (default K1=1, K3=1)"
+      - "Bandwidth: 10^7 / min_bandwidth * 256"
+      - "Delay: sum(delays) / 10 * 256"
+      - "Use 'bandwidth <kbps>' and 'delay <tens-of-microseconds>'"
+      - "Check 'show interface <intf>' for configured bandwidth"
+      - "Delay is more reliable for metric tuning (affects one direction)"
+    applicability: "EIGRP deployments where metric tuning affects path selection"
+
+  eigrp_variance:
+    name: "EIGRP Variance for Unequal Cost Load Balancing"
+    description: "Configure EIGRP variance incorrectly, preventing or misapplying unequal cost load balancing"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Unequal cost paths not used for load balancing"
+      - "Variance set but no additional paths installed in routing table"
+      - "Load balancing across paths with excessive metric difference"
+      - "Traffic distribution not proportional to metrics"
+    troubleshooting_hints:
+      - "Variance <multiplier>: install routes with metric <= best*multiplier"
+      - "Feasible successor condition must still be met"
+      - "Check 'show ip eigrp topology <prefix>' for FS candidates"
+      - "Use 'traffic-share balanced' or 'traffic-share min across-interfaces'"
+      - "Default variance is 1 (equal-cost load balancing only)"
+      - "Variance does not affect which path is primary"
+    applicability: "EIGRP deployments with unequal cost links"
+
+  eigrp_maximum_paths:
+    name: "EIGRP Maximum Paths Limitation"
+    description: "Configure EIGRP maximum-paths too low, preventing optimal use of multiple equal-cost paths"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Only one path installed despite multiple equal-cost paths"
+      - "Load balancing not using all available paths"
+      - "Suboptimal bandwidth utilization"
+      - "'maximum-paths' or 'maximum-paths eigrp' limit reached"
+    troubleshooting_hints:
+      - "Check 'show ip route <prefix>' for number of paths"
+      - "Default maximum-paths depends on platform (4, 6, 8, 16)"
+      - "Use 'maximum-paths <number>' for IP routing table"
+      - "Cisco: 'maximum-paths <num>' or 'maximum-paths eigrp <num>'"
+      - "More paths provide better load distribution"
+      - "FS condition must be met for each additional path"
+    applicability: "EIGRP deployments with multiple redundant links"
+
+  # Route Control Issues
+
+  eigrp_summary_route:
+    name: "EIGRP Route Summarization Error"
+    description: "Configure EIGRP summary route incorrectly, causing black holes or missing specific routes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Traffic black holes for subnets within summary"
+      - "Summary route not advertised to neighbors"
+      - "Specific routes suppressed when not intended"
+      - "Metric of summary route incorrect"
+    troubleshooting_hints:
+      - "Use 'ip summary-address eigrp <as> <network> <mask>'"
+      - "EIGRP creates a null0 route for the summary"
+      - "Summary suppresses more specific routes to neighbors"
+      - "If all specifics are down, traffic black-holes to null0"
+      - "Advertise default: 'ip summary-address eigrp <as> 0.0.0.0 0.0.0.0'"
+      - "Check 'show ip eigrp topology' for summary entries"
+    applicability: "EIGRP networks where route summarization is needed"
+
+  eigrp_distribute_list:
+    name: "EIGRP Distribute-List Blocking Route Exchange"
+    description: "Configure distribute-list under EIGRP that inadvertently filters legitimate routes in or out"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Specific routes not received from or sent to EIGRP neighbors"
+      - "Partial routing table missing expected prefixes"
+      - "Distribute-list ACL/prefix-list matching wrong prefixes"
+      - "Implicit deny at end of access-list blocking some routes"
+    troubleshooting_hints:
+      - "Use 'distribute-list <acl> in' or 'distribute-list <acl> out'"
+      - "ACLs have implicit deny any at the end"
+      - "Prefix-list more flexible than ACL for distribute-list"
+      - "Check 'show ip eigrp topology' for missing entries"
+      - "Use 'distribute-list prefix <name> in/out' for prefix-list"
+      - "Verify distribute-list applied to correct interface or protocol"
+    applicability: "EIGRP deployments with route filtering"
+
+  eigrp_route_map_filter:
+    name: "EIGRP Route-Map Filtering Error"
+    description: "Configure route-map filtering under EIGRP redistribution or neighbor, causing routes to be filtered or modified incorrectly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Routes filtered or modified unexpectedly by route-map"
+      - "Route-map match conditions not matching intended routes"
+      - "Redistributed routes missing specified metric values"
+      - "Route-map sequence order causing unintended matches"
+    troubleshooting_hints:
+      - "Route-maps have implicit deny (no match = denied)"
+      - "Check 'show route-map <name>' for match counters"
+      - "Route-map sequence number order: lower = higher priority"
+      - "Verify 'match ip address' ACL/prefix-list references"
+      - "Use 'set metric <bandwidth> <delay> <reliability> <load> <mtu>'"
+      - "Tag routes with 'set tag <value>' for policy tracking"
+    applicability: "EIGRP deployments using route-maps for route policy"
+
+  eigrp_default_route:
+    name: "EIGRP Default Route Distribution Error"
+    description: "Configure EIGRP default route incorrectly, preventing default route propagation or creating routing loops"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Default route missing from EIGRP domain"
+      - "No gateway of last resort in routing table"
+      - "Default route not advertised by border router"
+      - "Traffic to external networks black-holed"
+    troubleshooting_hints:
+      - "Use 'ip default-network <network>' for EIGRP default"
+      - "EIGRP propagates default via the default-network concept"
+      - "Alternative: 'redistribute static' with static default route"
+      - "Use 'ip route 0.0.0.0 0.0.0.0 <next-hop>' on border router"
+      - "Check 'show ip route' for 'Gateway of last resort'"
+      - "Verify border router is reachable from other EIGRP routers"
+    applicability: "EIGRP networks connecting to external networks"
+
+  eigrp_redistribution:
+    name: "EIGRP Route Redistribution Error"
+    description: "Configure redistribution from other protocols into EIGRP with incorrect metric or missing parameters"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Redistributed routes not appearing in EIGRP topology"
+      - "Routes redistributed with incorrect metric"
+      - "Redistribution creating routing loops or suboptimal paths"
+      - "Missing 'subnets' or metric specification in redistribution"
+    troubleshooting_hints:
+      - "EIGRP requires explicit metric for redistributed routes"
+      - "Use 'redistribute <protocol> metric <bw> <delay> <rel> <load> <mtu>'"
+      - "Or set 'default-metric <bw> <delay> <rel> <load> <mtu>'"
+      - "Use route-map to filter redistributed routes"
+      - "Check administrative distance of redistributed routes"
+      - "Verify 'show ip eigrp topology' for redistributed entries"
+    applicability: "EIGRP ASBRs redistributing from OSPF, BGP, or static"
+
+  # Stub and Leak-Map Issues
+
+  eigrp_stub_misconfig:
+    name: "EIGRP Stub Router Misconfiguration"
+    description: "Configure EIGRP stub router incorrectly (wrong stub type or leak-map), causing incomplete routing or query issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Stub router not receiving complete routing table"
+      - "Stub connected/static/summary routes not advertised"
+      - "Leak-map not releasing specific routes to stub"
+      - "Stub router not responding to queries (assumed disconnected)"
+    troubleshooting_hints:
+      - "Use 'eigrp stub [connected|static|summary|receive-only|leak-map]'"
+      - "Stub types: connected, static, summary, redistributed"
+      - "'receive-only' - stub only receives, never advertises"
+      - "Queries not sent to stub routers (they reply immediately)"
+      - "Check 'show ip eigrp neighbor detail' for stub status"
+      - "Leak-map allows selective route leaking beyond stub type"
+    applicability: "Hub-and-spoke EIGRP designs with stub routers at spokes"
+
+  eigrp_leak_map:
+    name: "EIGRP Leak-Map Misconfiguration"
+    description: "Configure EIGRP leak-map incorrectly on stub router, preventing intended routes from being advertised or leaking unintended routes"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Leak-map not releasing specific routes from stub"
+      - "Unintended routes leaked from stub router"
+      - "Stub type combined with leak-map not working as expected"
+      - "Specific routes missing from stub router neighbor"
+    troubleshooting_hints:
+      - "Leak-map allows stub to advertise additional routes"
+      - "Use 'eigrp stub leak-map <name>' under AF or router config"
+      - "Leak-map uses route-map to match prefixes to leak"
+      - "Check 'show ip eigrp neighbor detail' for leak-map status"
+      - "Leak-map only works with stub configured"
+      - "Careful: leak-map can defeat query-scoping purpose of stub"
+    applicability: "Hub-and-spoke EIGRP with selective route leaking to stub routers"
+
+  eigrp_stub_receive_only:
+    name: "EIGRP Receive-Only Stub Blocking Route Advertisement"
+    description: "Configure EIGRP stub as receive-only but router needs to advertise connected routes or local networks"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+    symptoms:
+      - "Stub router cannot advertise any routes to hub"
+      - "Connected networks behind stub not reachable from hub"
+      - "Receive-only stub silently drops all outgoing updates"
+      - "Routes from stub router missing in EIGRP domain"
+    troubleshooting_hints:
+      - "Receive-only stub: cannot advertise any routes"
+      - "Use 'eigrp stub connected' instead to advertise connected routes"
+      - "'receive-only' is useful for pure leaf routers"
+      - "Check 'show ip eigrp neighbor detail' for stub type"
+      - "Change stub type if router needs to advertise local networks"
+      - "Common in hub-and-spoke where spoke has no downstream routers"
+    applicability: "EIGRP stub routers in hub-and-spoke topologies"
+
+  # Named Mode EIGRP Issues
+
+  eigrp_named_mode:
+    name: "EIGRP Named Mode Configuration Error"
+    description: "Configure EIGRP in named mode with incorrect address-family or AF-interface parameters, preventing proper operation"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP named mode not functioning as expected"
+      - "Address-family configuration mismatch"
+      - "Named mode commands not recognized"
+      - "Transition from classic to named mode causes issues"
+    troubleshooting_hints:
+      - "Named mode: 'router eigrp <name>' with address-family ipv4"
+      - "Named mode supports IPv4 and IPv6 in same process"
+      - "Use 'address-family ipv4 autonomous-system <as>'"
+      - "AF-interface mode: 'af-interface <intf>' for interface config"
+      - "Named mode has different configuration hierarchy"
+      - "Check 'show ip eigrp [vrf <name>] interfaces' for status"
+    applicability: "EIGRP named mode deployments"
+
+  eigrp_af_interface:
+    name: "EIGRP Address-Family Interface Configuration Error"
+    description: "Configure EIGRP AF-interface parameters incorrectly, causing per-interface EIGRP settings to not apply"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "AF-interface settings not taking effect on interface"
+      - "Interface-specific EIGRP parameters not applied"
+      - "Named mode interface configuration hierarchy confusion"
+      - "Shutdown under AF-interface blocking EIGRP on interface"
+    troubleshooting_hints:
+      - "AF-interface: 'af-interface <intf>' under address-family"
+      - "Use 'af-interface default' for default interface settings"
+      - "Parameters set in AF-interface affect that interface only"
+      - "Use 'shutdown' under AF-interface to disable EIGRP on that intf"
+      - "AF-interface overrides interface-level EIGRP config"
+      - "Named mode: EIGRP parameters moved to AF-interface"
+    applicability: "EIGRP named mode deployments with per-interface tuning"
+
+  # Security and Advanced
+
+  eigrp_ttl_threshold:
+    name: "EIGRP TTL Threshold / GTSM Misconfiguration"
+    description: "Configure EIGRP TTL threshold (Generalized TTL Security Mechanism) preventing legitimate neighbors from forming adjacency"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP neighbor fails to form with TTL threshold configured"
+      - "Neighbor not directly connected (more than 1 hop away)"
+      - "EIGRP packets dropped due to TTL check"
+      - "Adjacency only works when TTL threshold removed"
+    troubleshooting_hints:
+      - "GTSM: 'ip ttl-threshold eigrp <as> <ttl-value>'"
+      - "Default EIGRP TTL is 1 (directly connected only)"
+      - "Set TTL to 255 or appropriate value for multi-hop"
+      - "Check 'show ip eigrp neighbor' for adjacency status"
+      - "GTSM protects against off-link EIGRP attacks"
+      - "Not supported in all EIGRP implementations"
+    applicability: "EIGRP deployments with TTL security requirements"
+
+  eigrp_key_chain_rollover:
+    name: "EIGRP Key-Chain Rollover / Key Management Issue"
+    description: "Configure EIGRP key-chain with overlapping key times or incorrect key management, causing authentication failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+    symptoms:
+      - "EIGRP authentication fails during key rollover"
+      - "Key valid-time windows not aligned between neighbors"
+      - "New key activated but neighbor still using old key"
+      - "Brief authentication failures during key transition"
+    troubleshooting_hints:
+      - "Key-chain supports multiple keys with send/accept lifetimes"
+      - "Ensure send-lifetime and accept-lifetime overlap between peers"
+      - "Use 'accept-lifetime' to accept old key during transition"
+      - "Use 'send-lifetime' to start new key after old key expires"
+      - "Key-ID higher = preferred for sending (Cisco)"
+      - "Verify clock synchronization (NTP) for time-based keys"
+    applicability: "EIGRP deployments with key-chain authentication and rollover"
+
+  # EIGRPv6 Issues
+
+  eigrp_ipv6_process:
+    name: "EIGRPv6 Process Configuration Error"
+    description: "Configure EIGRP for IPv6 (EIGRPv6) incorrectly with wrong process ID or router-id, preventing IPv6 route exchange"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "EIGRPv6 process not starting"
+      - "No EIGRPv6 neighbor adjacency"
+      - "IPv6 routes not exchanged"
+      - "EIGRPv6 requires explicit router-id"
+    troubleshooting_hints:
+      - "EIGRPv6: 'ipv6 router eigrp <as>'"
+      - "EIGRPv6 requires explicit 'eigrp router-id <ipv4>'"
+      - "Named mode: 'address-family ipv6' under router eigrp"
+      - "Enable on interface: 'ipv6 eigrp <as>'"
+      - "Check 'show ipv6 eigrp neighbors' for adjacency"
+      - "EIGRPv6 does not require global IPv6 on interface"
+    applicability: "EIGRP for IPv6 (EIGRPv6) deployments"
+
+  eigrp_ipv6_interface:
+    name: "EIGRPv6 Interface Not Enabled"
+    description: "Configure IPv6 on interface but fail to enable EIGRPv6, preventing IPv6 neighbor formation and route exchange"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "EIGRPv6 not running on interface with IPv6 enabled"
+      - "No EIGRPv6 hellos sent on the interface"
+      - "IPv6 routes missing from EIGRP domain"
+      - "Interface not listed in EIGRPv6 interfaces"
+    troubleshooting_hints:
+      - "Use 'ipv6 eigrp <as>' under interface to enable"
+      - "Check 'show ipv6 eigrp interfaces' for enabled interfaces"
+      - "EIGRPv6 requires 'ipv6 unicast-routing' globally"
+      - "Verify link-local address present on interface"
+      - "Named mode: 'af-interface <intf>' then 'no shutdown'"
+      - "Passive interface affects EIGRPv6 same as EIGRPv4"
+    applicability: "EIGRPv6 deployments"
+
+  eigrp_ipv6_named_not_shutdown:
+    name: "EIGRPv6 Named Mode Address-Family Not Activated"
+    description: "Configure EIGRPv6 in named mode but address-family IPv6 not no-shutdown"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "EIGRPv6 process not starting in named mode"
+      - "Address-family IPv6 shows administratively down"
+      - "EIGRPv6 neighbors not forming"
+      - "Named mode requires explicit AF no shutdown"
+    troubleshooting_hooks:
+      - "Named EIGRP: 'address-family ipv6' under 'router eigrp <name>'"
+      - "EIGRP named mode requires 'no shutdown' inside address-family"
+      - "Check 'show eigrp address-family ipv6' for AF status"
+      - "Classic EIGRPv6: 'ipv6 router eigrp <as>' different from named"
+      - "Named mode supports IPv4 and IPv6 in single process"
+      - "Named mode EIGRPv6 requires router-id (IPv4 format)"
+    applicability: "EIGRP named mode IPv6 deployments"
+
+  eigrp_ipv6_redistribute:
+    name: "EIGRPv6 Route Redistribution / External Route Issue"
+    description: "Configure redistribution into EIGRPv6 with missing metric or route-map"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - eigrp
+      - ipv6
+    symptoms:
+      - "Redistributed IPv6 routes not appearing in EIGRPv6 topology"
+      - "Missing metric for redistributed routes"
+      - "Redistribution route-map not matching expected IPv6 prefixes"
+      - "Static IPv6 routes not redistributed"
+    troubleshooting_hooks:
+      - "EIGRPv6 redistribution: 'redistribute <protocol> metric <bw> <delay> <rel> <load> <mtu>'"
+      - "Or 'redistribute <protocol> route-map <name>' under AF IPv6"
+      - "IPv6 route-map uses 'match ipv6 address prefix-list <name>'"
+      - "Default-metric applies if not specified in redistribute command"
+      - "Check 'show eigrp address-family ipv6 topology' for redistributed routes"
+      - "Verify source route exists in IPv6 routing table"
+    applicability: "EIGRPv6 redistribution from static or other protocols"

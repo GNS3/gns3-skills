@@ -1,0 +1,297 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "802.1X/AAA Issues Injection"
+description: "802.1X network access control and AAA (RADIUS, TACACS+) related network faults"
+category: "injection"
+protocols:
+  - 802.1x
+  - aaa
+  - radius
+  - tacacs+
+  - mab
+
+issues:
+  dot1x_disabled:
+    name: "802.1X Not Enabled on Required Port"
+    description: "802.1X not enabled on ports that require network access control"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - aaa
+    symptoms:
+      - "Unauthenticated devices allowed on the network"
+      - "Port open without 802.1X authentication"
+      - "No 802.1X authentication on access port"
+      - "Security policy bypassed"
+    troubleshooting_hints:
+      - "Check 802.1X with 'show dot1x all' or 'show dot1x interface <intf>'"
+      - "Enable: 'dot1x system-auth-control' globally"
+      - "Per port: 'authentication port-control auto'"
+      - "Port states: force-authorized (open), force-unauthorized (closed), auto (802.1X)"
+      - "Check 'show authentication sessions' for session status"
+      - "Multi-auth/host mode: 'authentication host-mode multi-host'"
+    applicability: "Network access control (NAC) deployments"
+
+  # 802.1X RADIUS and Port Control Issues
+
+  dot1x_radius:
+    name: "802.1X RADIUS Server Misconfiguration"
+    description: "Configure 802.1X with unreachable or misconfigured RADIUS server"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - radius
+      - aaa
+    symptoms:
+      - "802.1X authentication fails (timeout)"
+      - "RADIUS server not responding"
+      - "Wrong shared secret on switch or server"
+      - "RADIUS server reachability issues"
+    troubleshooting_hints:
+      - "Check RADIUS with 'show radius server'"
+      - "Verify 'radius-server host <ip> key <secret>'"
+      - "Test: 'test aaa group radius <user> <pass>'"
+      - "Check RADIUS ports: UDP 1812 (auth), 1813 (acct)"
+      - "Old standard: UDP 1645 (auth), 1646 (acct)"
+      - "Check 'debug radius' for detailed exchange"
+    applicability: "802.1X with RADIUS backend"
+
+  dot1x_port_control:
+    name: "802.1X Port Control Mode Wrong"
+    description: "Configure wrong 802.1X port control state on the switchport"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - 802.1x
+      - aaa
+    symptoms:
+      - "Port always open (force-authorized) bypassing authentication"
+      - "Port always blocked (force-unauthorized) blocking all devices"
+      - "Port in auto mode but supplicant not responding"
+      - "Devices not passing authentication"
+    troubleshooting_hints:
+      - "Check port control with 'show authentication interface <intf>'"
+      - "force-authorized: port open (no auth), default for most ports"
+      - "force-unauthorized: port blocked (ignores auth attempts)"
+      - "auto: 802.1X authentication required"
+      - "Use 'authentication port-control auto' for 802.1X enabled ports"
+      - "Use 'authentication event fail action next-method' for fallback"
+    applicability: "802.1X port configuration"
+
+  dot1x_mab:
+    name: "802.1X MAC Authentication Bypass (MAB) Misconfiguration"
+    description: "Configure MAB incorrectly or not as fallback for non-802.1X devices"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - mab
+      - aaa
+    symptoms:
+      - "Non-802.1X devices (printers, phones) cannot authenticate"
+      - "MAB not attempted as fallback after 802.1X timeout"
+      - "MAB configured before 802.1X in method list (wrong order)"
+      - "Device stuck unable to access network"
+    troubleshooting_hints:
+      - "MAB uses device MAC address as username/password to RADIUS"
+      - "Order: 'authentication order dot1x mab' (try 802.1X first)"
+      - "Or: 'authentication order mab dot1x' (MAB first for non-802.1X devices)"
+      - "Check 'show authentication interface <intf>' for method order"
+      - "RADIUS server must have MAC addresses configured as users"
+      - "MAC format: xxxx.xxxx.xxxx (no hyphens, lowercase)"
+    applicability: "Mixed environments with 802.1X and legacy devices"
+
+  # AAA Framework and Method Configuration
+
+  aaa_new_model:
+    name: "AAA New Model Not Enabled"
+    description: "Configure AAA commands without enabling 'aaa new-model'"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - aaa
+      - radius
+      - tacacs+
+    symptoms:
+      - "AAA commands not recognized or not taking effect"
+      - "Authentication methods not working"
+      - "Login authentication failing"
+      - "aaa commands rejected by CLI"
+    troubleshooting_hints:
+      - "Enable: 'aaa new-model' globally (required for all AAA)"
+      - "Without new-model, AAA commands are not available"
+      - "Enabling new-model changes default login authentication"
+      - "Default after new-model: local authentication for all logins"
+      - "Create login method: 'aaa authentication login default group radius local'"
+      - "Be careful enabling new-model remotely (can lock you out)"
+    applicability: "All AAA deployments"
+
+  aaa_authorization:
+    name: "AAA Authorization Method Misconfiguration"
+    description: "Configure AAA authorization incorrectly blocking commands or access"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - aaa
+      - radius
+      - tacacs+
+    symptoms:
+      - "Commands executed by privileged users blocked"
+      - "Authorization failures in logs"
+      - "User authenticated but cannot execute commands"
+      - "TACACS+ command authorization rejecting valid commands"
+    troubleshooting_hints:
+      - "AAA authorization types: exec, network, commands <level>, config-commands"
+      - "Check with 'show aaa sessions' for authorization status"
+      - "TACACS+ authorizes each command individually"
+      - "RADIUS authorizes via AV pairs (service-type, priv-lvl)"
+      - "Use 'authorization exec default group tacacs+' for shell access"
+      - "Use 'authorization commands 15 default group tacacs+' for enable mode"
+    applicability: "TACACS+ and RADIUS authorization deployments"
+
+  aaa_accounting:
+    name: "AAA Accounting Not Configured"
+    description: "AAA accounting not sending logs for security or billing"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - aaa
+      - radius
+      - tacacs+
+    symptoms:
+      - "No command logging for audit trail"
+      - "Accounting records not sent to AAA server"
+      - "No start/stop records for user sessions"
+      - "Billing or compliance logs missing"
+    troubleshooting_hints:
+      - "Accounting types: exec, commands, network, connection, system"
+      - "'accounting exec default start-stop group <method>'"
+      - "'accounting commands 15 default start-stop group <method>'"
+      - "Start-stop sends both start and stop records"
+      - "Stop-only only sends stop record"
+      - "Check AAA server for received accounting packets"
+    applicability: "Audit, compliance, and billing requirements"
+
+  # RADIUS Policy and Dynamic Assignment Issues
+
+  dot1x_vlan_assign:
+    name: "802.1X RADIUS VLAN Assign / Restricted VLAN Issue"
+    description: "Configure RADIUS VLAN assignment but VLAN not applied or restricted VLAN blocking unauthorized devices"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - radius
+    symptoms:
+      - "RADIUS-returned VLAN not applied to the port"
+      - "Guest VLAN not isolating unauthenticated devices"
+      - "Restricted VLAN not blocking unauthorized access"
+      - "VLAN override not working via RADIUS attribute"
+    troubleshooting_hints:
+      - "RADIUS attribute [64] Tunnel-Type=VLAN, [65] Tunnel-Medium-Type=802, [81] Tunnel-Private-Group-ID=VLAN-ID"
+      - "Check 'show authentication interface <intf>' for authorized VLAN"
+      - "Configure 'vlan assignment authorized' for dynamic VLAN"
+      - "Guest VLAN: 'authentication event no-response action authorize vlan <id>'"
+      - "Restricted VLAN: 'authentication event fail action authorize vlan <id>'"
+      - "RADIUS-returned VLAN must exist on the switch"
+    applicability: "802.1X dynamic VLAN assignment"
+
+  dot1x_critical:
+    name: "802.1X RADIUS Server Failure / Critical Auth"
+    description: "Configure 802.1X but RADIUS server fails and critical authentication behavior wrong"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - radius
+      - aaa
+    symptoms:
+      - "All 802.1X authentication fails when RADIUS unreachable"
+      - "Critical VLAN not enabled when RADIUS down"
+      - "Ports stay unauthorized when AAA server fails"
+      - "Network access completely lost during RADIUS outage"
+    troubleshooting_hints:
+      - "Critical auth: 'authentication critical' for RADIUS failure scenarios"
+      - "Critical VLAN: 'authentication event server dead action authorize vlan <id>'"
+      - "Recovery VLAN: re-authenticate when server recovers"
+      - "Fallback to local: create local accounts on switch"
+      - "Multiple RADIUS servers for redundancy"
+      - "Check 'show authentication sessions' for critical auth status"
+    applicability: "802.1X deployments needing RADIUS server redundancy"
+
+  dot1x_host_mode:
+    name: "802.1X Host Mode / Multi-Domain Multi-Host Misconfig"
+    description: "Configure 802.1X host mode incorrectly allowing too many or too few devices"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - 802.1x
+      - aaa
+    symptoms:
+      - "More devices than expected on single-authenticated port"
+      - "Second device fails authentication"
+      - "IP phone PC port not authenticating PC separately"
+      - "Hub behind 802.1X port causing multiple hosts"
+    troubleshooting_hints:
+      - "Host modes: single-host, multi-host, multi-domain, multi-auth"
+      - "Single-host: one device only (default)"
+      - "Multi-domain: one voice + one data device"
+      - "Multi-auth: authenticate each device individually"
+      - "Multi-host: first successful auth opens for all"
+      - "Check 'show authentication interface <intf>' for host mode"
+    applicability: "802.1X with voice, data, and guest device coexistence"
+
+  # TACACS+ Authorization Issues
+
+  tacacs_command_auth:
+    name: "TACACS+ Command Authorization / Privilege Level Issue"
+    description: "Configure TACACS+ command authorization but privilege levels not matching user roles"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - tacacs+
+      - aaa
+    symptoms:
+      - "User cannot execute permitted commands"
+      - "Unauthorized commands permitted"
+      - "Privilege level 15 users restricted by TACACS+"
+      - "Command set not matching role/group assignment"
+    troubleshooting_hints:
+      - "TACACS+ authorizes each CLI command individually"
+      - "Privilege levels: 0-15 (15=enable, 1=user, 0=logout)"
+      - "Check 'show privilege' for current level"
+      - "Use 'aaa authorization commands <level> default group tacacs+'"
+      - "TACACS+ server sends permit/deny per command"
+      - "Check 'debug aaa authorization' for command-level decisions"
+    applicability: "TACACS+ for CLI authorization"
+
+  dot1x_dynamic:
+    name: "802.1X Dynamic / Inline Power / Policy Push Failure"
+    description: "Configure 802.1X with RADIUS policy push for ACL/VLAN but policy not applied"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - 802.1x
+      - radius
+    symptoms:
+      - "RADIUS-returned ACL not applied to port"
+      - "RADIUS-returned QoS policy not functioning"
+      - "Dynamic VLAN assignment via RADIUS not working"
+      - "Per-user ACL not filtering as expected"
+    troubleshooting_hints:
+      - "RADIUS can push: VLAN, ACL, QoS, session-timeout, idle-timeout"
+      - "Check 'show authentication interface <intf> detail' for pushed policies"
+      - "Common attributes: Cisco-AV-Pair for ACL/QoS"
+      - "Format: 'ip:inacl#1=permit ip any any' or 'ipv6:inacl#1=permit ipv6 any any'"
+      - "Dynamic ACL applied after authentication only"
+      - "Check 'show ip access-lists dynamic' for active dynamic ACLs"
+    applicability: "802.1X with dynamic policy enforcement"

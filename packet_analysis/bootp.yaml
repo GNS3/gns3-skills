@@ -1,0 +1,74 @@
+name: BOOTP Packet Analysis
+description: BOOTP (Bootstrap Protocol) packet analysis for legacy IP assignment and PXE boot
+protocol_key: bootp
+display_filter: bootp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Message Type
+  tshark_field: dhcp.type
+  description: 'BOOTP message type: 1=Request, 2=Reply'
+- label: Hardware Type
+  tshark_field: dhcp.hw.type
+  description: Hardware type (1=Ethernet)
+- label: Hardware Address Length
+  tshark_field: dhcp.hw.len
+  description: Hardware address length (6 for MAC)
+- label: Hops
+  tshark_field: dhcp.hops
+  description: Hop count (relay agents)
+- label: Transaction ID
+  tshark_field: dhcp.id
+  description: BOOTP transaction ID
+- label: Seconds Elapsed
+  tshark_field: dhcp.secs
+  description: Seconds since client started
+- label: Broadcast Flag
+  tshark_field: dhcp.flags.bc
+  description: Broadcast reply requested
+- label: Client IP Address
+  tshark_field: dhcp.ip.client
+  description: Client IP (ciaddr)
+- label: Your IP Address
+  tshark_field: dhcp.ip.your
+  description: Assigned IP (yiaddr)
+- label: Server IP Address
+  tshark_field: dhcp.ip.server
+  description: Next server IP (siaddr)
+- label: Relay IP Address
+  tshark_field: dhcp.ip.relay
+  description: Relay agent IP (giaddr)
+- label: Client MAC
+  tshark_field: dhcp.hw.mac_addr
+  description: Client MAC address
+- label: Server Hostname
+  tshark_field: dhcp.server
+  description: Server hostname (sname)
+- label: Boot Filename
+  tshark_field: dhcp.file
+  description: Boot file name
+filter_examples:
+- name: BOOTP Request
+  filter: bootp.type == 1
+  description: Filter for BOOTP requests
+- name: BOOTP Reply
+  filter: bootp.type == 2
+  description: Filter for BOOTP replies
+- name: BOOTP via relay
+  filter: bootp.ip.relay != 0.0.0.0
+  description: Filter for BOOTP relayed
+- name: Specific MAC
+  filter: bootp.hw.mac_addr == 00:11:22:33:44:55
+  description: Filter for specific client MAC
+checks:
+- name: bootp_no_reply
+  severity: major
+  message: 'BOOTP request without reply: XID {dhcp.id}'
+  description: bootp.type == 1 and no matching bootp.type == 2 within timeout
+  condition: bootp.type == 1
+- name: bootp_relay_mismatch
+  severity: minor
+  message: 'BOOTP relay mismatch: giaddr {dhcp.ip.relay} different from source'
+  description: bootp.ip.relay is set and doesn't match client subnet
+  condition: null

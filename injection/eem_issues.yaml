@@ -1,0 +1,252 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "EEM Issues Injection"
+description: "Cisco Embedded Event Manager applet and script related network faults"
+category: "injection"
+protocols:
+  - eem
+
+issues:
+  # EEM Event Trigger Issues
+
+  eem_trigger_none:
+    name: "EEM Applet Not Triggering (Wrong Event)"
+    description: "Configure EEM applet with event that never occurs or is incorrectly specified"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet never executes"
+      - "Event trigger condition never met"
+      - "Expected automation not happening"
+      - "No EEM log entries for the applet"
+    troubleshooting_hints:
+      - "Check EEM applets with 'show event manager policy available' and 'show event manager policy active'"
+      - "Verify event trigger: syslog, counter, timer, interface, routing"
+      - "Use 'show event manager detector' for supported event types"
+      - "'event syslog pattern <regex>' triggers on syslog match"
+      - "'event none': manual trigger only (no automation)"
+      - "Test with 'event manager run <applet>' to verify actions"
+    applicability: "EEM automation deployments"
+
+  # EEM Action and Script Issues
+
+  eem_action_cli:
+    name: "EEM CLI Action Syntax Error"
+    description: "Configure EEM CLI action with incorrect command causing action failure"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet triggers but CLI action fails"
+      - "Command syntax error in EEM action"
+      - "CLI command not recognized from EEM context"
+      - "Action output not captured as expected"
+    troubleshooting_hints:
+      - "Debug EEM with 'debug event manager action cli'"
+      - "CLI action format: 'action <id> cli command <enable|config> \"<cmd>\"'"
+      - "Use 'action <id> cli command enable \"show <...>\"' for exec mode"
+      - "Use 'action <id> cli command config \"<config-cmd>\"' for config mode"
+      - "Variables: $_syslog_msg, $_interface_name, $_event_pub_sec"
+      - "Check 'show event manager history events' for action results"
+    applicability: "EEM applets with CLI actions"
+
+  eem_recurring:
+    name: "EEM Recurring Timer Running Too Frequently"
+    description: "Configure EEM recurring timer with too-short interval causing high CPU"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - eem
+    symptoms:
+      - "High CPU on the device"
+      - "EEM applet executing too frequently"
+      - "Log messages flooded by EEM actions"
+      - "Device responsiveness reduced"
+    troubleshooting_hints:
+      - "Check 'show event manager history events' for frequency"
+      - "Recurring timer: 'event timer watchdog time <seconds>'"
+      - "Minimum practical interval: 60s for most operations"
+      - "Faster intervals (5-30s) for critical monitoring"
+      - "Use 'action syslog' to log each execution"
+      - "CRITICAL: avoid sub-second timers on production devices"
+    applicability: "EEM recurring automation tasks"
+
+  eem_counter:
+    name: "EEM Counter Event Misconfiguration"
+    description: "Configure EEM counter with wrong operator or value never triggering"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM counter event never triggers"
+      - "Counter threshold too high or too low"
+      - "Counter operator incorrect (gt vs lt)"
+      - "Counter does not increment as expected"
+    troubleshooting_hints:
+      - "Event counter: 'event counter <name> entry-op <op> entry-val <v> exit-op <op> exit-val <v>'"
+      - "Operators: ge, le, gt, lt, eq, neq"
+      - "Entry-op: when counter crosses threshold (enters violation)"
+      - "Exit-op: when counter clears threshold (exits violation)"
+      - "Use 'action <id> increment counter <name>' in another applet"
+      - "Check 'show event manager policy active' for counter state"
+    applicability: "EEM counter-based threshold monitoring"
+
+  eem_syslog:
+    name: "EEM Syslog Trigger Causing Infinite Loop"
+    description: "EEM applet action generates syslog that itself triggers the same EEM applet"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet looping infinitely"
+      - "CPU 100% on the device"
+      - "Syslog messages flooding in infinite loop"
+      - "Device shutdown or crash"
+    troubleshooting_hints:
+      - "CRITICAL: EEM applet triggered by syslog MUST NOT generate the same syslog"
+      - "Use 'event syslog pattern <regex>' with very specific match"
+      - "Avoid broad patterns like '.*' or 'interface.*up'"
+      - "Test with 'event none' before enabling automatic trigger"
+      - "Use 'event manager applet <name> authorization bypass' sparingly"
+      - "Emergency recovery: reload if EEM loop is active"
+    applicability: "EEM syslog-triggered automation"
+
+  eem_env_var:
+    name: "EEM Environment Variable Not Defined"
+    description: "EEM applet referencing undefined environment variables causing action failure"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet actions referencing empty variables"
+      - "Variables not populated with expected values"
+      - "Conditional checks failing due to missing variables"
+      - "Action CLI using empty variable values"
+    troubleshooting_hints:
+      - "Define EEM variables: 'event manager environment <name> <value>'"
+      - "Access in applet: '$_<name>' in action parameters"
+      - "Check with 'show event manager environment'"
+      - "Built-in variables: $_syslog_msg, $_interface_name"
+      - "Variables are case-sensitive"
+      - "Use 'format' in action string to embed variables"
+    applicability: "EEM applets using environment variables"
+
+  # EEM Notification and Recovery Issues
+
+  eem_snmp_trap:
+    name: "EEM SNMP Trap / Syslog Output Not Generated"
+    description: "Configure EEM applet with SNMP trap or syslog action but notification not sent"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet runs but no syslog message generated"
+      - "SNMP trap from EEM not received by NMS"
+      - "Action syslog not visible in logs"
+      - "EEM event history shows trigger but no output"
+    troubleshooting_hints:
+      - "Use 'action <id> syslog priority <level> msg \"<text>\"' for syslog"
+      - "Check 'show event manager history events' for action results"
+      - "Syslog priority: emergencies, alerts, critical, error, warning, notice, info, debug"
+      - "Use 'action <id> snmp-trap <oid> <value>' for SNMP traps"
+      - "Verify syslog server / SNMP NMS reachability"
+      - "Check logging severity: 'logging trap <level>' for syslog forwarding"
+    applicability: "EEM applets with syslog/SNMP notification"
+
+  eem_timer_cron:
+    name: "EEM Cron Timer / Scheduled Execution Misconfiguration"
+    description: "Configure EEM cron timer with incorrect schedule pattern causing never-triggering"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM cron timer applet never executes"
+      - "Scheduled automation not running at expected times"
+      - "Cron pattern syntax error"
+      - "Timer offset/timezone causing unexpected execution times"
+    troubleshooting_hints:
+      - "Cron syntax: minute hour day-of-month month day-of-week"
+      - "Use 'event timer cron name <name> cron-entry \"<cron-string>\"'"
+      - "Example: '@hourly' = '0 * * * *', '@daily' = '0 0 * * *'"
+      - "Check 'show event manager policy active' for cron applets"
+      - "Use 'show event manager history events' for cron triggers"
+      - "Timer is in device local time, not UTC (unless configured)"
+    applicability: "EEM scheduled automation (maintenance, log rotation)"
+
+  eem_conditional:
+    name: "EEM Conditional / Multiple Event Trigger Issue"
+    description: "Configure EEM with multiple event conditions but AND/OR logic not working"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM applet triggering on single event when both should be needed"
+      - "Applet not triggering when all conditions met"
+      - "Multiple event types not combining correctly"
+      - "Event OR logic preventing expected trigger"
+    troubleshooting_hints:
+      - "Multiple events are OR'd by default (any event triggers)"
+      - "Use 'event manager applet <name> event none' + 'match' for AND logic"
+      - "Use multiple 'event' statements for OR logic"
+      - "Match condition: 'match <event-id> condition ...' for complex logic"
+      - "Check 'show event manager policy active' for event conditions"
+      - "Use separate applets with variable sharing for complex conditions"
+    applicability: "EEM with complex event correlation"
+
+  eem_tcl:
+    name: "EEM Tcl Script / Tool Command Language Error"
+    description: "Configure EEM with Tcl script but script execution fails due to syntax or environment issue"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM Tcl script not executing"
+      - "Tcl script syntax errors in execution log"
+      - "Script calling undefined procedures"
+      - "Tcl library not found or incompatible"
+    troubleshooting_hints:
+      - "Use 'event manager directory user policy <url>' for Tcl scripts"
+      - "Tcl scripts must be in the correct directory"
+      - "Check 'show event manager policy active' for script loading"
+      - "Tcl script format: '::cisco::eem::event_register_...'"
+      - "Syntax error: 'show event manager policy active detail'"
+      - "Test: manually execute Tcl with 'tclsh <script>'"
+    applicability: "EEM Tcl script automation"
+
+  eem_set_recovery:
+    name: "EEM Set Recovery / Action Reversal Missing"
+    description: "Configure EEM applet that changes config but never restores original state"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - eem
+    symptoms:
+      - "EEM changes configuration but never reverts on recovery"
+      - "High CPU action stays after high CPU condition clears"
+      - "Shutdown interface action never brings it back up"
+      - "EEM actions permanent until manual rollback"
+    troubleshooting_hints:
+      - "Each EEM action should have a corresponding revert action"
+      - "Use 'event none' paired with separate enable/disable events"
+      - "Or use separate applet for set and recovery"
+      - "Example: high-cpu-action and cpu-recovered-action applets"
+      - "Use counter events with entry-op/exit-op for set/revert"
+      - "Check 'show event manager policy active' for both applets"
+    applicability: "EEM with automatic recovery requirements"

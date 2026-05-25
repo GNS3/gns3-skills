@@ -1,0 +1,211 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "DNS Issues Injection"
+description: "DNS resolution, forwarding, recursion, DNSSEC related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - dns
+  - dns-forward
+  - dns-resolver
+
+issues:
+  # DNS Resolution Issues
+
+  dns_wrong_server:
+    name: "DNS Name-Server / Resolver Misconfiguration"
+    description: "Configure wrong DNS server IP on host or router causing resolution failures"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS resolution fails for all domains"
+      - "nslookup/dig timeout"
+      - "Wrong DNS server IP configured"
+      - "Able to access some sites by IP but not by name"
+    troubleshooting_hints:
+      - "Check DNS server with 'show running-config | include name-server'"
+      - "Use 'ip name-server <ip>' to configure DNS resolver"
+      - "Test: 'nslookup <domain>' from router or host"
+      - "Verify DNS server reachability: 'ping <dns-ip>'"
+      - "Check UDP 53 reachable between client and DNS server"
+      - "Multiple name-servers should be configured for redundancy"
+    applicability: "DNS resolver configuration on routers and hosts"
+
+  dns_recursion:
+    name: "DNS Recursion / Recursive Query Failure"
+    description: "Configure DNS recursion disabled on server causing queries from clients to fail"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS server resolution fails for external domains"
+      - "Recursive queries return SERVFAIL or timeout"
+      - "Local DNS records resolve but external domains do not"
+      - "Direct queries to authoritative servers work but recursive fails"
+    troubleshooting_hooks:
+      - "Recursion: DNS server queries other servers on behalf of client"
+      - "Check 'show running-config | section ip dns' for recursion config"
+      - "Use 'ip dns server' and 'ip dns server enable' for Cisco IOS DNS"
+      - "Disable recursion: 'no ip dns server' (accepts only local zones)"
+      - "If recursion disabled: only caches/forwards, no root traversal"
+      - "Enable recursion: 'ip dns server' (acts as caching resolver)"
+    applicability: "DNS server acting as caching resolver"
+
+  dns_forward:
+    name: "DNS Forwarding / Conditional Forward Target Wrong"
+    description: "Configure DNS forwarder with incorrect target address causing resolution failure for specific domains"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dns
+      - dns-forward
+    symptoms:
+      - "DNS resolution fails for external domains but internal works"
+      - "Conditional forward target IP unreachable"
+      - "Forward zone not matching expected domain"
+      - "DNS forwarder timeout for specific domain queries"
+    troubleshooting_hooks:
+      - "DNS forwarder sends queries to another DNS server instead of root"
+      - "Conditional forward: specific domain -> specific server"
+      - "Check 'ip dns forward' or 'ip name-server <ip>' for forwarding"
+      - "Conditional forwarding (BIND/Cisco): forwarders per domain zone"
+      - "Verify forward target IP is reachable and running DNS"
+      - "Forwarder timeout = DNS query fails after retries"
+    applicability: "DNS forwarding architectures"
+
+  dns_timeout:
+    name: "DNS Query Timeout / Retry Misconfiguration"
+    description: "Configure DNS timeout too low causing premature query failure"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS queries fail but eventually succeed on retry"
+      - "Slow DNS resolution causing application delays"
+      - "Timeout too short for high-latency links"
+      - "First query fails, retry succeeds"
+    troubleshooting_hooks:
+      - "DNS query timeout: default 3-5 seconds per name-server"
+      - "Cisco: 'ip domain timeout <seconds>' default 3"
+      - "Cisco: 'ip domain retry <count>' default 2"
+      - "Total resolution time = timeout * retry * number of name-servers"
+      - "If DNS server is across WAN link: increase timeout"
+      - "Use 'debug ip domain' to see query timing"
+    applicability: "DNS resolution across high-latency networks"
+
+  # DNS Server Issues
+
+  dns_zone_transfer:
+    name: "DNS Zone Transfer / Authoritative Zone Misconfiguration"
+    description: "Configure DNS zone with incorrect type or zone transfer ACL allowing unauthorized transfers"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS zone file missing expected records"
+      - "Zone transfer (AXFR) fails between primary and secondary"
+      - "Secondary DNS server has stale zone data"
+      - "Unauthorized zone transfer possible (security risk)"
+    troubleshooting_hooks:
+      - "DNS zone types: primary (master), secondary (slave), forward, stub"
+      - "AXFR (zone transfer) uses TCP 53"
+      - "Restrict zone transfer: 'allow-transfer {<ip>}' in zone config"
+      - "Check zone serial numbers: secondary compares serial to detect changes"
+      - "If serial mismatch: zone transfer triggered"
+      - "Unauthorized zone transfer exposes full DNS records list"
+    applicability: "Authoritative DNS zone management"
+
+  dns_servfail:
+    name: "DNS SERVFAIL / Resolution Error Response"
+    description: "Configure scenario causing DNS server to return SERVFAIL for valid queries"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS returns SERVFAIL (rcode 2) for specific queries"
+      - "Some domains fail to resolve while others work"
+      - "Authoritative servers unreachable for certain zones"
+      - "DNSSEC validation failure causing SERVFAIL"
+    troubleshooting_hooks:
+      - "SERVFAIL: server cannot process the query (upstream failure or DNSSEC)"
+      - "Common causes: upstream DNS timeout, DNSSEC validation failure"
+      - "DNSSEC: incorrect key, expired signatures, mismatched algorithms"
+      - "Check upstream DNS connectivity from the resolver"
+      - "Disable DNSSEC validation: 'no dnssec-validate' (Cisco)"
+      - "SERVFAIL is final: client does not retry"
+    applicability: "DNS resolution troubleshooting"
+
+  dns_split:
+    name: "Split-DNS / Internal-External View Mismatch"
+    description: "Configure split-DNS views incorrectly returning wrong IP for same domain based on source"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dns
+    symptoms:
+      - "Internal users get public IP when should get private IP"
+      - "External users get private IP when should get public IP"
+      - "Split-DNS views not matching expected client sources"
+      - "NAT hairpin issues due to wrong DNS response"
+    troubleshooting_hooks:
+      - "Split-DNS: different answers for same domain based on query source"
+      - "Internal clients -> private IP; external clients -> public IP"
+      - "View (BIND): 'match-clients { <acl> }' selects correct zone"
+      - "Check order of views: first match wins"
+      - "Wrong view selection = wrong IP returned"
+      - "Without split-DNS: internal clients get public IP (NAT hairpin needed)"
+    applicability: "Split-DNS deployments with NAT"
+
+  dns_cache_poison:
+    name: "DNS Cache Poisoning / Invalid Entry Scenario"
+    description: "Configure insecure DNS resulting in cached incorrect DNS entries"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - dns
+    symptoms:
+      - "DNS returns incorrect IP for specific domain"
+      - "Multiple clients resolve domain to wrong address"
+      - "Cache entry persists after source data corrected"
+      - "DNS source port randomization disabled"
+    troubleshooting_hooks:
+      - "DNS cache stores previous resolution results"
+      - "Clear DNS cache: 'clear ip dns' on router, 'ipconfig /flushdns' on host"
+      - "Check cached entries: 'show ip dns cache'"
+      - "Source-port randomization: 'ip dns source-interface <intf>'"
+      - "DNSSEC mitigates cache poisoning"
+      - "Cache time: controlled by TTL in DNS response"
+    applicability: "DNS security and cache management"
+
+  dns_nxdomain:
+    name: "DNS NXDOMAIN / Non-Existent Domain Handling"
+    description: "Configure DNS negative caching or NXDOMAIN responses cached too long"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - dns
+    symptoms:
+      - "Newly created domain not resolving"
+      - "NXDOMAIN response cached despite domain now valid"
+      - "Typo'ed domain returns cached error for too long"
+      - "Negative cache TTL too high"
+    troubleshooting_hooks:
+      - "NXDOMAIN: authoritative response that domain does not exist"
+      - "Negative caching: NXDOMAIN responses cached (default 1-3 hours)"
+      - "Check 'show ip dns cache' for negative entries (marked as NXDOMAIN)"
+      - "Clear negative cache: 'clear ip dns'"
+      - "Negative TTL controlled by SOA minimum field (RFC 2308)"
+      - "Too long: new domains unreachable; too short: increased query load"
+    applicability: "DNS negative caching behavior"

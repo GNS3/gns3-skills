@@ -1,0 +1,110 @@
+name: ICMPv6 Packet Analysis
+description: ICMPv6 (Internet Control Message Protocol for IPv6) packet analysis for neighbor discovery and connectivity
+protocol_key: icmpv6
+display_filter: icmpv6
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: ICMPv6 Type
+  tshark_field: icmpv6.type
+  description: 'ICMPv6 type: 1=Unreach, 2=PacketTooBig, 3=TimeExceed, 4=ParamProblem, 128=EchoReq, 129=EchoRep, 133=RS, 134=RA,
+    135=NS, 136=NA, 137=Redirect'
+- label: ICMPv6 Code
+  tshark_field: icmpv6.code
+  description: ICMPv6 code (sub-type)
+- label: Checksum
+  tshark_field: icmpv6.checksum
+  description: ICMPv6 checksum
+- label: MTU
+  tshark_field: icmpv6.mtu
+  description: Path MTU in Packet Too Big message
+- label: Pointer
+  tshark_field: icmpv6.pointer
+  description: Offset where parameter error occurred
+- label: Echo Identifier
+  tshark_field: icmpv6.echo.identifier
+  description: Echo request/reply identifier
+- label: Echo Sequence
+  tshark_field: icmpv6.echo.sequence_number
+  description: Echo request/reply sequence number
+- label: Target Address
+  tshark_field: icmpv6.nd.ns.target_address
+  description: NDP target address (NS/NA)
+- label: Prefix
+  tshark_field: icmpv6.opt.prefix
+  description: 'NDP option: prefix information'
+- label: Option Type
+  tshark_field: icmpv6.opt.type
+  description: 'NDP option type: 1=Source LL, 2=Target LL, 3=Prefix, 4=Redirected, 5=MTU, 7=ADV, 25=RDNSS'
+- label: Router Lifetime
+  tshark_field: icmpv6.nd.ra.router_lifetime
+  description: Router advertisement lifetime
+- label: Reachable Time
+  tshark_field: icmpv6.nd.ra.reachable_time
+  description: NS reachable time in milliseconds
+- label: Retrans Timer
+  tshark_field: icmpv6.nd.ra.retrans_timer
+  description: Retransmission timer in milliseconds
+filter_examples:
+- name: ICMPv6 Echo Request (ping)
+  filter: icmpv6.type == 128
+  description: Filter for ICMPv6 echo requests
+- name: ICMPv6 Echo Reply
+  filter: icmpv6.type == 129
+  description: Filter for ICMPv6 echo replies
+- name: ICMPv6 Neighbor Solicitation
+  filter: icmpv6.type == 135
+  description: Filter for NDP neighbor solicitations
+- name: ICMPv6 Neighbor Advertisement
+  filter: icmpv6.type == 136
+  description: Filter for NDP neighbor advertisements
+- name: ICMPv6 Router Solicitation
+  filter: icmpv6.type == 133
+  description: Filter for NDP router solicitations
+- name: ICMPv6 Router Advertisement
+  filter: icmpv6.type == 134
+  description: Filter for NDP router advertisements
+- name: ICMPv6 Packet Too Big
+  filter: icmpv6.type == 2
+  description: Filter for PMTUD packets
+- name: ICMPv6 Destination Unreachable
+  filter: icmpv6.type == 1
+  description: Filter for destination unreachable
+- name: ICMPv6 Time Exceeded
+  filter: icmpv6.type == 3
+  description: Filter for hop limit exceeded (traceroute)
+- name: ICMPv6 Redirect
+  filter: icmpv6.type == 137
+  description: Filter for ICMPv6 redirects
+checks:
+- name: icmpv6_ra_attack
+  severity: critical
+  message: 'ICMPv6 RA attack: multiple router advertisements from {ipv6.src}'
+  description: icmpv6.type == 134 and multiple sources
+  condition: icmpv6.type == 134
+- name: icmpv6_dad_failure
+  severity: major
+  message: 'ICMPv6 DAD failure: {icmpv6.nd.ns.target_address} may be in use'
+  description: icmpv6.type == 135 (NS with unspecified source) and matching NA received
+  condition: icmpv6.type == 135
+- name: icmpv6_ns_flood
+  severity: minor
+  message: 'ICMPv6 NS flood: {icmpv6.nd.ns.target_address} targeted multiple times'
+  description: More than 20 NS for same target within 1 second
+  condition: null
+- name: icmpv6_redirect_attack
+  severity: major
+  message: 'ICMPv6 redirect attack: {ipv6.src} redirecting traffic'
+  description: icmpv6.type == 137 and not from current first-hop router
+  condition: icmpv6.type == 137
+- name: icmpv6_pmtu_mutation
+  severity: minor
+  message: 'ICMPv6 PMTU mutation: MTU changed from {prev} to {icmpv6.mtu}'
+  description: icmpv6.type == 2 and icmpv6.mtu < prev_mtu
+  condition: icmpv6.type == 2
+- name: icmpv6_ping_timeout
+  severity: minor
+  message: 'ICMPv6 ping timeout: no echo reply for seq {icmpv6.echo.sequence_number}'
+  description: icmpv6.type == 128 and no matching icmpv6.type == 129
+  condition: icmpv6.type == 128

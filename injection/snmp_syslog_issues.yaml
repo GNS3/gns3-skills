@@ -1,0 +1,258 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "SNMP/Syslog/Logging Issues Injection"
+description: "SNMP, Syslog, logging and monitoring related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - snmp
+  - syslog
+  - logging
+  - netconf
+  - restconf
+
+issues:
+  # SNMP Community and Access Configuration
+
+  snmp_community:
+    name: "SNMP Community String / Access Mismatch"
+    description: "Configure SNMP with incorrect community string or access permissions"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - snmp
+    symptoms:
+      - "NMS cannot poll device via SNMP"
+      - "SNMP community string rejected by device"
+      - "Read-only access when read-write needed"
+      - "SNMP access list blocking NMS IP"
+    troubleshooting_hints:
+      - "Check 'show snmp community' for configured communities"
+      - "Use 'snmp-server community <string> [ro|rw] [acl]'"
+      - "Community string is case-sensitive"
+      - "Default: no SNMP communities configured"
+      - "ACL on community restricts which NMS can poll"
+      - "Check NMS configuration: community must match device"
+    applicability: "SNMP monitoring deployments"
+
+  snmp_trap:
+    name: "SNMP Trap / Inform Configuration Failure"
+    description: "Configure SNMP traps/informs but NMS not receiving notifications"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMP traps not received by NMS"
+      - "Inform requests timing out"
+      - "Trap destination misconfigured"
+      - "SNMP trap source interface wrong"
+    troubleshooting_hints:
+      - "Check SNMP trap config: 'show snmp'"
+      - "Use 'snmp-server host <ip> [version <v>] <community>'"
+      - "Use 'snmp-server enable traps <type>' for specific traps"
+      - "Verify NMS IP reachable from trap source interface"
+      - "Use 'snmp-server source-interface traps <intf>' for consistent source"
+      - "Check firewall: SNMP traps use UDP 162"
+    applicability: "SNMP-based network monitoring"
+
+  snmp_v3_auth:
+    name: "SNMPv3 Authentication / Encryption Mismatch"
+    description: "Configure SNMPv3 with mismatched auth/priv parameters between device and NMS"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMPv3 polling fails despite configuration"
+      - "Authentication failure between NMS and device"
+      - "Privacy (encryption) mismatches"
+      - "Engine ID mismatch for SNMPv3 users"
+    troubleshooting_hooks:
+      - "SNMPv3: user, auth (MD5/SHA), priv (DES/AES) must match NMS"
+      - "Check 'show snmp user' for configured SNMPv3 users"
+      - "Engine ID: 'snmp-server engineID local <id>'"
+      - "Verify auth protocol (MD5 vs SHA) matches NMS"
+      - "Verify priv protocol (DES vs AES-128/256) matches NMS"
+      - "Both sides must have identical credentials"
+    applicability: "SNMPv3 secure monitoring deployments"
+
+  # Syslog and Logging Configuration
+
+  syslog_server:
+    name: "Syslog Server Unreachable / Logging Misconfiguration"
+    description: "Configure syslog server but log messages not received"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - syslog
+      - logging
+    symptoms:
+      - "Syslog messages not reaching server"
+      - "Logging rate-limit suppressing messages"
+      - "Syslog server IP unreachable"
+      - "Source interface for syslog incorrect"
+    troubleshooting_hooks:
+      - "Check 'show logging' for configured syslog servers"
+      - "Use 'logging <ip>' to configure syslog server"
+      - "Use 'logging source-interface <intf>' for consistent source IP"
+      - "Syslog uses UDP 514 by default"
+      - "Check syslog level: 'logging trap <level>' (emergencies=0, debugging=7)"
+      - "Verify rate-limit: 'logging rate-limit <count> <window>' may limit"
+    applicability: "Syslog-based network logging and monitoring"
+
+  syslog_rate_limit:
+    name: "Syslog Rate-Limit / Suppression Misconfiguration"
+    description: "Configure syslog rate-limit too aggressively causing critical messages suppressed"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - syslog
+      - logging
+    symptoms:
+      - "Important log messages not sent to server"
+      - "Rate-limit drops for specific message types"
+      - "Syslog 'rate-limit exceeded' messages"
+      - "Message sequence number gaps in log analysis"
+    troubleshooting_hooks:
+      - "Check 'show logging' for rate-limit configuration"
+      - "Use 'logging rate-limit <count> per-second' to adjust"
+      - "Default may suppress duplicate messages"
+      - "Critical messages (level 0-2) should not be rate-limited"
+      - "Use 'service sequence-numbers' for message tracking"
+      - "Check 'show logging history' for buffered log entries"
+    applicability: "High-volume syslog environments"
+
+  logging_buffered:
+    name: "Logging Buffer Size / History Misconfiguration"
+    description: "Configure logging buffer too small causing log entries overwritten"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - logging
+    symptoms:
+      - "Old log entries overwritten in buffer"
+      - "Cannot see configuration changes in logs"
+      - "Log buffer size too small for normal operation"
+      - "Log history missing troubleshooting data"
+    troubleshooting_hooks:
+      - "Check 'show logging' for buffer size and utilization"
+      - "Use 'logging buffered <size> [<level>]' to increase"
+      - "Default buffer: 4096 bytes (very small)"
+      - "Recommended: 16384-65536 bytes for normal operation"
+      - "Use 'logging console <level>' for console logging"
+      - "Use 'logging monitor <level>' for terminal monitoring"
+    applicability: "Device logging and troubleshooting"
+
+  # SNMP Advanced Configuration
+
+  snmp_ifindex:
+    name: "SNMP ifIndex / Interface Index Persistence Issue"
+    description: "Configure SNMP but interface ifIndex changes after reload causing monitoring gaps"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - snmp
+    symptoms:
+      - "NMS interface counters inconsistent after reload"
+      - "ifIndex changes causing interface history gaps"
+      - "SNMP interface mapping wrong after reboot"
+      - "Monitoring tool showing wrong interface for known IP"
+    troubleshooting_hooks:
+      - "SNMP ifIndex maps interface name to numeric index"
+      - "ifIndex changes if interface configuration order changes"
+      - "Use 'snmp-server ifindex persist' to preserve ifIndex across reloads"
+      - "Check 'show snmp ifindex persist' for persistence status"
+      - "Without persistence: ifIndex may change on config change"
+      - "NMS uses ifIndex to correlate interface history data"
+    applicability: "SNMP-based interface monitoring"
+
+  snmp_acl:
+    name: "SNMP ACL / Community Access-List Misconfiguration"
+    description: "Configure SNMP community with access-list blocking legitimate NMS or allowing unauthorized hosts"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - snmp
+    symptoms:
+      - "NMS cannot poll device but community string is correct"
+      - "Access-list on SNMP community too restrictive"
+      - "SNMP server ACL ignoring NMS IP"
+      - "No SNMP access despite correct credentials"
+    troubleshooting_hooks:
+      - "SNMP ACL: 'snmp-server community <string> ro <acl>'"
+      - "Check ACL entries with 'show access-lists <acl>'"
+      - "Default: no ACL = all source IPs allowed"
+      - "ACL deny entry blocks all NMS from that subnet"
+      - "Use 'permit <nms-ip>' in ACL for specific management stations"
+      - "Check ACL hit counters to verify matching"
+    applicability: "SNMP deployments with access control"
+
+  snmp_vacm:
+    name: "SNMP VACM / View-Based Access Control Misconfiguration"
+    description: "Configure SNMPv3 VACM restricting access to specific MIB trees incorrectly"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMPv3 user cannot poll specific OID trees"
+      - "VACM view too restrictive blocking legitimate polling"
+      - "Read-only access prevents writing but needed"
+      - "SNMPv3 user gets noSuchObject for valid OIDs"
+    troubleshooting_hooks:
+      - "SNMPv3 VACM: 'snmp-server view <name> <oid-tree> included'"
+      - "VACM associates groups to views (read/write/notify)"
+      - "Check 'show snmp group' for group-to-view mapping"
+      - "Check 'show snmp user' for user-to-group mapping"
+      - "Three views per group: read, write, notify"
+      - "If no matching view: request returns noSuchObject/none"
+    applicability: "SNMPv3 role-based access control"
+
+  syslog_facility:
+    name: "Syslog Facility / Level / Origin-ID Misconfiguration"
+    description: "Configure syslog with wrong facility code causing server-side filtering issues"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - syslog
+    symptoms:
+      - "Syslog messages filtered at server by facility code"
+      - "Wrong facility (e.g., local0 vs local7) causing misrouting"
+      - "Origin-ID missing making it hard to identify source"
+      - "Syslog server cannot distinguish messages from different devices"
+    troubleshooting_hooks:
+      - "Syslog facility: 'logging facility <facility>' (default: local7)"
+      - "Facility codes: local0-local7, syslog, user, daemon"
+      - "Origin-ID: 'logging origin-id {hostname|ip|<string>}'"
+      - "Server rules use facility + severity to route messages"
+      - "Consistent origin-id across device helps server correlation"
+      - "Check 'show logging' for current facility and origin-id"
+    applicability: "Syslog infrastructure with filtering rules"
+
+  snmp_engine_id:
+    name: "SNMP Engine ID / Discovery Conflict"
+    description: "Configure SNMPv3 engine ID incorrectly causing authentication failures"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - snmp
+    symptoms:
+      - "SNMPv3 user authentication fails on first poll"
+      - "Engine ID change invalidates existing SNMPv3 users"
+      - "Multiple devices share same engine ID (rare issue)"
+      - "SNMPv3 discovery returns unexpected engine ID"
+    troubleshooting_hooks:
+      - "Engine ID uniquely identifies SNMP entity"
+      - "Default: auto-generated from MAC address"
+      - "Use 'snmp-server engineID local <hex>' for manual override"
+      - "Engine ID change requires re-creating SNMPv3 users"
+      - "Check 'show snmp engineID' for current engine ID"
+      - "NMS uses engine ID for authentication cache (may need reset)"
+    applicability: "SNMPv3 deployments with authentication"

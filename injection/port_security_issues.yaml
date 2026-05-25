@@ -1,0 +1,289 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "Port Security Issues Injection"
+description: "Switch port security related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - port-security
+  - switch
+
+issues:
+  port_security_max_macs:
+    name: "Port Security Maximum MAC Limit Too Low"
+    description: "Set maximum MAC addresses too low causing port to err-disable or drop traffic"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Port enters err-disable state"
+      - "New devices cannot connect to the switch port"
+      - "MAC address limit violation alarms"
+      - "Secure MAC count exceeds configured maximum"
+    troubleshooting_hints:
+      - "Check port security status with 'show port-security interface <intf>'"
+      - "Default max MAC count is 1"
+      - "Use 'switchport port-security maximum <1-132>'"
+      - "Set to appropriate number based on connected devices"
+      - "A hub behind the port requires more MAC addresses"
+      - "Check 'show port-security' for violation counts"
+    applicability: "Switch access ports with port security"
+
+  # Port Security Violation and Learning Settings
+
+  port_security_violation_action:
+    name: "Port Security Violation Action Misconfiguration"
+    description: "Configure violation action to 'protect' instead of 'restrict' or 'shutdown' causing silent traffic drops"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Traffic silently dropped on the port"
+      - "No violation counters or SNMP traps generated"
+      - "Port stays up but drops unauthorized traffic"
+      - "Difficult to detect and troubleshoot port security violations"
+    troubleshooting_hints:
+      - "Check violation mode with 'show port-security interface <intf>'"
+      - "Violation actions: protect, restrict, shutdown"
+      - "Protect: silently drops violating traffic (no notification)"
+      - "Restrict: drops violating traffic and increments counter"
+      - "Shutdown: err-disables the port (most common, most visible)"
+      - "Use 'switchport port-security violation {protect|restrict|shutdown}'"
+    applicability: "Port security on access ports"
+
+  port_security_sticky_disabled:
+    name: "Port Security Sticky MAC Learning Disabled"
+    description: "Disable sticky MAC learning causing MAC addresses to be lost after switch reload"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "MAC addresses lost after switch reload"
+      - "Port security violations after reboot"
+      - "Dynamically learned MACs not saved to running config"
+      - "Port err-disables after reboot until MACs re-learn"
+    troubleshooting_hints:
+      - "Check sticky status with 'show port-security interface <intf>'"
+      - "Sticky MACs are saved to running-config"
+      - "Use 'switchport port-security mac-address sticky' to enable"
+      - "Sticky MACs convert dynamic MACs to secure sticky MACs"
+      - "Configure with 'switchport port-security mac-address sticky <mac>'"
+      - "Sticky entries persist across reloads if config is saved"
+    applicability: "Port security requiring persistent MAC learning"
+
+  port_security_shutdown_recovery:
+    name: "Port Security Shutdown / Err-Disable Recovery"
+    description: "Configure err-disable recovery disabled, requiring manual port re-enable after violation"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Port remains err-disabled until manually recovered"
+      - "User unplugged indefinitely after violation"
+      - "No auto-recovery of security-violation ports"
+      - "Extended outage for legitimate devices after false violation"
+    troubleshooting_hints:
+      - "Check err-disable status with 'show interfaces <intf> status'"
+      - "Err-disabled ports show 'err-disabled' in interface status"
+      - "Recover with 'shutdown' then 'no shutdown' on the interface"
+      - "Enable auto-recovery: 'errdisable recovery cause psecure-violation'"
+      - "Set recovery timer: 'errdisable recovery interval <seconds>'"
+      - "Check 'show errdisable recovery' for recovery configuration"
+    applicability: "Port security with automatic recovery requirements"
+
+  # Static MAC and Multi-Device Issues
+
+  port_security_static_mac:
+    name: "Port Security Static MAC Conflict"
+    description: "Configure static secure MAC that conflicts with dynamically learned MACs"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Static MAC address failing to configure"
+      - "Conflict between static and dynamic secure MACs"
+      - "Legitimate device blocked due to MAC conflict"
+      - "Port security violation on expected device"
+    troubleshooting_hints:
+      - "Check secure MAC addresses with 'show port-security address'"
+      - "Static secure MAC: 'switchport port-security mac-address <mac>'"
+      - "Static MAC must not duplicate existing dynamic/sticky MACs"
+      - "Remove conflicting MAC or use a different one"
+      - "Static MACs are saved in running-config"
+      - "Static MAC takes precedence over others"
+    applicability: "Port security with statically defined MACs"
+
+  port_security_voice_vlan:
+    name: "Port Security Voice VLAN Misconfiguration"
+    description: "Configure port security with voice VLAN not allowing enough MACs for phone and PC"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+      - voice-vlan
+    symptoms:
+      - "IP phone fails after PC powers on"
+      - "PC has connectivity but phone does not (or vice versa)"
+      - "Port security violation on voice VLAN after PC connects"
+      - "Phone MAC or PC MAC blocked due to limit"
+    troubleshooting_hints:
+      - "Check port security for voice VLAN with 'show port-security interface <intf>'"
+      - "Voice VLAN ports need at least 2 MACs (phone + PC)"
+      - "Phone behind PC needs 2 MACs (phone passthrough)"
+      - "Set 'switchport port-security maximum 2' or more"
+      - "MAC address count includes all VLANs on the port"
+      - "Use 'switchport port-security maximum 3' for phone + PC + service"
+    applicability: "Access ports with IP phones (Cisco VoIP)"
+
+  port_security_mac_flap:
+    name: "Port Security MAC Flapping / MAC Move Between Ports"
+    description: "Configure port security causing MAC flap violation when host moves between switch ports"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Port security violation when laptop moves between desks"
+      - "MAC address flapping between two secure ports"
+      - "Err-disabled port after host reconnects to different port"
+      - "User mobility causing port security issues"
+    troubleshooting_hints:
+      - "Secure MAC addresses are per-port (host cannot move freely)"
+      - "Check 'show port-security address' for MAC-to-port bindings"
+      - "Sticky MACs are per-port, different port = new MAC required"
+      - "Clear old binding: 'clear port-security sticky <intf> <mac>'"
+      - "Auto-recovery: 'errdisable recovery cause psecure-violation'"
+      - "Consider 802.1X + port security for user mobility"
+    applicability: "Environments with laptop/users moving between desks"
+
+  # Advanced Port Security Scenarios
+
+  port_security_trunk:
+    name: "Port Security on Trunk Port Misconfiguration"
+    description: "Configure port security on trunk port causing MAC limit per-VLAN issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Trunk port with port security blocking legitimate VLAN traffic"
+      - "MAC addresses per VLAN exceeding limit"
+      - "VLAN pruning causing port security violations"
+      - "Secure MAC count across VLANs unexpected"
+    troubleshooting_hints:
+      - "Port security on trunk: MAC limit applies to ALL VLANs combined"
+      - "Check 'show port-security interface <intf>' for VLAN counts"
+      - "Maximum MAC count must account for all VLANs on trunk"
+      - "voice VLAN adds additional MACs per VLAN"
+      - "Consider MAC limit based on number of active VLANs"
+      - "Port security on trunk NOT recommended in most designs"
+    applicability: "Trunk ports with port security (not recommended)"
+
+  port_security_aging:
+    name: "Port Security MAC Aging Misconfiguration"
+    description: "Configure port security MAC aging incorrectly causing premature MAC removal or non-aging"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "Secure MACs not aging out after host disconnects"
+      - "Once-learned MACs never cleared from port security table"
+      - "Port fills MAC table with stale entries"
+      - "New hosts unable to connect due to MAC table full"
+    troubleshooting_hints:
+      - "Check 'show port-security interface <intf>' for aging config"
+      - "Sticky MAC aging: 'switchport port-security aging time <minutes>'"
+      - "Aging types: absolute (after time), inactivity (after no traffic)"
+      - "Use 'switchport port-security aging type {absolute|inactivity}'"
+      - "Inactivity aging recommended for guest ports"
+      - "Static MACs do not age out"
+    applicability: "Port security with MAC aging requirements (guest networks, BYOD)"
+
+  port_security_8021x:
+    name: "Port Security with 802.1X / Multi-Domain Auth Conflict"
+    description: "Configure port security with 802.1X authentication but MAC-based authentication fails"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - port-security
+      - switch
+      - aaa
+    symptoms:
+      - "802.1X authenticated host unable to access port"
+      - "Port security violation after successful 802.1X"
+      - "MAC authentication bypass (MAB) port security conflict"
+      - "Multi-domain authentication (voice+data) port security limit"
+    troubleshooting_hints:
+      - "Port security and 802.1X can coexist with proper configuration"
+      - "Sticky learning may conflict with 802.1X MAC authentication"
+      - "Use 'authentication port-control auto' with port security"
+      - "Multi-domain (voice+data) needs secure mac-count >= 2"
+      - "MAB: port security learns authenticated MAC"
+      - "Check 'show authentication sessions <intf>' for auth state"
+    applicability: "Switch ports combining port security with 802.1X"
+
+  port_security_vlan_mismatch:
+    name: "Port Security Voice VLAN / MAC Limit Per VLAN"
+    description: "Configure port security on voice VLAN without accounting for phone MAC"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - port-security
+      - switch
+    symptoms:
+      - "IP phone fails after PC connects"
+      - "Port security violation when both phone and PC are active"
+      - "Voice VLAN traffic blocked after data VLAN passes"
+      - "Phone and PC compete for MAC address limit"
+    troubleshooting_hints:
+      - "Voice VLAN ports need separate MAC counting per VLAN"
+      - "Set 'switchport port-security maximum <count>' high enough for both VLANs"
+      - "Phone: uses voice VLAN, PC: uses data VLAN"
+      - "Check 'show port-security interface <intf>' for per-VLAN counts"
+      - "Use 'switchport port-security maximum 2' or more"
+      - "Port with IP phone typically needs 2-3 allowed MACs"
+    applicability: "Access ports with IP phones and PC passthrough"
+
+  port_security_dhcp_snooping:
+    name: "Port Security + DHCP Snooping + IP Source Guard Interop"
+    description: "Configure port security with DHCP snooping and IPSG but features conflict"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - port-security
+      - dhcp-snooping
+      - switch
+    symptoms:
+      - "Port security violation after DHCP lease obtained"
+      - "IPSG blocks traffic despite valid DHCP binding"
+      - "Sticky learning does not capture IP from DHCP snooping"
+      - "Port security and IPSG interaction causing drops"
+    troubleshooting_hooks:
+      - "Order: DHCP snooping bind -> IPSG verify -> port security check MAC"
+      - "Check 'show ip verify source' for IPSG bindings"
+      - "Port security sticky MACs are Layer 2 only (no IP binding)"
+      - "IPSG uses DHCP snooping binding (Layer 3 check)"
+      - "Combined: 'ip verify source port-security' for MAC+IP verification"
+      - "Sticky learning may conflict if source MAC changes after auth"
+    applicability: "Converged access layer with multiple security features"

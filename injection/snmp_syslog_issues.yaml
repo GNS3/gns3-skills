@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "SNMP/Syslog/Logging Issues Injection"
 description: "SNMP, Syslog, logging and monitoring related network faults for troubleshooting practice"

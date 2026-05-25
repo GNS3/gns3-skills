@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "EtherChannel/LACP Issues Injection"
 description: "EtherChannel, LACP (802.3ad) and PAgP related network faults for troubleshooting practice"

@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Segment Routing Issues Injection"
 description: "Segment Routing (SR-MPLS) related network faults for troubleshooting practice"

@@ -5,6 +5,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 """
 Validate tshark fields in packet_analysis YAML files against installed tshark.

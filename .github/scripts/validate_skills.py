@@ -5,6 +5,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 """
 Validate GNS3-Skills YAML format according to the schema defined in

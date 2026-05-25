@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "EVPN Issues Injection"
 description: "EVPN control plane related network faults for troubleshooting practice"

@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "SRv6 Issues Injection"
 description: "Segment Routing over IPv6 (SRv6) related network faults for troubleshooting practice"

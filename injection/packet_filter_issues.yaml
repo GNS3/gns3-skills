@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Packet Filter Issues Injection"
 description: "Network layer packet filtering faults for simulating real-world network conditions like latency, packet loss, and corruption"

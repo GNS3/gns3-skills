@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "IPv6 Routing Issues Injection"
 description: "IPv6 routing protocols (OSPFv3, RIPng, EIGRPv6) and IPv6 transition related faults"

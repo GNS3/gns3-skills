@@ -5,6 +5,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 """
 Basic YAML syntax validation for all YAML files in the repository.

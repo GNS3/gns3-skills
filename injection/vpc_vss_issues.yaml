@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "vPC/VSS/Stackwise Issues Injection"
 description: "Virtual Port Channel, Virtual Switching System and stacking related faults"

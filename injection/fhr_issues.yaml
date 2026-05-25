@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "VRRP/HSRP Issues Injection"
 description: "First Hop Redundancy Protocol (VRRP, HSRP) related network faults for troubleshooting practice"

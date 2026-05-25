@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "BFD Issues Injection"
 description: "BFD (Bidirectional Forwarding Detection) session, timer, and protocol integration related faults"

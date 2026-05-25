@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "NTP/SPAN Issues Injection"
 description: "NTP time synchronization and SPAN/RSPAN/ERSPAN port mirroring related network faults"

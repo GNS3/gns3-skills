@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "DNS Issues Injection"
 description: "DNS resolution, forwarding, recursion, DNSSEC related network faults for troubleshooting practice"

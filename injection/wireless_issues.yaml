@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Wireless/CAPWAP Issues Injection"
 description: "Wireless LAN, CAPWAP AP-WLC and roaming related network faults"

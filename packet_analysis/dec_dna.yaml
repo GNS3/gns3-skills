@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "DEC DNA Packet Analysis"
 description: "DEC DNA (Digital Equipment Corporation Digital Network Architecture) packet analysis for legacy DECnet routing"

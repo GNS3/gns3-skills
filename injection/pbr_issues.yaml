@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "PBR Issues Injection"
 description: "Policy-Based Routing and route-map related network faults for troubleshooting practice"

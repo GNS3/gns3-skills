@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "VPLS/VPWS/L2VPN Issues Injection"
 description: "VPLS, VPWS (AToM, Martini) and L2VPN related network faults"

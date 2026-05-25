@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "SD-WAN Issues Injection"
 description: "SD-WAN fabric, OMP, TLOC, vSmart/vEdge configuration related network faults"

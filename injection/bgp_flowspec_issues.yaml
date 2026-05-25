@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "BGP FlowSpec/RTBH Issues Injection"
 description: "BGP FlowSpec, RTBH and DDoS mitigation related network faults"

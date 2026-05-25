@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Access Control Issues Injection"
 description: "Access control lists (ACL) and security-related network faults for troubleshooting practice"

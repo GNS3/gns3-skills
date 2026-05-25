@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "QoS Issues Injection"
 description: "QoS classification, marking, queuing, policing and shaping related network faults"

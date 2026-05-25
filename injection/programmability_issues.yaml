@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Network Programmability Issues Injection"
 description: "NETCONF, RESTCONF, YANG, gNMI, model-driven telemetry related network faults"

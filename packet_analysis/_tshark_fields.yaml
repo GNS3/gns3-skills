@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "TShark Field Query Reference"
 description: "Reference for querying tshark protocol fields using -G fields and -T fields commands"

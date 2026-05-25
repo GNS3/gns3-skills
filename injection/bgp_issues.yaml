@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "BGP Issues Injection"
 description: "BGP protocol related network faults for troubleshooting practice"

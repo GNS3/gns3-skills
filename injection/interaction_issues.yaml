@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "Cross-Protocol Interaction Issues Injection"
 description: "End-to-end and cross-protocol network faults for advanced troubleshooting practice"

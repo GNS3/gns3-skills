@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2025 GNS3 Contributors
 #
+# Author: Yue Guobin (@yueguobin)
+#
 
 name: "802.1X/AAA Issues Injection"
 description: "802.1X network access control and AAA (RADIUS, TACACS+) related network faults"

@@ -293,3 +293,7 @@ GPL-3.0-or-later
 ## Copyright
 
 Copyright (C) 2025 GNS3 Contributors
+
+## Author
+
+Developed by Yue Guobin (@yueguobin)

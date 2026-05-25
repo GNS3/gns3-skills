@@ -1,0 +1,366 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "EVPN Issues Injection"
+description: "EVPN control plane related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - evpn
+  - vxlan
+  - bgp
+
+issues:
+  # EVPN Service and Peer Configuration
+
+  evpn_l2vni_not_created:
+    name: "EVPN L2VNI Not Created on Leaf"
+    description: "L2VNI not configured or created on a leaf switch causing EVPN service not available"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "EVPN service not operational on specific VNI"
+      - "No MAC addresses learned via EVPN for the VNI"
+      - "Show vxlan vni missing the expected VNI"
+      - "End hosts cannot communicate across the fabric"
+    troubleshooting_hints:
+      - "Check VNI with 'show vxlan vni' or 'show nve vni'"
+      - "Verify 'vni <id> l2' configuration under evpn"
+      - "Ensure VLAN-to-VNI mapping is correctly configured"
+      - "Check 'show bgp l2vpn evpn' for VNI-based routes"
+      - "VNI range: 1-16777215 (24-bit)"
+      - "Verify NVE interface is properly configured for the VNI"
+    applicability: "EVPN VXLAN leaf switches"
+
+  evpn_ebgp_peer_not_up:
+    name: "EVPN eBGP Peer Not Established"
+    description: "EVPN BGP peer session not established between leaf and spine"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "EVPN BGP session down between leaf and spine"
+      - "No EVPN routes exchanged"
+      - "BGP state stuck in IDLE or ACTIVE"
+      - "Underlay reachability issue to BGP peer"
+    troubleshooting_hints:
+      - "Check BGP EVPN summary with 'show bgp l2vpn evpn summary'"
+      - "Verify peer IP address and AS number are correct"
+      - "Check 'show bgp l2vpn evpn neighbors <ip>' for state"
+      - "Ensure underlay routing reaches the peer IP"
+      - "Verify 'address-family l2vpn evpn' is activated for the peer"
+      - "Check 'send-community extended' is configured"
+    applicability: "EVPN VXLAN leaf-spine fabrics"
+
+  evpn_vlan_vni_mapping:
+    name: "EVPN VLAN-to-VNI Mapping Mismatch"
+    description: "Configure different VLAN-to-VNI mapping on leaf switches for the same tenant"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "VLAN not mapped to correct VNI across leaves"
+      - "Tenant L2 connectivity broken"
+      - "VLAN on one leaf maps to different VNI than another leaf"
+      - "MAC addresses learned but traffic not forwarded"
+    troubleshooting_hints:
+      - "Check VLAN-VNI mapping with 'show vlan mapping' or 'show vxlan vni'"
+      - "Verify VNI mapping is consistent across all leaves"
+      - "L2VNI must be the same for the same broadcast domain"
+      - "Check 'show l2route evpn mac' for MAC-to-VNI consistency"
+      - "Verify 'evpn vni <id> l2' configuration matches on all leaves"
+      - "L3VNI must be consistent for the same VRF across leaves"
+    applicability: "EVPN VXLAN multi-leaf deployments"
+
+  evpn_anycast_gateway_missing:
+    name: "EVPN Anycast Gateway IP Not Configured"
+    description: "Missing anycast gateway IP on IRB/SVI causing hosts unable to reach default gateway"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+      - vxlan
+    symptoms:
+      - "Hosts cannot reach gateway IP for inter-subnet routing"
+      - "Different gateway MAC on different leaves"
+      - "Anycast gateway not responding to ARP requests"
+      - "First-hop redundancy not working"
+    troubleshooting_hints:
+      - "Check anycast gateway with 'show irb' or 'show vlan irb'"
+      - "Verify 'anycast-gateway-mac <mac>' under IRB configuration"
+      - "All leaves must use the same anycast MAC address"
+      - "Use 'ip virtual-router address' for VARP support"
+      - "Check 'show l2route evpn mac ip' for gateway MAC distribution"
+      - "Anycast gateway enables active-active forwarding"
+    applicability: "EVPN VXLAN with inter-subnet routing"
+
+  # EVPN Gateway and Route Advertisement
+
+  evpn_type2_route_missing:
+    name: "EVPN Type 2 Route Missing"
+    description: "MAC/IP advertisement routes not being sent or received in EVPN"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "MAC addresses not learned via EVPN"
+      - "Hosts reachable locally but not across fabric"
+      - "Missing MAC mobility bindings"
+      - "Show l2route evpn mac missing expected entries"
+    troubleshooting_hints:
+      - "Check EVPN MAC routes with 'show bgp l2vpn evpn route-type 2'"
+      - "Verify 'rewrite-evpn-rt-asn' is configured if needed"
+      - "Check 'show l2route evpn mac' for local MAC advertisements"
+      - "Type 2 routes carry MAC/IP and VLAN binding information"
+      - "Verify EVPN route targets are properly configured"
+      - "Check 'show bgp l2vpn evpn' for route distribution"
+    applicability: "EVPN BGP route distribution and MAC learning"
+
+  evpn_type3_imet:
+    name: "EVPN Type 3 IMET Route Missing"
+    description: "Configure EVPN but Inclusive Multicast Ethernet Tag (IMET) routes not generated, preventing BUM traffic"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "BUM traffic not reaching remote VTEPs"
+      - "Type 3 routes missing from EVPN database"
+      - "Broadcast frames not forwarded across fabric"
+      - "Ingress replication list incomplete"
+    troubleshooting_hints:
+      - "Type 3 carries VTEP IP, VNI, and PMSI tunnel info for BUM"
+      - "Check 'show bgp l2vpn evpn route-type 3' for IMET routes"
+      - "Each VTEP generates Type 3 per VNI/L2VNI"
+      - "Type 3 enables BUM traffic distribution"
+      - "Verify ingress replication or multicast tunnel signaled"
+      - "Check 'show evpn vni <id>' for IMET status"
+    applicability: "All EVPN VXLAN deployments"
+
+  evpn_type5:
+    name: "EVPN Type 5 IP Prefix Route Missing"
+    description: "Configure EVPN Type 5 route for IP prefix advertisement but routes not generated or imported correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "IP prefixes not advertised via EVPN"
+      - "External/NAT prefixes missing from remote leaves"
+      - "Type 5 routes not in EVPN database"
+      - "L3VNI not associated with Type 5 routes"
+    troubleshooting_hints:
+      - "Type 5 carries IP prefix + L3VNI + GW IP for inter-subnet/external"
+      - "Check 'show bgp l2vpn evpn route-type 5' for prefix routes"
+      - "Use 'advertise ipv4 unicast' under EVPN to generate Type 5"
+      - "Requires L3VNI configured on all leaf switches"
+      - "Type 5 redistributes connected/static/BGP routes into EVPN"
+      - "Verify route-target matches the L3VNI configuration"
+    applicability: "EVPN VXLAN with inter-subnet or external prefix advertising"
+
+  evpn_mac_mobility:
+    name: "EVPN MAC Mobility / MAC Move Loop"
+    description: "Configure EVPN with MAC mobility (host moves between ports) but sequence number or MAC move limit causes issues"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+    symptoms:
+      - "MAC addresses flapping between local and remote VTEPs"
+      - "MAC mobility sequence number not incrementing correctly"
+      - "MAC move limit exceeded causing MAC freeze/blackhole"
+      - "Host connectivity loss after port-move event"
+    troubleshooting_hints:
+      - "MAC mobility: sequence number tracks MAC location changes"
+      - "Check 'show l2route evpn mac <mac>' for sequence number"
+      - "Higher sequence number = newer location"
+      - "MAC move limit: default ~10 moves/sec triggers suppression"
+      - "Use 'mac move-limit <count>' to adjust threshold"
+      - "Stuck MAC: clear with 'clear l2route evpn mac <mac>'"
+    applicability: "EVPN VXLAN with mobile hosts or VM migrations"
+
+  # EVPN Multi-Homing and Advanced Issues
+
+  evpn_df_election:
+    name: "EVPN DF (Designated Forwarder) Election Issue"
+    description: "Configure EVPN with multi-homed CE but designated forwarder election fails or incorrect DF elected"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+    symptoms:
+      - "BUM traffic duplication from multi-homed CE"
+      - "DF election not converging for Ethernet segment"
+      - "Multiple PEs forwarding BUM to same CE"
+      - "Type 1 (Ethernet Auto-Discovery) routes not exchanged"
+    troubleshooting_hints:
+      - "DF elected per Ethernet segment (ESI), per VNI"
+      - "Only DF forwards BUM traffic to multi-homed CE"
+      - "Check 'show evpn ethernet-segment <esi>' for DF status"
+      - "DF election: highest priority (modulo method), then highest IP"
+      - "Type 1 routes signal ESI label and DF election status"
+      - "All PEs in same ES must participate in DF election"
+    applicability: "EVPN with CE multi-homing (ESI-based)"
+
+  evpn_esi_mismatch:
+    name: "EVPN ESI / Ethernet Segment Configuration Mismatch"
+    description: "Configure EVPN Ethernet Segment Identifier (ESI) inconsistently across PEs multi-homing the same CE"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+    symptoms:
+      - "Multi-homing not working between PEs"
+      - "ESI mismatch prevents DF election"
+      - "Type 1 routes not generated for the ES"
+      - "MAC addresses flapping between PEs"
+    troubleshooting_hints:
+      - "ESI uniquely identifies an Ethernet segment (10 bytes)"
+      - "PEs multi-homing same CE must use same ESI value"
+      - "Check 'show evpn ethernet-segment <esi> detail'"
+      - "ESI format: type 0/1/2/3/4/5 with specific encoding"
+      - "Auto-generated vs manually configured ESI"
+      - "ESI mismatch causes DF election failure and MAC flap"
+    applicability: "EVPN with CE multi-homing"
+
+  evpn_aliasing:
+    name: "EVPN E-ALIASing / Load Balancing Issue"
+    description: "Configure EVPN with aliasing (E-ALIAS) but load balancing not distributing traffic across multi-homed PEs"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+    symptoms:
+      - "Traffic not load balanced across multi-homed PE links"
+      - "One PE carries all traffic for a MAC despite active-active"
+      - "Aliasing not working for single-active redundancy mode"
+      - "ESI label not programmed for load balancing"
+    troubleshooting_hints:
+      - "E-ALIAS: remote PE sends traffic to any multi-homed PE"
+      - "Type 1 routes carry ESI label for aliasing"
+      - "Check 'show evpn ethernet-segment <esi> aliasing'"
+      - "All PEs in ES must advertise same ESI for aliasing"
+      - "Single-active: one PE forwards, others standby per VLAN"
+      - "All-active: all PEs forward traffic simultaneously"
+    applicability: "EVPN multi-homing with load balancing"
+
+  evpn_l3vni_config:
+    name: "EVPN L3VNI / IP VRF Configuration Mismatch"
+    description: "Configure EVPN L3VNI (IP VRF VNI) inconsistently across leaf switches, breaking IP routing"
+    severity: "critical"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "IP routes not exchanged between leaves via EVPN"
+      - "L3VNI mismatch between leaf switches"
+      - "Type 5 routes missing for VRF prefixes"
+      - "VRF RT import/export incorrectly matching L3VNI"
+    troubleshooting_hints:
+      - "L3VNI must be same across all leaves for the same VRF"
+      - "Check 'show vrf <name>' for L3VNI assignment"
+      - "Use 'vni <id> l3' to map L3VNI to VRF"
+      - "Route-target for L3VNI must be consistent"
+      - "Check 'show bgp l2vpn evpn route-type 5' for prefix routes"
+      - "L3VNI different from L2VNI (separate VNI range or allocation)"
+    applicability: "EVPN VXLAN with tenant IP routing"
+
+  evpn_arp_nd_suppression:
+    name: "EVPN ARP/ND Suppression Cache Miss"
+    description: "Configure EVPN with ARP/ND suppression but cache miss causes BUM flooding for ARP/ND packets"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+    symptoms:
+      - "Excessive ARP flooding across VXLAN fabric"
+      - "ARP suppression cache miss rate high"
+      - "Remote host ARP entries not populated from EVPN"
+      - "ND suppression not working for IPv6"
+    troubleshooting_hints:
+      - "EVPN Type-2 routes populate ARP/ND suppression database"
+      - "Check 'show evpn arp-cache vni <id>' for cached entries"
+      - "Cache miss = ARP flooded to all remote VTEPs"
+      - "Ensure all hosts MAC/IP advertised via Type-2"
+      - "ND suppression for IPv6 Neighbor Discovery"
+      - "Threshold tuning: 'arp suppression interval <seconds>'"
+    applicability: "EVPN VXLAN at-scale deployments"
+
+  evpn_irb_gateway_mac:
+    name: "EVPN IRB Anycast Gateway MAC Conflict"
+    description: "Configure EVPN anycast gateway with same IP but different MAC addresses across leaf switches"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - evpn
+    symptoms:
+      - "Hosts experiencing intermittent gateway connectivity"
+      - "ARP resolution returning different MAC for same gateway IP"
+      - "Traffic forwarded incorrectly due to MAC mismatch"
+      - "Gateway load balancing not working"
+    troubleshooting_hints:
+      - "All leaves must use identical anycast gateway MAC"
+      - "Configure 'fabric forwarding anycast-gateway-mac <mac>'"
+      - "Default anycast MAC: 2022.0000.0000 (Cisco)"
+      - "Check 'show ip arp <gateway-ip>' on multiple leaves"
+      - "Different MACs = hosts confused about which leaf is gateway"
+      - "Anycast MAC enables active-active first-hop redundancy"
+    applicability: "EVPN VXLAN with anycast gateway"
+
+  evpn_vni_route_target:
+    name: "EVPN VNI Route Target Import/Export Filtering"
+    description: "Configure EVPN VNI route target filtering incorrectly, preventing VNI-specific route exchange"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - evpn
+      - bgp
+    symptoms:
+      - "EVPN routes for specific VNI not imported on remote leaf"
+      - "RT filtering blocking VNI-specific routes"
+      - "Partial VNI operation - some leaves get routes, others don't"
+      - "Type 2/3 routes for specific VNI missing"
+    troubleshooting_hints:
+      - "Each VNI has its own RT import/export policy"
+      - "Check 'show bgp l2vpn evpn vni <id>' for RT configuration"
+      - "Use 'route-target both <rt>' under 'evpn vni <id> l2'"
+      - "RT format usually follows VNI or tenant AS (e.g., 65000:<vni>)"
+      - "RT mismatch is the most common EVPN configuration error"
+      - "Auto-RT generation: <bGP-AS>:<VNI> or <bGP-AS>:<VLAN-ID>"
+    applicability: "All EVPN VXLAN deployments"
+
+  evpn_etree:
+    name: "EVPN E-Tree / Root-and-Leaf Topology Misconfiguration"
+    description: "Configure EVPN E-Tree incorrectly, causing leaf-to-leaf communication when isolation is required"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - evpn
+    symptoms:
+      - "Leaf (AC) ports communicate when they should be isolated"
+      - "Root (MP) ports not forwarding correctly"
+      - "E-Tree VLAN/EVPN isolation tag not applied"
+      - "BUM traffic between leaves not expected"
+    troubleshooting_hints:
+      - "E-Tree isolates leaf (AC) ports but connects them via root (MP)"
+      - "Leaf-to-leaf communication must be blocked in E-Tree"
+      - "Root-to-leaf and leaf-to-root communication allowed"
+      - "Check 'show evpn etree vlan <id>' for isolation status"
+      - "EVPN E-Tree uses DF election for leaf isolation"
+      - "Common in Mobile Backhaul and aggregation networks"
+    applicability: "EVPN deployments needing traffic isolation (E-Tree)"

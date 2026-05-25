@@ -1,0 +1,295 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Segment Routing Issues Injection"
+description: "Segment Routing (SR-MPLS) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - segment-routing
+  - mpls
+  - isis
+  - ospf
+  - sr-te
+  - ldp
+
+issues:
+  # SID Allocation and Configuration Issues
+
+  srgb_mismatch:
+    name: "SRGB (Segment Routing Global Block) Mismatch"
+    description: "Configure different SRGB ranges on routers in the same SR domain"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - mpls
+    symptoms:
+      - "SID (Segment ID) conflict across SR domain"
+      - "MPLS label allocation unexpected"
+      - "SR-TE policy path computation failure"
+      - "Label forwarding incorrect"
+    troubleshooting_hints:
+      - "Check SRGB with 'show segment-routing mpls' or 'show isis segment-routing'"
+      - "Use 'segment-routing mpls srgb <start> <end>' to configure"
+      - "All routers in the same SR domain should have consistent SRGB"
+      - "Default SRGB is 16000-23999 on most platforms"
+      - "SRGB must be large enough for all prefix-SIDs in the network"
+      - "Check for overlapping SRGB between different domains"
+    applicability: "Segment Routing deployments"
+
+  prefix_sid_missing:
+    name: "Prefix-SID Not Assigned or Missing"
+    description: "Prefix-SID (label) not configured for a loopback interface in the SR domain"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - segment-routing
+      - isis
+      - ospf
+    symptoms:
+      - "No SR label allocated for the loopback prefix"
+      - "SR-TE paths cannot use this node as endpoint"
+      - "MPLS forwarding table missing label for this prefix"
+      - "SR policy headend cannot compute path"
+    troubleshooting_hints:
+      - "Check prefix-SID with 'show isis prefix-sid' or 'show segment-routing mpls prefix-sid-map'"
+      - "Configure 'prefix-sid <index>' under IS-IS or OSPF interface"
+      - "SID index is combined with SRGB to create the MPLS label"
+      - "Verify the loopback prefix is advertised in IGP with the SID"
+      - "Each loopback prefix should have a unique SID index"
+      - "Duplicate SIDs cause label conflicts"
+    applicability: "Segment Routing with IS-IS or OSPF"
+
+  adjacency_sid:
+    name: "Adjacency-SID Misconfiguration"
+    description: "Adjacency-SID not generated or incorrect due to IGP interface configuration"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - segment-routing
+      - isis
+    symptoms:
+      - "Adjacency-SID not allocated for specific neighbors"
+      - "SR-TE strict paths cannot use this adjacency"
+      - "Adjacency segment missing in SR database"
+      - "Label stack for strict path incomplete"
+    troubleshooting_hints:
+      - "Check adjacency-SID with 'show isis adjacency-sid' or 'show segment-routing mpls adjacency'"
+      - "Adjacency-SID is automatically allocated per neighbor"
+      - "Adjacency-SID is local (unique per router, not domain-wide)"
+      - "Check IS-IS/OSPF interface is running IGP with SR extension"
+      - "Adjacency-SID persists across IGP restarts"
+      - "Only one adjacency-SID is allocated per adjacency (IPv4 or IPv6)"
+    applicability: "SR-TE and strict path segment routing"
+
+  # SR-TE and Traffic Steering Issues
+
+  sr_te_policy:
+    name: "SR-TE Policy Candidate-Path Misconfiguration"
+    description: "Configure SR-TE policy candidate-path with wrong preference or segment-list"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - sr-te
+      - mpls
+    symptoms:
+      - "SR-TE policy not active or not selected"
+      - "Candidate-path preference conflict"
+      - "Segment-list does not reach destination"
+      - "Traffic-engineering policy not steering traffic"
+    troubleshooting_hints:
+      - "Check SR-TE policy with 'show segment-routing traffic-eng policy'"
+      - "Candidate-path with higher preference wins"
+      - "Use 'candidate-path preference <value>' to set priority"
+      - "Verify segment-list: 'show segment-routing mpls segment-list <name>'"
+      - "Color and endpoint must match for policy selection"
+      - "Check 'show segment-routing traffic-eng forwarding' for active path"
+    applicability: "SR-TE policies for traffic engineering"
+
+  sr_steering:
+    name: "SR Traffic Steering Misconfiguration"
+    description: "Traffic not steered into SR-TE policy via color or route-policy"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - sr-te
+      - bgp
+    symptoms:
+      - "Traffic not following the intended SR-TE path"
+      - "BGP routes not colored with the expected color community"
+      - "Steering route-policy not matching or applied"
+      - "Default routing table used instead of SR-TE"
+    troubleshooting_hints:
+      - "SR traffic steering uses color community on BGP routes"
+      - "Color community format: color:<color-value>"
+      - "BGP route-policy must set color on specific routes"
+      - "SR-TE policy with matching color+endpoint attracts traffic"
+      - "Check 'show bgp <prefix>' for color community"
+      - "Steering via autoroute or static route per policy"
+    applicability: "SR-TE traffic steering in BGP networks"
+
+  # Fast-Reroute and Protection Issues
+
+  sr_ti_lfa:
+    name: "SR TI-LFA (Topology-Independent LFA) Failure"
+    description: "Configure SR TI-LFA backup path not being computed due to missing adjacency-SID or constraints"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - isis
+      - ospf
+    symptoms:
+      - "TI-LFA backup path not computed for a prefix"
+      - "Post-convergence path blackhole under failure"
+      - "Fast-reroute not active for specific prefixes"
+      - "Protection coverage incomplete"
+    troubleshooting_hints:
+      - "Check TI-LFA with 'show isis fast-reroute ti-lfa' or 'show ip ospf fast-reroute ti-lfa'"
+      - "TI-LFA requires adjacency-SIDs for backup path construction"
+      - "Use 'fast-reroute per-prefix ti-lfa' under IGP"
+      - "Check 'show isis fast-reroute protected-prefixes' for coverage"
+      - "TI-LFA works with SR and LDP both"
+      - "All intermediate routers need SR enabled for TI-LFA"
+    applicability: "Segment Routing fast-reroute deployments"
+
+  # Interoperability and Domain Issues
+
+  sr_mpls_ldp_interop:
+    name: "SR-MPLS and LDP Interoperability Issue"
+    description: "Configure SR-MPLS and LDP on same router but label mapping mismatched"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - mpls
+      - ldp
+    symptoms:
+      - "Some routers use SR while others use LDP"
+      - "Label allocation conflict on migration routers"
+      - "Mapping server not advertising prefix-SIDs for LDP-to-SR"
+      - "Label edge node cannot swap between SR and LDP"
+    troubleshooting_hints:
+      - "SR-to-LDP interworking: mapping server advertises SIDs for LDP prefixes"
+      - "Use 'segment-routing mapping-server' for prefix-SID mapping"
+      - "Check 'show mpls forwarding-table' for label consistency"
+      - "Migration: enable SR, keep LDP, then disable LDP"
+      - "IGP LDP sync still needed during migration"
+      - "Both SR and LDP can coexist on the same router"
+    applicability: "SR-MPLS migration from LDP-based networks"
+
+  sr_anycast_sid:
+    name: "SR Anycast-SID / Redundancy SID Conflict"
+    description: "Configure SR anycast-SID for multi-homed prefix but SID index or routing causing suboptimal forwarding"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - isis
+    symptoms:
+      - "ECMP not working correctly for anycast prefix"
+      - "Anycast SID index conflict between redundant routers"
+      - "Traffic not load balancing across anycast nodes"
+      - "Suboptimal anycast forwarding path"
+    troubleshooting_hints:
+      - "Anycast-SID: same SID index on multiple routers for the same prefix"
+      - "Traffic forwarded via ECMP to the closest anycast node"
+      - "Check anycast SID: 'show isis prefix-sid <prefix>'"
+      - "Both routers must use the same SID index"
+      - "Anycast prefix advertised from both routers with same SID"
+      - "Use for multi-homed services and seamless redundancy"
+    applicability: "SR networks with multi-homed services"
+
+  sr_ospf_sr:
+    name: "OSPF Segment Routing (OSPF-SR) Extension Issue"
+    description: "Configure OSPF with SR extension incorrectly causing prefix-SID not generated in OSPF LSAs"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - segment-routing
+      - ospf
+    symptoms:
+      - "OSPF SR prefix-SIDs not generated"
+      - "OSPF opaque LSA (Type 9/10) not carrying SR info"
+      - "Other routers not learning prefix-SID via OSPF"
+      - "SR not operational in OSPF areas"
+    troubleshooting_hints:
+      - "OSPF SR: uses Opaque LSA Type 10 (area) or Type 9 (link)"
+      - "Check 'show ip ospf database opaque-area' for SR info"
+      - "Use 'segment-routing mpls' under router ospf"
+      - "Prefix-SID: 'prefix-sid <index>' under network command"
+      - "OSPF SRB: 'segment-routing global-block <start> <end>'"
+      - "Requires 'capability opaque' on all OSPF routers"
+    applicability: "OSPF-based SR deployments"
+
+  sr_adj_protection:
+    name: "Adjacency-SID Protection / FRR Backup Failure"
+    description: "Configure SR adjacency-SID protection (FRR) but backup path not available"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - isis
+    symptoms:
+      - "Adjacency-SID lost when link fails"
+      - "No backup path for adjacency-SID protected prefix"
+      - "Adjacency-SID forwarding interrupted on link failure"
+      - "FRR not protecting adjacency-SID path"
+    troubleshooting_hints:
+      - "Adjacency-SID protection: 'adjacency-sid protect' under IGP"
+      - "TI-LFA or IP-FRR provides backup paths"
+      - "Check 'show isis adjacency-sid <intf>' for backup info"
+      - "FRR protection requires precomputed backup path"
+      - "Backup path uses alternate interface or node"
+      - "Verify 'fast-reroute per-prefix' is enabled for protection"
+    applicability: "SR networks with link protection requirements"
+
+  sr_isl_exclusion:
+    name: "SR Inter-Layer / ODN / On-Demand Next-Hop Config Error"
+    description: "Configure SR on-demand next-hop (ODN) but auto-path not instantiated for BGP destinations"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - bgp
+    symptoms:
+      - "ODN not creating SR path for BGP destinations"
+      - "BGP route with color not triggering SR policy creation"
+      - "ODN policy not matching BGP prefix"
+      - "SR path to BGP next-hop not available"
+    troubleshooting_hints:
+      - "ODN: BGP color community triggers SR policy creation"
+      - "Use 'segment-routing traffic-eng on-demand color <value>'"
+      - "BGP: set color community on routes needing SR transport"
+      - "Check 'show segment-routing traffic-eng policy' for ODN policies"
+      - "ODN policy = color + endpoint (destination prefix)"
+      - "Requires BGP-LS or IGP topology for path computation"
+    applicability: "SR-TE on-demand policies for BGP destinations"
+
+  sr_liveness:
+    name: "SR Liveness / BFD for SR Policy Failure"
+    description: "Configure BFD for SR-TE policy but BFD session not established"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - segment-routing
+      - sr-te
+    symptoms:
+      - "BFD for SR policy not established"
+      - "SR policy not protected by BFD fast detection"
+      - "BFD session flapping for SR path"
+      - "Slow failover despite BFD configuration"
+    troubleshooting_hints:
+      - "BFD for SR: 'bfd segment-routing traffic-eng'"
+      - "BFD session tracks SR policy liveness"
+      - "Check 'show bfd segment-routing traffic-eng' for session state"
+      - "BFD provides sub-50ms failure detection"
+      - "Alternative: SR policy candidate-path validation"
+      - "If BFD down: policy marked invalid, switch to backup candidate"
+    applicability: "SR-TE with fast failure detection requirements"

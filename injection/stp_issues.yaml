@@ -1,0 +1,283 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "STP/RSTP/MSTP Issues Injection"
+description: "Spanning Tree Protocol (STP, RSTP, MSTP) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - stp
+  - rstp
+  - mstp
+
+issues:
+  stp_root_bridge:
+    name: "STP Root Bridge Election Manipulation"
+    description: "Set bridge priority to force the wrong switch to become the root bridge"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - stp
+      - rstp
+      - mstp
+    symptoms:
+      - "Unexpected root bridge elected"
+      - "Suboptimal spanning tree topology"
+      - "Traffic traverses suboptimal path to reach root"
+      - "Redundant links not utilized optimally"
+    troubleshooting_hints:
+      - "Check root bridge with 'show spanning-tree'"
+      - "Bridge priority default is 32768, lower value wins election"
+      - "Root bridge is elected by lowest bridge priority, then lowest MAC"
+      - "Use 'spanning-tree vlan <vlan> priority <0-61440>' to set priority"
+      - "Only multiples of 4096 are valid priorities"
+      - "Use 'spanning-tree vlan <vlan> root primary/secondary' for macro"
+    applicability: "All switched networks with STP"
+
+  stp_portfast:
+    name: "STP Portfast Misconfiguration"
+    description: "Enable Portfast on trunk ports or disable Portfast on access ports causing slow convergence"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "Trunk port with Portfast causes loop on configuration change"
+      - "Access port takes 30-50s to transition to forwarding"
+      - "Host connectivity delayed after link up"
+      - "BPDU received on Portfast port triggers loop"
+    troubleshooting_hints:
+      - "Check Portfast status with 'show spanning-tree interface <intf>'"
+      - "Portfast should only be enabled on access ports"
+      - "Portfast bypasses listening/learning states (immediate forwarding)"
+      - "Use 'spanning-tree portfast' on access ports only"
+      - "Combine Portfast with BPDUguard for access port security"
+      - "'spanning-tree portfast default' enables on all non-trunk ports"
+    applicability: "All switched networks with end-host connections"
+
+  stp_path_cost:
+    name: "STP Port Path Cost Manipulation"
+    description: "Set artificially high or low path cost on a port to alter STP topology"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+      - mstp
+    symptoms:
+      - "STP blocking wrong port in a redundant topology"
+      - "High-speed link blocked while low-speed link forwarding"
+      - "Suboptimal traffic flow"
+      - "Expected forwarding port is in blocking state"
+    troubleshooting_hints:
+      - "Check path cost with 'show spanning-tree interface <intf>'"
+      - "Default cost: 10G=2, 1G=4, 100M=19, 10M=100"
+      - "Use 'spanning-tree cost <value>' to override default"
+      - "Cost determines port role (Root/Designated/Alternate)"
+      - "Lower cost path to root is preferred"
+      - "Reference: short mode (1-65535) vs long mode (1-200000000)"
+    applicability: "Switched networks with STP path cost tuning"
+
+  stp_bpdu_guard:
+    name: "STP BPDU Guard Misconfiguration"
+    description: "Disable BPDU guard on access ports, or enable BPDU guard on trunk ports"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "Access port receives BPDU causing STP topology change"
+      - "Port with BPDU guard err-disabled when BPDU received"
+      - "Unauthorized switch connected to access port causes loop"
+      - "BPDU guard mistakenly blocking legitimate BPDUs on trunk"
+    troubleshooting_hints:
+      - "Check BPDU guard with 'show spanning-tree interface <intf>'"
+      - "BPDU on access port usually indicates unauthorized device"
+      - "Use 'spanning-tree portfast bpduguard' on access ports"
+      - "'spanning-tree portfast bpduguard default' globally enables"
+      - "BPDU guard err-disables the port on BPDU reception"
+      - "Clear err-disabled with 'shutdown' followed by 'no shutdown'"
+    applicability: "All switched networks with end-host connections"
+
+  # STP Protection and Security Issues
+
+  stp_loop_guard:
+    name: "STP Loop Guard Misconfiguration"
+    description: "Disable loop guard on ports where it should be enabled (or enable where it shouldn't)"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "Unidirectional link failure causes STP loop"
+      - "Alternate port transitions to forwarding when not receiving BPDUs"
+      - "Loop guard keeps port in loop-inconsistent state"
+      - "Port stuck in blocking despite redundant path"
+    troubleshooting_hints:
+      - "Check loop guard with 'show spanning-tree interface <intf>'"
+      - "Loop guard prevents alternate ports from becoming designated"
+      - "Port in loop-inconsistent state recovers when BPDUs received"
+      - "Enable on all ports where BPDUs are expected"
+      - "Use 'spanning-tree guard loop' on non-designated ports"
+      - "Loop guard and UplinkFast are mutually exclusive"
+    applicability: "Switched networks, especially with fiber links"
+
+  stp_tcn_flood:
+    name: "STP TCN (Topology Change Notification) Flood"
+    description: "Configure frequent STP topology changes causing TCN propagation and MAC table flushing across the network"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "MAC address tables being flushed frequently"
+      - "High CPU due to STP recalculation"
+      - "Network-wide MAC flooding after changes"
+      - "TCN storms disrupting network operations"
+    troubleshooting_hints:
+      - "Check 'show spanning-tree detail' for TC count"
+      - "TCN flushes learned MAC addresses"
+      - "Identify source of TCN: 'show spanning-tree vlan <vlan> detail'"
+      - "Use portfast on access ports to prevent TCNs from host changes"
+      - "'spanning-tree uplinkfast' reduces convergence impact"
+      - "Use 'spanning-tree bpduguard portfast' to stop unauthorized switch additions"
+    applicability: "Switched networks with frequent port state changes"
+
+  # STP Advanced and Interoperability Issues
+
+  stp_mst_region:
+    name: "MSTP Region / Instance Mapping Misconfiguration"
+    description: "Configure MST region name, revision or VLAN-to-instance mapping inconsistently across switches"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - mstp
+    symptoms:
+      - "Switches not joining MST region as expected"
+      - "MST region boundary issues"
+      - "CIST (Common Internal Spanning Tree) broken"
+      - "VLAN-to-instance mapping mismatch between switches"
+    troubleshooting_hints:
+      - "Check MST config: 'show spanning-tree mst configuration'"
+      - "Region name, revision number, and VLAN map must match across all switches"
+      - "Use 'spanning-tree mst configuration' then 'instance <id> vlan <vlan-list>'"
+      - "'region <name>' and 'revision <num>' must be identical across region"
+      - "Mismatch = region boundary (CIST runs instead of MST)"
+      - "Maximum 16 MST instances (0-15), instance 0 is CIST"
+    applicability: "MSTP deployments in data center and campus networks"
+
+  stp_bpdu_filter:
+    name: "STP BPDU Filter / BPDU Ignore on Access Ports"
+    description: "Configure BPDU filter on access port ignoring incoming BPDUs, preventing loop detection"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "Port not processing received BPDUs"
+      - "STP loop formed despite BPDU sent into the network"
+      - "Access port with BPDU filter ignores all BPDUs"
+      - "BPDU filter bypassing STP protection mechanisms"
+    troubleshooting_hints:
+      - "BPDU filter prevents sending AND receiving BPDUs on port"
+      - "'spanning-tree bpdufilter enable' on interface"
+      - "BPDU filter + Portfast = immediate forwarding, no BPDU processing"
+      - "Danger: if a loop-forming cable connects two filtered ports, loop occurs"
+      - "Use BPDU guard instead of BPDU filter for better protection"
+      - "BPDU guard err-disables the port; BPDU filter allows the loop"
+    applicability: "Access ports where BPDU filter is used (not recommended)"
+
+  stp_root_guard:
+    name: "STP Root Guard Blocking Legitimate BPDU"
+    description: "Configure root guard on wrong ports preventing optimal root bridge placement"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+      - rstp
+      - mstp
+    symptoms:
+      - "Designated port transitions to root-inconsistent state"
+      - "Port blocked despite being intended forwarding port"
+      - "Root guard triggering incorrectly on superior BPDUs"
+      - "Network segmentation due to root guard"
+    troubleshooting_hints:
+      - "Root guard on port blocks it if superior BPDU received"
+      - "Apply root guard on ports that should never become root port"
+      - "Use 'spanning-tree guard root' on root-facing ports"
+      - "Port in root-inconsistent recovers when BPDU stops"
+      - "Don't apply on ports expected to receive superior BPDUs"
+      - "Root guard is per-port, not per-VLAN"
+    applicability: "Switched networks where root bridge location is fixed"
+
+  stp_uplinkfast:
+    name: "STP UplinkFast / BackboneFast Misconfiguration"
+    description: "Configure STP acceleration features (UplinkFast, BackboneFast) incorrectly causing convergence issues"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+    symptoms:
+      - "UplinkFast not accelerating failover on uplink loss"
+      - "BackboneFast not expediting LSA expiry for indirect failures"
+      - "UplinkFast / BackboneFast not compatible with other features"
+      - "UplinkFast and loop guard mutually exclusive"
+    troubleshooting_hints:
+      - "UplinkFast: instant failover on root port loss, replaces 30s STP delay"
+      - "Use 'spanning-tree uplinkfast' globally"
+      - "Increases path cost by 3000 on all ports"
+      - "BackboneFast: reduces convergence after indirect link failure"
+      - "BackboneFast expires max-age quickly for inferior BPDUs"
+      - "Modern RSTP/MSTP replaces these legacy acceleration features"
+    applicability: "Legacy STP networks requiring faster convergence"
+
+  stp_vlan_mismatch:
+    name: "STP VLAN Mismatch / PVST+ Simulation Inconsistency"
+    description: "Configure PVST+ with inconsistent VLANs across trunk links causing STP per-VLAN issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - stp
+    symptoms:
+      - "PVST+ simulation inconsistency detected on trunk"
+      - "Trunk port moved to root-inconsistent state"
+      - "Some VLANs blocked while others forwarding"
+      - "VLAN pruning or allowed list mismatch"
+    troubleshooting_hints:
+      - "PVST+ simulation mismatch: Cisco PVST+ vs MST interoperability"
+      - "Check 'show spanning-tree <vlan>' per-VLAN root status"
+      - "Ensure allowed VLAN list matches on both trunk ends"
+      - "'switchport trunk allowed vlan' must match across trunk"
+      - "Native VLAN mismatch causes PVST+ simulation issues"
+      - "Use 'spanning-tree vlan <vlan> root primary/secondary' for selection"
+    applicability: "PVST+ and hybrid PVST+/MST deployments"
+
+  stp_guard_loop:
+    name: "STP Guard Loop / Unidirectional Link"
+    description: "Configure unidirectional link (fiber TX/RX issue) causing STP loop despite loop guard"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - stp
+      - rstp
+    symptoms:
+      - "STP loop despite all protection mechanisms"
+      - "Unidirectional link (fiber cut one direction)"
+      - "Port receives BPDUs but cannot send"
+      - "Loop guard not detecting the failure"
+    troubleshooting_hints:
+      - "Unidirectional link: BPDU sent but not received = port becomes designated"
+      - "Loop guard prevents designated transition if BPDUs stop"
+      - "UDLD (Unidirectional Link Detection) works at Layer 1/2"
+      - "Use 'udld enable' and 'udld port aggressive' for fiber links"
+      - "UDLD + loop guard together for complete protection"
+      - "Fiber links: one strand broken = perfect unidirectional failure"
+    applicability: "Fiber-based switched networks, especially single-strand failures"

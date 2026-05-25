@@ -1,0 +1,280 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "IP SLA/Object Tracking Issues Injection"
+description: "IP SLA probes and object tracking related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - ip-sla
+  - tracking
+
+issues:
+  sla_probe_wrong:
+    name: "IP SLA Probe Target Misconfiguration"
+    description: "Configure IP SLA probe with wrong target IP address or wrong type"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "IP SLA probe failing or timing out"
+      - "Tracking object shows 'down' incorrectly"
+      - "SLA probe target unreachable"
+      - "Probe type not suitable for the monitored path"
+    troubleshooting_hints:
+      - "Check SLA probe with 'show ip sla statistics <id>'"
+      - "Verify target IP address is correct and reachable"
+      - "Probe types: icmp-echo, tcp-connect, udp-jitter, http, etc."
+      - "Use 'ip sla <id>' and appropriate type command"
+      - "Test manually: 'ping <target>' from the router"
+      - "Check 'show ip sla configuration <id>' for settings"
+    applicability: "IP SLA based failover and tracking"
+
+  # Probe Configuration and Timing Issues
+
+  sla_frequency:
+    name: "IP SLA Probe Frequency Misconfiguration"
+    description: "Configure IP SLA probe frequency too slow or too fast"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "Failover detection too slow"
+      - "SLA probes consuming too much CPU"
+      - "Tracking state change delayed"
+      - "Probe frequency not meeting convergence requirements"
+    troubleshooting_hints:
+      - "Check probe frequency with 'show ip sla configuration <id>'"
+      - "Default frequency is 60 seconds"
+      - "Use 'frequency <seconds>' under ip sla schedule"
+      - "Faster probes = faster convergence but more CPU"
+      - "Combined with track timeout for overall detection time"
+      - "Sub-second frequency requires good CPU resources"
+    applicability: "IP SLA with specific convergence requirements"
+
+  sla_threshold:
+    name: "IP SLA Threshold / Timeout Misconfiguration"
+    description: "Configure IP SLA threshold or timeout too low causing false positives"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "False SLA probe failures during normal operation"
+      - "Premature failover due to threshold violation"
+      - "Probe marked failed despite successful connectivity"
+      - "Threshold too sensitive for network jitter"
+    troubleshooting_hints:
+      - "Check threshold with 'show ip sla configuration <id>'"
+      - "Use 'threshold <milliseconds>' for reaction thresholds"
+      - "Use 'timeout <milliseconds>' for probe timeout"
+      - "Timeout should be longer than expected RTT"
+      - "Reaction configuration triggers tracking state change"
+      - "Adjust based on baseline network latency"
+    applicability: "IP SLA with strict failover requirements"
+
+  track_object_wrong:
+    name: "Track Object Referencing Wrong SLA"
+    description: "Configure track object referencing the wrong IP SLA operation ID"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - tracking
+      - ip-sla
+    symptoms:
+      - "Track object tracking wrong path"
+      - "Track object showing incorrect state"
+      - "Failover not triggering when it should"
+      - "Wrong SLA probe being tracked"
+    troubleshooting_hints:
+      - "Check track object with 'show track <id>'"
+      - "Verify 'track <id> ip sla <sla-id>' references correct SLA"
+      - "Use 'show track summary' for all track objects"
+      - "Check SLA state with 'show ip sla statistics <sla-id>'"
+      - "Track object state reflects the SLA probe state"
+      - "Multiple track objects can use same SLA probe"
+    applicability: "All object tracking configurations"
+
+  # Object Tracking and Failover Issues
+
+  track_list_logic:
+    name: "Track List Boolean Logic Error"
+    description: "Configure track list with incorrect boolean logic (AND/OR)"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - tracking
+    symptoms:
+      - "Track list state not reflecting expected logic"
+      - "AND list up when one object is down"
+      - "OR list down when all objects are up"
+      - "Failover conditions not met correctly"
+    troubleshooting_hints:
+      - "Check track list with 'show track <id>'"
+      - "Use 'track <id> list boolean and|or'"
+      - "AND: all objects must be up for track list to be up"
+      - "OR: any object up = track list up"
+      - "Use 'track <id> list threshold percentage' for percentage-based"
+      - "Check each member object state individually"
+    applicability: "Multi-condition tracking for static routes / HSRP / VRRP"
+
+  sla_not_scheduled:
+    name: "IP SLA Probe Not Scheduled"
+    description: "Configure IP SLA probe but forget to schedule it"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ip-sla
+      - tracking
+    symptoms:
+      - "IP SLA not sending probes"
+      - "Track object stuck in down state"
+      - "No SLA statistics available"
+      - "Failover not working as expected"
+    troubleshooting_hints:
+      - "Check SLA schedule with 'show ip sla configuration <id>'"
+      - "Schedule: 'ip sla schedule <id> life {forever|<secs>} start-time now'"
+      - "Life forever ensures continuous probing"
+      - "Start-time now: starts immediately"
+      - "Use 'start-time <hh:mm:ss>' for delayed start"
+      - "Restart schedule after configuration changes"
+    applicability: "All IP SLA deployments"
+
+  track_application:
+    name: "Track Application (Static Route / HSRP) Not Configured"
+    description: "Configure track object but not applied to static route, HSRP, or VRRP"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - tracking
+      - static
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Track object state changes but no action taken"
+      - "Static route not removed when track goes down"
+      - "HSRP priority not decremented on failure"
+      - "Failover not occurring despite correct tracking"
+    troubleshooting_hints:
+      - "For static routes: 'ip route <prefix> <mask> <nh> track <id>'"
+      - "For HSRP: 'standby <group> track <id> [decrement <value>]'"
+      - "For VRRP: 'vrrp <group> track <id> [decrement <value>]'"
+      - "Check 'show track <id>' to verify application"
+      - "Track object must be referenced by a client to have effect"
+      - "Verify track state and client action match expectations"
+    applicability: "Static route failover, HSRP/VRRP interface tracking"
+
+  # Advanced SLA Monitoring Issues
+
+  sla_icmp_jitter:
+    name: "IP SLA ICMP Jitter / Voice Quality Monitoring Issue"
+    description: "Configure IP SLA jitter probe but statistics not collected or inaccurate"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA jitter probe returns no data"
+      - "Voice quality metrics (MOS, jitter, latency) not available"
+      - "Jitter probe target not responding"
+      - "Probe showing excessive packet loss"
+    troubleshooting_hints:
+      - "ICMP jitter: 'ip sla <id> icmp-jitter <target> interval <ms>'"
+      - "Jitter measures inter-packet delay variance"
+      - "Check 'show ip sla statistics <id>' for jitter data"
+      - "Target must respond to ICMP and the specific probe"
+      - "MOS score: 4.0+ = good, <3.6 = poor voice quality"
+      - "UDP jitter more accurate than ICMP jitter for voice metrics"
+    applicability: "Voice quality monitoring with IP SLA"
+
+  sla_multi_hop:
+    name: "IP SLA Multi-Hop / Path Monitoring Issue"
+    description: "Configure IP SLA probe for path beyond directly connected neighbor"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA multiple-hop probe timing out"
+      - "Return path not reachable from probe target"
+      - "Intermediate routers dropping SLA probe"
+      - "Path monitoring not reflecting end-to-end availability"
+    troubleshooting_hints:
+      - "Multi-hop probe requires target to be reachable (routing)"
+      - "Ensure return route to source exists on the target"
+      - "Use 'ip sla <id> icmp-echo <target> source-interface <intf>'"
+      - "Check ACL not blocking ICMP on intermediate routers"
+      - "For TCP/UDP probes: firewall must allow the probe protocol"
+      - "Use traceroute to verify path before configuring multi-hop SLA"
+    applicability: "End-to-end path availability monitoring"
+
+  sla_dns_http:
+    name: "IP SLA HTTP/DNS Application Monitoring Issue"
+    description: "Configure IP SLA application-specific probe (HTTP, DNS, FTP) but application check fails"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "HTTP SLA probe failing despite web server reachable"
+      - "DNS resolution probe timing out"
+      - "Application response slow or non-responsive"
+      - "SLA application check not reflecting true service status"
+    troubleshooting_hints:
+      - "HTTP SLA: 'ip sla <id> http get <url>'"
+      - "DNS SLA: 'ip sla <id> dns <hostname> name-server <ip>'"
+      - "Target server must respond to the specific application request"
+      - "Check 'show ip sla statistics <id>' for app-specific responses"
+      - "Application SLA probes validate end-to-end service (not just ICMP)"
+      - "Use 'timeout <ms>' to set appropriate application response time"
+    applicability: "Application-level health monitoring with IP SLA"
+
+  sla_logging:
+    name: "IP SLA Reaction / Logging Misconfiguration"
+    description: "Configure IP SLA reaction to trigger on threshold but logging not enabled"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA threshold violation but no log or tracking change"
+      - "Reaction configuration not triggering action"
+      - "SLA probe fails silently without notification"
+      - "NMS not alerted on SLA violation"
+    troubleshooting_hints:
+      - "Use 'reaction <id> action-type trigger-only' for threshold events"
+      - "Reaction types: trigger-only, logging, trap"
+      - "Enable logging: 'ip sla reaction <id> action-type logging'"
+      - "SNMP trap: 'snmp-server enable traps ip sla'"
+      - "Check 'show ip sla reaction <id>' for reaction status"
+      - "Reaction + threshold = half-open monitor for threshold crossing"
+    applicability: "IP SLA monitoring with event notification requirements"
+
+  sla_multi_probe:
+    name: "IP SLA Multiple Probe / Scheduler Conflict"
+    description: "Configure multiple IP SLA probes with overlapping schedules or same operation ID"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ip-sla
+    symptoms:
+      - "IP SLA probes interfering with each other"
+      - "Operation ID conflict"
+      - "Multiple probes causing high CPU"
+      - "Probe schedule overlap causing inaccurate results"
+    troubleshooting_hints:
+      - "Each IP SLA operation needs unique ID (1-2147483647)"
+      - "Check active probes: 'show ip sla configuration'"
+      - "Schedule: 'ip sla schedule <id> life {forever|<sec>}'"
+      - "Multiple probes fine if frequency staggered"
+      - "Probes to same target: only one ICMP echo needed"
+      - "Use different types for different metrics (jitter vs latency vs availability)"
+    applicability: "Multi-metric IP SLA monitoring deployments"

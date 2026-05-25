@@ -1,0 +1,121 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for DEC DNA
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DEC DNA Packet Analysis"
+description: "DEC DNA (Digital Equipment Corporation Digital Network Architecture) packet analysis for legacy DECnet routing"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "dec_dna"
+
+# tshark display filter - used for -Y parameter
+display_filter: "dec_dna"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "Routing Flags"
+    tshark_field: "dec_dna.flags"
+    description: "DNA routing flags"
+
+  - label: "Control Packet"
+    tshark_field: "dec_dna.flags.control"
+    description: "Control packet flag"
+
+  - label: "Return to Sender Request"
+    tshark_field: "dec_dna.flags.RQR"
+    description: "Return to sender request"
+
+  - label: "Return Trip"
+    tshark_field: "dec_dna.flags.RTS"
+    description: "Packet on return trip"
+
+  - label: "Intra-Ethernet"
+    tshark_field: "dec_dna.flags.intra_eth"
+    description: "Intra-Ethernet packet flag"
+
+  - label: "Discarded"
+    tshark_field: "dec_dna.flags.discard"
+    description: "Discarded packet flag"
+
+  - label: "Destination Address"
+    tshark_field: "dec_dna.dst.address"
+    description: "Destination MAC address"
+
+  - label: "Source Address"
+    tshark_field: "dec_dna.src.addr"
+    description: "Source MAC address"
+
+  - label: "Destination Node"
+    tshark_field: "dec_dna.dst_node"
+    description: "Destination node number"
+
+  - label: "Source Node"
+    tshark_field: "dec_dna.src_node"
+    description: "Source node number"
+
+  - label: "Visit Count"
+    tshark_field: "dec_dna.visit_cnt"
+    description: "Number of nodes visited"
+
+  - label: "Protocol Type"
+    tshark_field: "dec_dna.proto_type"
+    description: "Protocol type"
+
+  - label: "Service Class"
+    tshark_field: "dec_dna.svc_cls"
+    description: "Service class"
+
+  - label: "Routing Control Message"
+    tshark_field: "dec_dna.rt.msg_type"
+    description: "Routing control message type"
+
+  - label: "NSP Message Type"
+    tshark_field: "dec_dna.nsp.msg_type"
+    description: "NSP (Network Services Protocol) message type"
+
+  - label: "Flow Control"
+    tshark_field: "dec_dna.nsp.flow_control"
+    description: "Flow control indicator"
+
+  - label: "Segment Size"
+    tshark_field: "dec_dna.nsp.segsize"
+    description: "Maximum data segment size"
+
+  - label: "Segment Number"
+    tshark_field: "dec_dna.nsp.segnum"
+    description: "Message segment number"
+
+filter_examples:
+  - name: "DEC DNA Router Hello"
+    filter: "dec_dna.flags.control == 1"
+    description: "Filter for DEC DNA routing control messages"
+
+  - name: "DEC DNA Data"
+    filter: "dec_dna.flags.control == 0"
+    description: "Filter for DEC DNA data messages"
+
+  - name: "Return to Sender"
+    filter: "dec_dna.flags.RQR == 1"
+    description: "Filter for return to sender requests"
+
+  - name: "Intra-Ethernet"
+    filter: "dec_dna.flags.intra_eth == 1"
+    description: "Filter for intra-Ethernet packets"
+
+checks:
+  - name: "dec_dna_discard"
+    severity: major
+    message: "DEC DNA packet discarded: {dec_dna.dst.address} to {dec_dna.src.addr}"
+    condition: "dec_dna.flags.discard == 1"
+
+  - name: "dec_dna_loop"
+    severity: minor
+    message: "DEC DNA routing loop: visit count {dec_dna.visit_cnt}"
+    condition: "dec_dna.visit_cnt > 10"

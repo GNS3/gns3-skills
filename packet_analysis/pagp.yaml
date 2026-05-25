@@ -1,0 +1,83 @@
+name: PAgP Packet Analysis
+description: PAgP (Port Aggregation Protocol) packet analysis for Cisco EtherChannel troubleshooting
+protocol_key: pagp
+display_filter: pagp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: PAgP Version
+  tshark_field: pagp.version
+  description: 'PAgP PDU version: 1=Info, 2=Flush'
+- label: Flags
+  tshark_field: pagp.flags
+  description: PAgP information flags
+- label: Slow Hello
+  tshark_field: pagp.flags.slowhello
+  description: Slow hello enabled flag
+- label: Auto Mode
+  tshark_field: pagp.flags.automode
+  description: Auto mode flag (vs Desirable)
+- label: Consistent State
+  tshark_field: pagp.flags.state
+  description: Consistent state flag
+- label: Local Device ID
+  tshark_field: pagp.localdevid
+  description: Local device MAC address
+- label: Local Learn Capability
+  tshark_field: pagp.localearncap
+  description: Local learn capability
+- label: Local Port Priority
+  tshark_field: pagp.localportpri
+  description: Local port priority
+- label: Local Group Capability
+  tshark_field: pagp.localgroupcap
+  description: Local group capability
+- label: Partner Device ID
+  tshark_field: pagp.partnerdevid
+  description: Partner device MAC address
+- label: Partner Learn Capability
+  tshark_field: pagp.partnerlearncap
+  description: Partner learn capability
+- label: Partner Port Priority
+  tshark_field: pagp.partnerportpri
+  description: Partner port priority
+- label: Partner Group Capability
+  tshark_field: pagp.partnergroupcap
+  description: Partner group capability
+- label: Partner Count
+  tshark_field: pagp.partnercount
+  description: Number of partners
+filter_examples:
+- name: PAgP Info
+  filter: pagp.version == 1
+  description: Filter for PAgP Info PDU
+- name: PAgP Flush
+  filter: pagp.version == 2
+  description: Filter for PAgP Flush PDU
+- name: PAgP Auto
+  filter: pagp.flags.automode == 1
+  description: Filter for PAgP Auto mode
+- name: PAgP Desirable
+  filter: pagp.flags.automode == 0
+  description: Filter for PAgP Desirable mode
+- name: PAgP Consistent
+  filter: pagp.flags.state == 1
+  description: Filter for PAgP in consistent state
+- name: Specific Partner
+  filter: pagp.partnerdevid == 00:11:22:33:44:55
+  description: Filter for specific partner device
+checks:
+- name: pagp_inconsistent
+  severity: major
+  message: 'PAgP inconsistent state: link to {pagp.partnerdevid} not bundled'
+  condition: pagp.flags.state == 0
+- name: pagp_partner_mismatch
+  severity: minor
+  message: 'PAgP partner mismatch: different {pagp.partnerdevid} seen'
+  description: Different pagp.partnerdevid from same port
+  condition: null
+- name: pagp_capability_mismatch
+  severity: minor
+  message: 'PAgP capability mismatch: local {pagp.localgroupcap} vs partner {pagp.partnergroupcap}'
+  condition: pagp.localgroupcap != pagp.partnergroupcap

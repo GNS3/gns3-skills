@@ -1,0 +1,118 @@
+name: DNS Packet Analysis
+description: DNS (Domain Name System) packet analysis for query/response troubleshooting
+protocol_key: dns
+display_filter: dns
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Transaction ID
+  tshark_field: dns.id
+  description: DNS transaction identifier (matches query with response)
+- label: Query/Response
+  tshark_field: dns.flags.response
+  description: 'DNS message type: 0=query, 1=response'
+- label: Opcode
+  tshark_field: dns.flags.opcode
+  description: 'DNS operation code: 0=Query, 1=Inverse Query, 2=Status, 3=Notify, 4=Update'
+- label: Authoritative
+  tshark_field: dns.flags.authoritative
+  description: Server is authoritative for the domain
+- label: Truncated
+  tshark_field: dns.flags.truncated
+  description: Message truncated (TCP retry required)
+- label: Recursion Desired
+  tshark_field: dns.flags.recdesired
+  description: Client requests recursive query
+- label: Recursion Available
+  tshark_field: dns.flags.recavail
+  description: Server supports recursive queries
+- label: Reply Code
+  tshark_field: dns.flags.rcode
+  description: 'DNS response code: 0=NoError, 1=FormErr, 2=ServFail, 3=NXDomain, 4=NotImp, 5=Refused, etc.'
+- label: Query Name
+  tshark_field: dns.qry.name
+  description: DNS query name
+- label: Query Type
+  tshark_field: dns.qry.type
+  description: 'DNS query type: 1=A, 2=NS, 5=CNAME, 6=SOA, 12=PTR, 15=MX, 28=AAAA, 33=SRV, etc.'
+- label: Query Class
+  tshark_field: dns.qry.class
+  description: 'DNS query class: 1=IN (Internet)'
+- label: Response Name
+  tshark_field: dns.resp.name
+  description: DNS response name
+- label: Response Type
+  tshark_field: dns.resp.type
+  description: DNS response type
+- label: Response TTL
+  tshark_field: dns.resp.ttl
+  description: DNS response Time To Live
+- label: Response Address
+  tshark_field: dns.a
+  description: DNS A record address (IPv4)
+- label: Response Address (IPv6)
+  tshark_field: dns.aaaa
+  description: DNS AAAA record address (IPv6)
+- label: DNS CNAME
+  tshark_field: dns.cname
+  description: DNS CNAME record (canonical name)
+filter_examples:
+- name: DNS Queries only
+  filter: dns.flags.response == 0
+  description: Filter for DNS query messages
+- name: DNS Responses only
+  filter: dns.flags.response == 1
+  description: Filter for DNS response messages
+- name: DNS NoError responses
+  filter: dns.flags.response == 1 and dns.flags.rcode == 0
+  description: Filter for successful DNS responses
+- name: DNS NXDomain responses
+  filter: dns.flags.response == 1 and dns.flags.rcode == 3
+  description: Filter for domain not found responses
+- name: DNS ServFail responses
+  filter: dns.flags.response == 1 and dns.flags.rcode == 2
+  description: Filter for server failure responses
+- name: DNS over TCP
+  filter: dns and tcp
+  description: Filter for DNS messages over TCP (truncated responses)
+- name: Specific query name
+  filter: dns.qry.name == "example.com"
+  description: Filter for queries to specific domain
+- name: A record queries
+  filter: dns.qry.type == 1
+  description: Filter for A record queries
+- name: AAAA record queries
+  filter: dns.qry.type == 28
+  description: Filter for AAAA (IPv6) record queries
+checks:
+- name: dns_no_response
+  severity: major
+  message: 'DNS query with no response: {dns.qry.name} (ID: {dns.id})'
+  description: dns.flags.response == 0 and no matching dns.flags.response == 1 with same dns.id within timeout
+  condition: dns.flags.response == 0
+- name: dns_nxdomain
+  severity: major
+  message: 'DNS domain not found: {dns.qry.name} returned NXDomain'
+  condition: dns.flags.response == 1 and dns.flags.rcode == 3
+- name: dns_servfail
+  severity: major
+  message: 'DNS server failure: {dns.qry.name} returned ServFail'
+  condition: dns.flags.response == 1 and dns.flags.rcode == 2
+- name: dns_timeout
+  severity: major
+  message: 'DNS query timeout: {dns.qry.name} (ID: {dns.id})'
+  description: dns.flags.response == 0 and retransmission detected with same dns.id
+  condition: dns.flags.response == 0
+- name: dns_truncated
+  severity: minor
+  message: 'DNS response truncated: {dns.qry.name} requires TCP retry'
+  condition: dns.flags.truncated == 1
+- name: dns_refused
+  severity: major
+  message: 'DNS query refused: {dns.qry.name} returned Refused'
+  condition: dns.flags.response == 1 and dns.flags.rcode == 5
+- name: dns_high_response_time
+  severity: minor
+  message: 'DNS slow response: {dns.qry.name} took {frame.time_delta} seconds'
+  condition: dns.flags.response == 1 and frame.time_delta > 2

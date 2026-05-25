@@ -1,0 +1,29 @@
+name: Auto-RP Packet Analysis
+description: Auto-RP (Auto-Rendezvous Point) packet analysis for Cisco multicast RP discovery
+protocol_key: auto_rp
+display_filter: autorp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+filter_examples:
+- name: Auto-RP Announce
+  filter: autorp.type == 0
+  description: Filter for RP-Announce messages
+- name: Auto-RP Discovery
+  filter: autorp.type == 1
+  description: Filter for RP-Discovery messages
+- name: Specific RP
+  filter: autorp.rp_addr == 10.1.1.1
+  description: Filter for specific RP address
+checks:
+- name: autor_rp_spoof
+  severity: major
+  message: 'Auto-RP spoofing: unauthorized RP {ip.src} announced'
+  description: Auto-RP announcement from unexpected source
+  condition: null
+- name: autor_same_rp_announce
+  severity: minor
+  message: 'Auto-RP duplicate RP: {ip.src} announced by multiple sources'
+  description: Same autorp.rp_addr from different sources
+  condition: null

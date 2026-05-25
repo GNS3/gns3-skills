@@ -1,0 +1,74 @@
+name: IPsec ESP Packet Analysis
+description: IPsec ESP (Encapsulating Security Payload) packet analysis for VPN troubleshooting
+protocol_key: esp
+display_filter: esp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: SPI
+  tshark_field: esp.spi
+  description: Security Parameters Index (identifies SA)
+- label: Sequence Number
+  tshark_field: esp.sequence
+  description: ESP sequence number
+- label: Next Header
+  tshark_field: esp.protocol
+  description: Next header protocol (decrypted payload)
+- label: Pad Length
+  tshark_field: esp.pad_len
+  description: ESP padding length
+- label: IV
+  tshark_field: esp.iv
+  description: Initialization Vector
+- label: Encrypted Data
+  tshark_field: esp.encrypted_data
+  description: Encrypted payload data
+- label: Decrypted Data
+  tshark_field: esp.decrypted_data
+  description: Decrypted payload data (if key available)
+- label: ICV
+  tshark_field: esp.icv
+  description: Integrity Check Value
+- label: ICV Good
+  tshark_field: esp.icv_good
+  description: ICV validation passed
+- label: ICV Bad
+  tshark_field: esp.icv_bad
+  description: ICV validation failed
+- label: Expected Sequence Number
+  tshark_field: esp.sequence-analysis.expected-sn
+  description: Expected sequence number
+filter_examples:
+- name: Specific SPI
+  filter: esp.spi == 0x12345678
+  description: Filter for specific SPI value
+- name: ESP sequence gap
+  filter: esp.sequence-analysis.wrong-sequence-number
+  description: Filter for ESP packets with sequence number issues
+- name: ESP ICV bad
+  filter: esp.icv_bad
+  description: Filter for ESP with failed ICV validation
+- name: ESP with padding
+  filter: esp.pad_len > 0
+  description: Filter for ESP packets with padding
+checks:
+- name: esp_sequence_gap
+  severity: major
+  message: 'ESP sequence gap: expected {esp.sequence-analysis.expected-sn}, got {esp.sequence}'
+  description: esp.sequence-analysis.wrong-sequence-number is set
+  condition: null
+- name: esp_icv_error
+  severity: critical
+  message: 'ESP ICV error: integrity check failed for SPI {esp.spi}'
+  condition: esp.icv_bad == 1
+- name: esp_replay_attack
+  severity: major
+  message: 'ESP possible replay attack: duplicate sequence number {esp.sequence}'
+  description: Duplicate esp.sequence for same esp.spi within replay window
+  condition: null
+- name: esp_sa_timeout
+  severity: major
+  message: 'ESP SA timeout: no traffic on SPI {esp.spi} within expected interval'
+  description: No ESP packets for specific esp.spi within SA lifetime
+  condition: null

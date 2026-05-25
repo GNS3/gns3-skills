@@ -1,0 +1,93 @@
+name: CDP Packet Analysis
+description: CDP (Cisco Discovery Protocol) packet analysis for Cisco neighbor discovery
+protocol_key: cdp
+display_filter: cdp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: CDP Version
+  tshark_field: cdp.version
+  description: CDP version (usually 2)
+- label: TTL
+  tshark_field: cdp.ttl
+  description: Time to live in seconds (usually 180)
+- label: Checksum
+  tshark_field: cdp.checksum
+  description: CDP checksum
+- label: Checksum Status
+  tshark_field: cdp.checksum.status
+  description: Checksum verification status
+- label: Device ID
+  tshark_field: cdp.deviceid
+  description: Device hostname/ID
+- label: Platform
+  tshark_field: cdp.platform
+  description: Hardware platform
+- label: Port ID
+  tshark_field: cdp.portid
+  description: Sending interface name
+- label: Capabilities
+  tshark_field: cdp.capabilities
+  description: Device capabilities bitmap
+- label: Router
+  tshark_field: cdp.capabilities.router
+  description: Router capability
+- label: Switch
+  tshark_field: cdp.capabilities.switch
+  description: Switch capability
+- label: IGMP Capable
+  tshark_field: cdp.capabilities.igmp_capable
+  description: IGMP capability
+- label: VoIP Phone
+  tshark_field: cdp.capabilities.voip_phone
+  description: VoIP phone capability
+- label: Native VLAN
+  tshark_field: cdp.native_vlan
+  description: Native VLAN ID
+- label: Duplex
+  tshark_field: cdp.duplex
+  description: Interface duplex setting
+- label: TLV Type
+  tshark_field: cdp.tlv.type
+  description: 'TLV type: 0x0001=Device, 0x0003=Port, 0x0006=Cap, etc.'
+- label: TLV Length
+  tshark_field: cdp.tlv.len
+  description: TLV length
+filter_examples:
+- name: CDP from specific device
+  filter: cdp.deviceid == "Switch01"
+  description: Filter for CDP from specific device
+- name: CDP from routers
+  filter: cdp.capabilities.router == 1
+  description: Filter for CDP from routers
+- name: CDP from switches
+  filter: cdp.capabilities.switch == 1
+  description: Filter for CDP from switches
+- name: CDP from VoIP phones
+  filter: cdp.capabilities.voip_phone == 1
+  description: Filter for CDP from VoIP phones
+- name: CDP with native VLAN
+  filter: cdp.native_vlan
+  description: Filter for CDP with native VLAN info
+checks:
+- name: cdp_neighbor_timeout
+  severity: minor
+  message: 'CDP neighbor timeout: no CDP from {cdp.deviceid} within TTL'
+  description: No CDP frames from neighbor within cdp.ttl seconds
+  condition: null
+- name: cdp_native_vlan_mismatch
+  severity: major
+  message: 'CDP native VLAN mismatch: neighbor {cdp.deviceid} has VLAN {cdp.native_vlan}'
+  description: cdp.native_vlan differs from local configuration
+  condition: null
+- name: cdp_duplex_mismatch
+  severity: major
+  message: 'CDP duplex mismatch: neighbor {cdp.deviceid} shows {cdp.duplex}'
+  description: cdp.duplex differs from local interface setting
+  condition: null
+- name: cdp_device_id_change
+  severity: minor
+  message: 'CDP device ID change: new device {cdp.deviceid} on port'
+  description: Different cdp.deviceid from same source MAC
+  condition: null

@@ -1,0 +1,90 @@
+name: ARP / NDP Packet Analysis
+description: ARP (Address Resolution Protocol) and IPv6 NDP (Neighbor Discovery Protocol) packet analysis rules
+protocol_key: arp
+display_filter: arp or icmpv6.ns or icmpv6.na or icmpv6.rs or icmpv6.ra
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Source IP
+  tshark_field: arp.src.proto_ipv4
+  description: Sender protocol address (IPv4)
+- label: Target IP
+  tshark_field: arp.dst.proto_ipv4
+  description: Target protocol address (IPv4)
+- label: Source MAC
+  tshark_field: arp.src.hw_mac
+  description: Sender hardware address (MAC)
+- label: Target MAC
+  tshark_field: arp.dst.hw_mac
+  description: Target hardware address (MAC, zero in requests)
+- label: Opcode
+  tshark_field: arp.opcode
+  description: 'ARP operation code: 1=request, 2=reply, 3=reverse-request, 4=reverse-reply'
+- label: Duplicate Detected
+  tshark_field: arp.duplicate-address-detected
+  description: Duplicate IP address detection flag
+- label: IPv6 Source
+  tshark_field: ipv6.src
+  description: IPv6 source address (for NDP)
+- label: IPv6 Destination
+  tshark_field: ipv6.dst
+  description: IPv6 destination address (for NDP)
+- label: ICMPv6 Type
+  tshark_field: icmpv6.type
+  description: 'ICMPv6 type: 133=RS, 134=RA, 135=NS, 136=NA, 137=Redirect'
+- label: ICMPv6 Target
+  tshark_field: icmpv6.nd.ns.target_address
+  description: NDP target address (NS/NA target)
+- label: ICMPv6 Option Type
+  tshark_field: icmpv6.opt.type
+  description: 'NDP option type: 1=Source Link-Layer, 2=Target Link-Layer, 3=Prefix Info, 5=MTU'
+filter_examples:
+- name: ARP requests only
+  filter: arp.opcode == 1
+  description: Filter for ARP requests
+- name: ARP replies only
+  filter: arp.opcode == 2
+  description: Filter for ARP replies
+- name: ARP for specific IP
+  filter: arp.src.proto_ipv4 == 192.168.1.1
+  description: Filter ARP packets for specific IP address
+- name: NDP Neighbor Solicitation
+  filter: icmpv6.type == 135
+  description: Filter for ICMPv6 Neighbor Solicitation messages
+- name: NDP Neighbor Advertisement
+  filter: icmpv6.type == 136
+  description: Filter for ICMPv6 Neighbor Advertisement messages
+- name: NDP Router Advertisement
+  filter: icmpv6.type == 134
+  description: Filter for ICMPv6 Router Advertisement messages
+checks:
+- name: duplicate_ip
+  severity: critical
+  message: 'Duplicate IP detected: {arp.src.proto_ipv4} claimed by {arp.src.hw_mac} and existing entry'
+  description: arp.duplicate-address-detected is set to 1
+  condition: null
+- name: arp_no_reply
+  severity: major
+  message: 'No ARP reply received from {arp.dst.proto_ipv4}: {arp.src.proto_ipv4} keeps re-sending requests'
+  description: Same arp.dst.proto_ipv4 appears in more than 3 requests without a matching reply
+  condition: null
+- name: arp_flood
+  severity: major
+  message: 'Possible ARP scan or flooding from {arp.src.proto_ipv4}: {count} requests in short interval'
+  description: More than 20 ARP requests from same source within 5 seconds
+  condition: null
+- name: gratuitous_arp
+  severity: minor
+  message: 'Gratuitous ARP from {arp.src.proto_ipv4} (MAC: {arp.src.hw_mac}) for IP {arp.src.proto_ipv4}/{arp.dst.proto_ipv4}'
+  condition: arp.opcode == 2 and arp.src.proto_ipv4 == arp.dst.proto_ipv4
+- name: ndp_no_neighbor_advertisement
+  severity: major
+  message: No NA reply for NS targeting {icmpv6.nd.ns.target_address} from {ipv6.src}
+  description: icmpv6.type == 135 and no matching icmpv6.type == 136 within expected window
+  condition: icmpv6.type == 135
+- name: ndp_duplicate_address
+  severity: critical
+  message: DAD (Duplicate Address Detection) indicates {icmpv6.nd.ns.target_address} may be in use
+  description: icmpv6.type == 135 and icmpv6.target_address matches solicited-node multicast and NA received in response
+  condition: icmpv6.type == 135

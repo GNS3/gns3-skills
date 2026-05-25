@@ -1,0 +1,104 @@
+name: VTP Packet Analysis
+description: VTP (VLAN Trunking Protocol) packet analysis for Cisco VLAN management troubleshooting
+protocol_key: vtp
+display_filter: vtp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: VTP Version
+  tshark_field: vtp.version
+  description: 'VTP version: 1=VTPv1, 2=VTPv2, 3=VTPv3'
+- label: Code
+  tshark_field: vtp.code
+  description: 'VTP message code: 1=Summary, 2=Subset, 3=Request'
+- label: Management Domain
+  tshark_field: vtp.md
+  description: VTP management domain name
+- label: Management Domain Length
+  tshark_field: vtp.md_len
+  description: Management domain name length
+- label: Configuration Revision
+  tshark_field: vtp.conf_rev_num
+  description: VTP configuration revision number
+- label: Updater Identity
+  tshark_field: vtp.upd_id
+  description: IP address of last updater
+- label: Update Timestamp
+  tshark_field: vtp.upd_ts
+  description: Timestamp of last configuration update
+- label: MD5 Digest
+  tshark_field: vtp.md5_digest
+  description: VTP configuration MD5 digest
+- label: Followers
+  tshark_field: vtp.followers
+  description: Number of Subset-Advertisement messages
+- label: VLAN Info Length
+  tshark_field: vtp.vlan_info.len
+  description: VLAN information field length
+- label: VLAN Status
+  tshark_field: vtp.vlan_info.status
+  description: VLAN status flags
+- label: VLAN Type
+  tshark_field: vtp.vlan_info.vlan_type
+  description: VLAN media type
+- label: VLAN Name
+  tshark_field: vtp.vlan_info.vlan_name
+  description: VLAN name
+- label: VLAN ID (ISL)
+  tshark_field: vtp.vlan_info.isl_vlan_id
+  description: VLAN ID for ISL trunks
+- label: MTU Size
+  tshark_field: vtp.vlan_info.mtu_size
+  description: VLAN MTU size
+- label: Sequence Number
+  tshark_field: vtp.seq_num
+  description: Subset-Advertisement sequence number
+filter_examples:
+- name: VTP Summary
+  filter: vtp.code == 1
+  description: Filter for VTP Summary Advertisement
+- name: VTP Subset
+  filter: vtp.code == 2
+  description: Filter for VTP Subset Advertisement
+- name: VTP Request
+  filter: vtp.code == 3
+  description: Filter for VTP Request
+- name: VTPv1
+  filter: vtp.version == 1
+  description: Filter for VTPv1
+- name: VTPv2
+  filter: vtp.version == 2
+  description: Filter for VTPv2
+- name: VTPv3
+  filter: vtp.version == 3
+  description: Filter for VTPv3
+- name: Specific domain
+  filter: vtp.md == "CISCO"
+  description: Filter for specific VTP domain
+checks:
+- name: vtp_revision_mismatch
+  severity: critical
+  message: 'VTP configuration revision mismatch: {vtp.conf_rev_num} from {vtp.upd_id}'
+  description: Different vtp.conf_rev_num values with different vtp.upd_id
+  condition: null
+- name: vtp_domain_mismatch
+  severity: critical
+  message: 'VTP domain mismatch: multiple domains on same segment'
+  description: Different vtp.md values from same segment
+  condition: null
+- name: vtp_digest_error
+  severity: critical
+  message: 'VTP digest error: configuration corruption detected'
+  description: VTP MD5 digest validation failed
+  condition: null
+- name: vtp_mode_conflict
+  severity: major
+  message: 'VTP mode conflict: multiple VTP servers in domain'
+  description: Multiple switches with higher vtp.conf_rev_num in same domain
+  condition: null
+- name: vtp_version_mismatch
+  severity: major
+  message: 'VTP version mismatch: different versions in same domain'
+  description: Different vtp.version values in same vtp.md
+  condition: null

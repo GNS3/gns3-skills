@@ -1,0 +1,35 @@
+name: HDLC Packet Analysis
+description: HDLC/ Cisco HDLC packet analysis for WAN serial link troubleshooting
+protocol_key: hdlc
+display_filter: chdlc or slhc
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: Address
+  tshark_field: chdlc.address
+  description: HDLC address (unicast/multicast)
+- label: Control
+  tshark_field: chdlc.control
+  description: HDLC control byte
+filter_examples:
+- name: Cisco HDLC
+  filter: chdlc
+  description: Filter for Cisco HDLC frames
+- name: HDLC keepalive
+  filter: chdlc.ptype == 2
+  description: Filter for HDLC keepalive messages
+- name: HDLC encapsulated IP
+  filter: chdlc.code == 0x0800
+  description: Filter for HDLC carrying IPv4
+checks:
+- name: hdlc_keepalive_timeout
+  severity: major
+  message: 'HDLC keepalive timeout: no keepalive from serial link'
+  description: No HDLC keepalive received within expected interval
+  condition: null
+- name: hdlc_wrap
+  severity: minor
+  message: 'HDLC wrap detected: receiving own keepalive'
+  description: HDLC keepalive with local identifier seen from remote
+  condition: null

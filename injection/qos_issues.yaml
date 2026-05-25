@@ -1,0 +1,252 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "QoS Issues Injection"
+description: "QoS classification, marking, queuing, policing and shaping related network faults"
+category: "injection"
+protocols:
+  - qos
+
+issues:
+  # Classification and Marking Issues
+
+  qos_class_map:
+    name: "QoS Class-Map Match Criteria Error"
+    description: "Configure class-map with incorrect match criteria causing wrong traffic classification"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "Wrong traffic classified into QoS class"
+      - "Expected traffic not matching the class"
+      - "Match-all vs match-any logic confusion"
+      - "Multiple match criteria not working as designed"
+    troubleshooting_hints:
+      - "Check class-map with 'show class-map <name>'"
+      - "Match-all: all conditions must match (AND)"
+      - "Match-any: any condition match sufficient (OR)"
+      - "Verify match statements: dscp, precedence, access-group, protocol"
+      - "Match protocol requires NBAR configuration"
+      - "Use 'show policy-map interface <intf>' for class statistics"
+    applicability: "Modular QoS CLI (MQC) configurations"
+
+  # Policy Attachment and Bandwidth Issues
+
+  qos_policy_attach:
+    name: "QoS Policy Not Attached to Interface"
+    description: "Configure policy-map but not attached to the interface or attached in wrong direction"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - qos
+    symptoms:
+      - "QoS policy not taking effect"
+      - "Traffic not classified/queued as expected"
+      - "No policy statistics available"
+      - "QoS not applied in the correct direction"
+    troubleshooting_hints:
+      - "Check 'show policy-map interface <intf>' for attachments"
+      - "Use 'service-policy input <name>' for inbound"
+      - "Use 'service-policy output <name>' for outbound"
+      - "Verify interface supports service-policy"
+      - "Check interface is correct (sub-interface vs main interface)"
+      - "Direction: input classifies before routing, output after routing"
+    applicability: "All MQC QoS deployments"
+
+  # Queuing and Congestion Management Issues
+
+  qos_bandwidth:
+    name: "QoS Bandwidth Allocation Exceeded"
+    description: "Configure QoS bandwidth allocation that exceeds interface capacity or violates scheduling"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "QoS policy rejected due to bandwidth over-allocation"
+      - "Interface bandwidth percentage exceeds 100%"
+      - "Shape/police rate exceeds interface speed"
+      - "Remaining bandwidth not distributed correctly"
+    troubleshooting_hints:
+      - "Check policy-map bandwidth sum with 'show policy-map <name>'"
+      - "Bandwidth sum in a policy cannot exceed interface bandwidth"
+      - "Use 'bandwidth remaining percent' for unused bandwidth"
+      - "Bandwidth command guarantees minimum, not maximum"
+      - "Shape: 'shape average <bps>' for traffic shaping"
+      - "Police: 'police <bps>' for traffic policing"
+    applicability: "QoS policies with bandwidth guarantees"
+
+  qos_queuing:
+    name: "QoS Queuing Strategy Misconfiguration"
+    description: "Configure incorrect queuing strategy (FIFO, WFQ, CBWFQ, LLQ) causing priority issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "Priority traffic not getting priority queuing"
+      - "LLQ starvation of other queues"
+      - "Excessive jitter for real-time traffic"
+      - "Queue congestion not managed correctly"
+    troubleshooting_hints:
+      - "Check queuing with 'show policy-map interface <intf>'"
+      - "LLQ (priority) queue: strict priority, can starve others"
+      - "Use 'priority <kbps>' for real-time traffic (voice/video)"
+      - "Use 'police <rate>' under priority to prevent starvation"
+      - "CBWFQ: 'bandwidth <kbps>' for guaranteed bandwidth"
+      - "Check queue depth and drops with 'show policy-map interface'"
+    applicability: "QoS for voice, video, and data convergence"
+
+  qos_marking:
+    name: "QoS Marking/Remarking Not Working"
+    description: "Configure QoS marking but CoS/DSCP/IP precedence not being set correctly"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "Traffic not marked with expected DSCP or CoS"
+      - "QoS markings stripped by intermediate devices"
+      - "Untrusted DSCP values from incoming traffic"
+      - "Layer 2 CoS not matching Layer 3 DSCP"
+    troubleshooting_hints:
+      - "Use 'set dscp <value>' or 'set ip precedence <value>' in policy"
+      - "Trust boundary: 'mls qos trust cos' / 'mls qos trust dscp'"
+      - "Check CoS-to-DSCP and DSCP-to-CoS mappings"
+      - "Use 'show mls qos interface <intf>' for trust state"
+      - "Campus switches: trust at access edge, remark at distribution"
+      - "Use 'show policy-map interface <intf> class <class>' for marking stats"
+    applicability: "QoS marking and trust boundaries"
+
+  # Policing and Advanced QoS Issues
+
+  qos_policing:
+    name: "QoS Policing / Shaping Misconfiguration"
+    description: "Configure policing or shaping with incorrect rate or burst parameters"
+    severity: "medium"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "Traffic dropped below configured rate"
+      - "TCP global synchronization due to tail drop"
+      - "Burst too small causing premature drops"
+      - "Shape/police rate mismatch with interface speed"
+    troubleshooting_hints:
+      - "Policing drops exceeding traffic (can cause TCP retransmits)"
+      - "Shaping buffers then transmits exceeding traffic"
+      - "Use 'police <rate> <burst>' with appropriate burst size"
+      - "Burst = rate * 1.5 / 8 (typical Cisco calculation)"
+      - "Shaper: 'shape average <bps> <burst>'"
+      - "Use 'show policy-map interface <intf>' for violate/conform actions"
+    applicability: "Traffic policing at provider edge, shaping at customer edge"
+
+  qos_trust:
+    name: "QoS Trust Boundary / CoS/DSCP Trust Misconfiguration"
+    description: "Configure QoS trust boundary incorrectly allowing untrusted devices to set QoS markings"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "End devices setting their own QoS marking (DSCP/CoS)"
+      - "Untrusted traffic inheriting high priority markings"
+      - "QoS trust boundary not enforced at access edge"
+      - "Guest traffic marked with same priority as voice/video"
+    troubleshooting_hints:
+      - "Check trust state: 'show mls qos interface <intf>'"
+      - "Set trust at access: 'mls qos trust cos' (Cisco switch)"
+      - "Default: port is untrusted (CoS=0 for all incoming)"
+      - "Trust boundary: set at access edge, never on user-facing ports"
+      - "Use 'mls qos trust device cisco-phone' for IP phone trust"
+      - "Auto QoS helps configure trust boundary correctly"
+    applicability: "QoS trust boundaries in campus switched networks"
+
+  qos_nbar:
+    name: "QoS NBAR / Application Recognition Failure"
+    description: "Configure QoS NBAR (Network Based Application Recognition) but application not correctly identified"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "NBAR not classifying applications correctly"
+      - "Application not in NBAR protocol pack"
+      - "Traffic not matching expected NBAR protocol"
+      - "Custom NBAR signatures not working"
+    troubleshooting_hints:
+      - "Check 'show ip nbar protocol-discovery' for stats"
+      - "Verify NBAR protocol pack version: 'show ip nbar version'"
+      - "Update protocol pack: 'ip nbar protocol-pack <url>'"
+      - "Use 'match protocol <name>' in class-map for NBAR"
+      - "NBAR can match: HTTP URLs, SSL SNI, DNS, etc."
+      - "NBAR2 (next-gen) supports 1400+ applications"
+    applicability: "QoS with deep packet inspection (NBAR)"
+
+  qos_wred:
+    name: "QoS WRED / Congestion Avoidance Misconfiguration"
+    description: "Configure WRED (Weighted Random Early Detection) incorrectly causing premature drops or no drops"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - qos
+    symptoms:
+      - "WRED not preventing TCP tail drop"
+      - "Premature packet drops before queue full"
+      - "WRED thresholds too aggressive for traffic"
+      - "TCP global synchronization not prevented"
+    troubleshooting_hints:
+      - "WRED: drops packets probabilistically before queue full"
+      - "Check 'show policy-map interface <intf>' for WRED drops"
+      - "WRED min-threshold, max-threshold, mark-probability"
+      - "Lower min-threshold: more aggressive dropping"
+      - "Exponential weight: influences average queue calculation"
+      - "WRED is per-DSCP or per-CoS, not per-flow"
+    applicability: "QoS congestion management in WAN and core routers"
+
+  qos_cos_dscp_map:
+    name: "QoS CoS-to-DSCP / DSCP-to-CoS Mapping Error"
+    description: "Configure CoS-to-DSCP or DSCP-to-CoS mapping inconsistently causing layer 2/3 QoS mismatch"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "CoS marking on switch not matching DSCP of the same packet"
+      - "QoS policy at L2 layer sees different marking than L3"
+      - "CoS-to-DSCP mapping inconsistent across switches"
+      - "Voice/Video packets treated differently after L2/L3 boundary"
+    troubleshooting_hints:
+      - "Check mapping: 'show mls qos maps cos-dscp'"
+      - "Default CoS-to-DSCP: CoS 0->DSCP 0, CoS 5->DSCP 40"
+      - "Use 'mls qos map cos-dscp <dscp-list>' for custom mapping"
+      - "DSCP-to-CoS: 'show mls qos maps dscp-cos'"
+      - "IP phone marks CoS, switch should trust and map to DSCP"
+      - "Consistent mapping required across entire QoS domain"
+    applicability: "Campus QoS where CoS and DSCP are both in use"
+
+  qos_auto:
+    name: "QoS Auto-QoS / Misconfiguration from Auto-Generated Policies"
+    description: "Configure Auto-QoS but generated policies conflict with existing QoS or cause unexpected results"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - qos
+    symptoms:
+      - "Auto-QoS generated policies not matching design intent"
+      - "Conflicting policy when modifying Auto-QoS generated config"
+      - "Auto-QoS overwriting manual QoS configuration"
+      - "Auto-QoS template not compatible with platform"
+    troubleshooting_hints:
+      - "Auto-QoS: 'auto qos voip trust' or 'auto qos classify-police'"
+      - "Auto-QoS generates trust, class-maps, policy-maps automatically"
+      - "Check generated config: 'show auto qos'"
+      - "Modifying Auto-QoS requires understanding of generated policies"
+      - "Disable Auto-QoS: 'no auto qos' before manual configuration"
+      - "Auto-QoS is a good starting point but may need customization"
+    applicability: "Cisco Auto-QoS deployments for voice/video"

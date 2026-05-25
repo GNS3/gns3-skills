@@ -1,0 +1,488 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Packet Filter Issues Injection"
+description: "Network layer packet filtering faults for simulating real-world network conditions like latency, packet loss, and corruption"
+category: "injection"
+protocols:
+  - packet_filter
+  - network_layer
+  - link_layer
+  - performance
+
+# BPF Filter Capability Summary
+#
+# The ubridge BPF module provides comprehensive standard pcap/tcpdump filtering syntax:
+#
+# **Core Parameters:**
+# - Required: BPF filter expression
+# - Optional: Data link layer type (default: EN10MB)
+#
+# **Syntax Capabilities:**
+# - Basic filtering: host, net, port, protocol
+# - Directional control: src, dst, bidirectional
+# - Logical combinations: and, or, not, complex nesting
+# - Byte-level access: proto[offset:size] syntax
+# - Bit operations: AND/OR/XOR bitwise operations
+# - Protocol fields: Precise access to any protocol field
+#
+# **Advanced Features:**
+# - Deep packet inspection for complex protocols (OSPF, BGP, etc.)
+# - TCP flags, IP options, and protocol-specific field checking
+# - Packet size, broadcast/multicast, and special filtering
+# - Full tcpdump expression syntax compatibility
+#
+# **Usage Recommendations:**
+# 1. Validate complex expressions with tcpdump before deployment
+# 2. Ensure byte offset accuracy for protocol-specific fields
+# 3. Use parentheses to clarify precedence in complex logic
+# 4. Multiple BPF filters can be combined for complex logic
+#
+# The ubridge BPF implementation is powerful and supports virtually all standard
+# tcpdump filtering syntax, sufficient for various network simulation filtering needs.
+
+issues:
+  # Latency Issues
+
+  high_latency:
+    name: "High Network Latency"
+    description: "Inject 100ms latency with 10ms jitter to simulate WAN or cross-region network conditions"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Applications respond slowly"
+      - "Voice/Video quality degradation (jitter, delay)"
+      - "TCP throughput reduced due to increased RTT"
+      - "Interactive sessions feel sluggish"
+      - "Network tests show high round-trip times"
+    troubleshooting_hints:
+      - "Use ping to measure RTT: normal should be <10ms, now ~100ms"
+      - "Check traceroute for which hop shows increased delay"
+      - "Use 'show interface' for interface statistics (if available)"
+      - "Test application response times before and after"
+      - "This simulates WAN/satellite/cross-region network conditions"
+    applicability: "All network links requiring performance testing"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "delay"
+      values: [100, 10]
+    restore_commands: "Clear packet filters from affected link"
+
+  extreme_latency:
+    name: "Extreme Network Latency"
+    description: "Inject 500ms latency with 100ms jitter to simulate severely degraded network conditions"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Applications timeout or become unusable"
+      - "Real-time applications (voice, video) completely fail"
+      - "TCP connections may time out during establishment"
+      - "File transfers extremely slow or fail"
+      - "User experience is severely impacted"
+    troubleshooting_hints:
+      - "Check application timeout values (may need adjustment)"
+      - "Use 'ping -t' to see consistent high delay"
+      - "Monitor TCP retransmissions with 'show interface counters'"
+      - "This simulates very poor network (international, congested links)"
+      - "Consider TCP window scaling effects on high-latency networks"
+    applicability: "Stress testing applications and network resilience"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "delay"
+      values: [500, 100]
+    restore_commands: "Clear packet filters from affected link"
+
+  # Packet Loss Issues
+
+  packet_loss_light:
+    name: "Light Packet Loss (5%)"
+    description: "Inject 5% packet loss to simulate unstable wireless or congested network conditions"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Intermittent connectivity issues"
+      - "Some packets dropped, causing retransmissions"
+      - "Real-time protocols show occasional glitches"
+      - "Applications may retry operations automatically"
+      - "Network appears mostly functional but unreliable"
+    troubleshooting_hints:
+      - "Use 'ping -c 100' and note packet loss percentage"
+      - "Check for TCP retransmissions: 'show tcp statistics'"
+      - "Monitor application logs for timeout/retry messages"
+      - "This simulates wireless networks, weak signals, or congestion"
+      - "5% loss is enough to impact TCP performance significantly"
+    applicability: "Testing application resilience to packet loss"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "packet_loss"
+      values: [5]
+    restore_commands: "Clear packet filters from affected link"
+
+  packet_loss_heavy:
+    name: "Heavy Packet Loss (15%)"
+    description: "Inject 15% packet loss to simulate severely degraded network conditions"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Severe connectivity problems"
+      - "Many applications fail or timeout"
+      - "TCP throughput severely degraded"
+      - "Real-time protocols unusable"
+      - "High retransmission rates observed"
+    troubleshooting_hints:
+      - "Packet loss >10% causes significant TCP performance issues"
+      - "Check 'show interface' for error counters and drops"
+      - "Monitor TCP congestion window behavior"
+      - "This simulates very poor quality links (congestion, interference)"
+      - "Consider UDP vs TCP behavior under loss (UDP has no recovery)"
+    applicability: "Stress testing and worst-case scenario simulation"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "packet_loss"
+      values: [15]
+    restore_commands: "Clear packet filters from affected link"
+
+  # Packet Corruption Issues
+
+  packet_corruption:
+    name: "Packet Corruption"
+    description: "Inject 3% packet corruption to simulate transmission errors or interference"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Applications receive corrupted data"
+      - "TCP checksum failures trigger retransmissions"
+      - "Application errors due to data corruption"
+      - "Some operations fail with data integrity errors"
+      - "Network appears functional but data is unreliable"
+    troubleshooting_hints:
+      - "Check interface CRC/error counters: 'show interface'"
+      - "Monitor for TCP checksum errors"
+      - "Applications may report data validation failures"
+      - "This simulates bad cables, EMI, or hardware issues"
+      - "Corruption is more serious than loss (data arrives but wrong)"
+    applicability: "Testing data integrity mechanisms and error handling"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "corrupt"
+      values: [3]
+    restore_commands: "Clear packet filters from affected link"
+
+  # Intermittent Connectivity
+
+  intermittent_connectivity:
+    name: "Intermittent Connectivity"
+    description: "Drop every 10th packet to simulate periodic link flapping or unstable connections"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Network appears up but some operations fail randomly"
+      - "Periodic timeouts or connection drops"
+      - "Applications show inconsistent behavior"
+      - "Some pings succeed, others fail"
+      - "User experience is unpredictable"
+    troubleshooting_hints:
+      - "Use continuous ping: 'ping -t' to see pattern"
+      - "Look for periodic failures (every 10th packet here)"
+      - "This simulates loose cables, intermittent hardware, or interference"
+      - "More challenging to diagnose than complete failures"
+      - "Check physical layer (cables, connectors) for intermittent issues"
+    applicability: "Testing fault detection and diagnostic skills"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "frequency_drop"
+      values: [10]
+    restore_commands: "Clear packet filters from affected link"
+
+  complete_link_failure:
+    name: "Complete Link Failure"
+    description: "Drop all packets to simulate complete network outage or cable disconnection"
+    severity: "critical"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "No connectivity across the link"
+      - "All pings fail with 100% packet loss"
+      - "Routing protocols lose adjacency"
+      - "Applications show 'network unreachable'"
+      - "Interface may show 'up' but no traffic passes"
+    troubleshooting_hints:
+      - "This simulates cable unplugged, device powered off, or link down"
+      - "Check physical layer: cables, SFP modules, power"
+      - "Verify interface status on both ends"
+      - "Look for interface errors in logs"
+      - "Use 'show ip route' to see routing impact"
+    applicability: "Testing outage recovery and redundancy mechanisms"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "frequency_drop"
+      values: [-1]
+    restore_commands: "Clear packet filters from affected link"
+
+  # Combined Scenarios
+
+  degraded_network:
+    name: "Degraded Network (Mild)"
+    description: "Combined 100ms delay, 10ms jitter, and 5% packet loss for realistic poor network conditions"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Noticeably slow application response"
+      - "Some operations timeout or retry"
+      - "Voice/video quality degraded but usable"
+      - "File transfers slow but complete"
+      - "User experience is poor but functional"
+    troubleshooting_hints:
+      - "This simulates congested WAN or long-distance links"
+      - "Check multiple metrics: latency, loss, jitter"
+      - "Applications may need timeout adjustments"
+      - "Consider QoS mechanisms to prioritize critical traffic"
+      - "Realistic scenario for branch office networks"
+    applicability: "Real-world performance testing and application tuning"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "combined"
+      values:
+        delay: [100, 10]
+        packet_loss: [5]
+    restore_commands: "Clear all packet filters from affected link"
+
+  severely_degraded_network:
+    name: "Severely Degraded Network"
+    description: "Combined 200ms delay, 50ms jitter, 15% packet loss, and 3% corruption for worst-case conditions"
+    severity: "critical"
+    difficulty: "advanced"
+    protocols:
+      - packet_filter
+      - performance
+    symptoms:
+      - "Applications mostly unusable or completely fail"
+      - "High timeout and error rates"
+      - "Real-time applications completely broken"
+      - "Data integrity issues due to corruption"
+      - "Network appears barely functional"
+    troubleshooting_hints:
+      - "This simulates extremely poor quality connections"
+      - "Multiple failure modes complicate troubleshooting"
+      - "Check each symptom separately to isolate issues"
+      - "Applications may not be designed for such conditions"
+      - "Consider this as a stress test or edge case scenario"
+    applicability: "Extreme stress testing and application resilience validation"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "combined"
+      values:
+        delay: [200, 50]
+        packet_loss: [15]
+        corrupt: [3]
+    restore_commands: "Clear all packet filters from affected link"
+
+  # Service-Specific Issues (using BPF)
+
+  blocked_ssh:
+    name: "SSH Service Blocked"
+    description: "Block TCP port 22 (SSH) to simulate firewall rule or access control issue"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - bpf
+      - security
+    symptoms:
+      - "Cannot establish SSH connections to devices"
+      - "Port 22 shows as filtered or unreachable"
+      - "Other services (HTTP, HTTPS) work normally"
+      - "Console access still works"
+      - "Network appears functional except SSH"
+    troubleshooting_hints:
+      - "This simulates ACL, firewall, or security policy blocking SSH"
+      - "Test with 'telnet <host> 22' to confirm port 22 filtering"
+      - "Check for access control lists or firewall rules"
+      - "Verify if other management protocols are affected (Telnet, HTTPS)"
+      - "Consider out-of-band access methods"
+    applicability: "Testing remote access and security policy troubleshooting"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "bpf"
+      values: ["tcp port 22"]
+    restore_commands: "Clear packet filters from affected link"
+
+  blocked_routing_protocols:
+    name: "Routing Protocol Traffic Blocked"
+    description: "Block OSPF (protocol 89) and BGP (port 179) to simulate routing protocol connectivity failure"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - bpf
+      - ospf
+      - bgp
+    symptoms:
+      - "Routing protocol neighbor relationships fail to establish"
+      - "Routes not exchanged between routers"
+      - "Network shows partial or no connectivity"
+      - "Direct connected routes work but not learned routes"
+      - "Routing tables incomplete or missing entries"
+    troubleshooting_hints:
+      - "Check routing process status: 'show ip ospf neighbor' or 'show ip bgp summary'"
+      - "Verify basic IP connectivity (should work for directly connected networks)"
+      - "This simulates firewall blocking routing protocol ports"
+      - "Check for access rules affecting protocol ports (TCP 179, protocol 89)"
+      - "Routing protocols require bidirectional communication"
+    applicability: "Testing routing protocol troubleshooting and firewall issues"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "bpf"
+      values: ["ip proto 89 or tcp port 179"]
+    restore_commands: "Clear packet filters from affected link"
+
+  blocked_dns:
+    name: "DNS Service Blocked"
+    description: "Block UDP port 53 (DNS) to simulate DNS resolution failure"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - packet_filter
+      - bpf
+      - dns
+    symptoms:
+      - "Domain name resolution fails"
+      - "Applications cannot resolve hostnames"
+      - "Direct IP addresses work but names don't"
+      - "nslookup or dig commands timeout"
+      - "Web browsing fails (unless using IP addresses)"
+    troubleshooting_hints:
+      - "Test DNS: 'nslookup', 'dig', or 'host' commands"
+      - "Try connecting directly to IP addresses (should work)"
+      - "This simulates DNS server down or firewall blocking port 53"
+      - "Check if alternative DNS servers are configured"
+      - "Consider DNS caching and fallback mechanisms"
+    applicability: "Testing DNS troubleshooting and application dependency on name resolution"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "bpf"
+      values: ["udp port 53"]
+    restore_commands: "Clear packet filters from affected link"
+
+  # WAN Simulation
+
+  wan_simulation:
+    name: "WAN Link Simulation"
+    description: "Simulate WAN conditions with 150ms latency, 20ms jitter, and 2% packet loss"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+      - wan
+    symptoms:
+      - "Noticeable delay in all communications"
+      - "Applications tuned for LAN perform poorly over WAN"
+      - "Some protocols timeout (need adjustment)"
+      - "Throughput reduced due to latency and loss"
+      - "Real-time applications (VoIP, video) show quality issues"
+    troubleshooting_hints:
+      - "This simulates typical cross-region or international WAN links"
+      - "Consider TCP window scaling and optimization techniques"
+      - "Applications may need timeout adjustments for WAN conditions"
+      - "QoS prioritization becomes more important over WAN"
+      - "Test application performance before and after optimization"
+    applicability: "WAN performance testing and application optimization validation"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "combined"
+      values:
+        delay: [150, 20]
+        packet_loss: [2]
+    restore_commands: "Clear all packet filters from affected link"
+
+  # Wireless Simulation
+
+  wireless_simulation:
+    name: "Wireless Network Simulation"
+    description: "Simulate wireless conditions with 80ms latency, 30ms jitter, and 8% packet loss"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - packet_filter
+      - performance
+      - wireless
+    symptoms:
+      - "Variable performance (sometimes good, sometimes poor)"
+      - "Higher latency than wired networks"
+      - "Noticeable jitter affecting real-time applications"
+      - "Occasional packet bursts causing issues"
+      - "Performance degrades with distance/interference"
+    troubleshooting_hints:
+      - "This simulates typical WiFi or wireless WAN conditions"
+      - "Wireless has higher latency and more jitter than wired"
+      - "Packet loss patterns are more variable on wireless"
+      - "Consider wireless-specific optimizations (roaming, band steering)"
+      - "Test mobile applications or wireless-dependent services"
+    applicability: "Wireless network testing and mobile application validation"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "combined"
+      values:
+        delay: [80, 30]
+        packet_loss: [8]
+    restore_commands: "Clear all packet filters from affected link"
+
+  # Congestion Simulation
+
+  congestion_simulation:
+    name: "Network Congestion Simulation"
+    description: "Simulate congested network with 25% packet loss and 200ms delay"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - packet_filter
+      - performance
+      - congestion
+    symptoms:
+      - "Severe performance degradation"
+      - "High packet loss causing many retransmissions"
+      - "Applications timeout or fail"
+      - "Network appears overloaded or saturated"
+      - "Some protocols may fail completely"
+    troubleshooting_hints:
+      - "This simulates heavily congested links or bandwidth exhaustion"
+      - "Check for bandwidth-intensive applications or broadcasts"
+      - "Consider QoS mechanisms to prioritize critical traffic"
+      - "Monitor interface utilization and queue depths"
+      - "Test application behavior under stress conditions"
+    applicability: "Congestion management and QoS testing scenarios"
+    injection_method: "packet_filter"
+    filter_config:
+      type: "combined"
+      values:
+        delay: [200, 0]
+        packet_loss: [25]
+    restore_commands: "Clear all packet filters from affected link"

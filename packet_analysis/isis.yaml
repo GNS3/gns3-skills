@@ -1,0 +1,96 @@
+name: IS-IS Packet Analysis
+description: IS-IS (Intermediate System to Intermediate System) packet analysis for link-state routing troubleshooting
+protocol_key: isis
+display_filter: isis
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: PDU Type
+  tshark_field: isis.type
+  description: 'IS-IS PDU type: 15=L1 LAN Hello, 16=L2 LAN Hello, 17=P2P Hello, 18=L1 LSP, 19=L2 LSP, 20=L1 CSNP, 21=L2 CSNP,
+    22=L1 PSNP, 23=L2 PSNP'
+- label: Version
+  tshark_field: isis.version
+  description: IS-IS protocol version
+- label: System ID Length
+  tshark_field: isis.sysid_len
+  description: System ID length (usually 6 bytes)
+- label: Maximum Area Addresses
+  tshark_field: isis.max_area_adr
+  description: Maximum area addresses
+- label: Source ID
+  tshark_field: isis.csnp.source_id
+  description: Source system ID
+- label: LSP ID
+  tshark_field: isis.csnp.lsp_id
+  description: LSP identifier
+- label: LSP Sequence Number
+  tshark_field: isis.csnp.lsp_seq_num
+  description: LSP sequence number
+- label: LSP Remaining Lifetime
+  tshark_field: isis.csnp.lsp_remain_life
+  description: LSP remaining lifetime in seconds (max 1200)
+- label: LSP Checksum
+  tshark_field: isis.csnp.lsp_checksum
+  description: LSP checksum
+- label: Checksum Status
+  tshark_field: isis.csnp.checksum.status
+  description: Checksum verification status
+- label: Priority
+  tshark_field: isis.hello.priority
+  description: DIS election priority
+- label: LAN ID
+  tshark_field: isis.hello.lan_id
+  description: LAN identifier (System ID + circuit number)
+- label: Circuit ID
+  tshark_field: isis.hello.local_circuit_id
+  description: Point-to-point circuit ID
+- label: NLPID
+  tshark_field: isis.hello.clv_nlpid.nlpid
+  description: Network Layer Protocol ID (IPv4=0xCC, IPv6=0x8E)
+filter_examples:
+- name: IS-IS L1 Hello
+  filter: isis.type == 15
+  description: Filter for IS-IS Level 1 LAN Hello
+- name: IS-IS L2 Hello
+  filter: isis.type == 16
+  description: Filter for IS-IS Level 2 LAN Hello
+- name: IS-IS P2P Hello
+  filter: isis.type == 17
+  description: Filter for IS-IS Point-to-Point Hello
+- name: IS-IS L1 LSP
+  filter: isis.type == 18
+  description: Filter for IS-IS Level 1 LSP
+- name: IS-IS L2 LSP
+  filter: isis.type == 19
+  description: Filter for IS-IS Level 2 LSP
+- name: IS-IS CSNP
+  filter: isis.type == 20 or isis.type == 21
+  description: Filter for IS-IS CSNP (Complete Sequence Number PDU)
+- name: IS-IS PSNP
+  filter: isis.type == 22 or isis.type == 23
+  description: Filter for IS-IS PSNP (Partial Sequence Number PDU)
+checks:
+- name: isis_lsp_aging
+  severity: minor
+  message: 'IS-IS LSP aging: {isis.csnp.lsp_id} lifetime {isis.csnp.lsp_remain_life}s'
+  condition: isis.csnp.lsp_remain_life < 300
+- name: isis_checksum_error
+  severity: major
+  message: 'IS-IS LSP checksum error: {isis.csnp.lsp_id}'
+  condition: isis.csnp.checksum.status != 0
+- name: isis_lsp_sequence_number_wrap
+  severity: minor
+  message: 'IS-IS LSP sequence number wrap: {isis.csnp.lsp_id} seq {isis.csnp.lsp_seq_num}'
+  condition: isis.csnp.lsp_seq_num > 4000000000
+- name: isis_area_mismatch
+  severity: major
+  message: 'IS-IS area mismatch: different area addresses from {ip.src}'
+  description: Multiple different IS-IS area addresses in hello packets from same source
+  condition: null
+- name: isis_dis_change
+  severity: minor
+  message: 'IS-IS DIS change: new LAN ID {isis.hello.lan_id}'
+  description: Different isis.lan_hello.lan_id from same LAN segment
+  condition: null

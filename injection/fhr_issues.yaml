@@ -1,0 +1,259 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VRRP/HSRP Issues Injection"
+description: "First Hop Redundancy Protocol (VRRP, HSRP) related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - vrrp
+  - hsrp
+  - glbp
+
+issues:
+  # VRRP Configuration Issues
+
+  vrrp_priority:
+    name: "VRRP Priority Misconfiguration"
+    description: "Set lower priority on the intended master router or higher priority on the standby router"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - vrrp
+    symptoms:
+      - "Wrong router elected as VRRP master"
+      - "Backup router becomes master despite configuration"
+      - "Suboptimal first-hop routing"
+      - "Traffic exiting through non-preferred gateway"
+    troubleshooting_hints:
+      - "Check VRRP status with 'show vrrp' or 'show vrrp brief'"
+      - "Priority default is 100, higher priority wins election"
+      - "Master is elected based on highest priority, then highest IP"
+      - "Use 'vrrp <group> priority <1-255>' to set priority"
+      - "Priority 255 means the real IP owner (always wins)"
+      - "Check preempt configuration affects failback behavior"
+    applicability: "VRRP groups with multiple routers"
+
+  vrrp_timers:
+    name: "VRRP Timer Mismatch"
+    description: "Set non-standard VRRP advertisement interval causing master dead timer issues"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - vrrp
+    symptoms:
+      - "VRRP master election flapping"
+      - "Backup declaring master dead prematurely"
+      - "Frequent VRRP state changes"
+      - "Gateway temporarily unavailable"
+    troubleshooting_hints:
+      - "Check VRRP timers with 'show vrrp'"
+      - "Default advertisement interval is 1 second"
+      - "Master down interval = 3 x advertisement (in seconds)"
+      - "Use 'vrrp <group> timers advertise <seconds>'"
+      - "Sub-second timers possible with 'msec' option"
+      - "Master and backup use same timer (master advertises it)"
+    applicability: "VRRP groups requiring fast failover"
+
+  # HSRP Configuration Issues
+
+  hsrp_priority:
+    name: "HSRP Priority Misconfiguration"
+    description: "Set lower HSRP priority on intended active router or higher priority on standby"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+    symptoms:
+      - "Wrong router elected as HSRP active"
+      - "Standby router becomes active unexpectedly"
+      - "HSRP state flapping between routers"
+      - "Default gateway not reachable on some hosts"
+    troubleshooting_hints:
+      - "Check HSRP state with 'show standby brief'"
+      - "HSRP priority default is 100, higher priority wins"
+      - "Active is elected based on highest priority, then highest IP"
+      - "Use 'standby <group> priority <0-255>' to set priority"
+      - "Priority 255 means the real IP owner (always active if configured)"
+      - "Check 'preempt' configuration for failback behavior"
+    applicability: "HSRP groups with multiple routers"
+
+  hsrp_timers:
+    name: "HSRP Hello/Hold Timer Mismatch"
+    description: "Configure mismatched HSRP hello and hold timers causing failover issues"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+    symptoms:
+      - "HSRP state flapping"
+      - "Standby declaring active down prematurely"
+      - "Failover not happening when expected"
+      - "Hold timer expires too quickly"
+    troubleshooting_hints:
+      - "Check HSRP timers with 'show standby'"
+      - "Default hello is 3 seconds, hold is 10 seconds"
+      - "Hold time should be at least 3 x hello time"
+      - "Use 'standby <group> timers <hello> <hold>'"
+      - "Mismatched timers cause failover problems"
+      - "HSRP version 2 supports millisecond timers"
+    applicability: "HSRP groups requiring fast failover"
+
+  hsrp_authentication:
+    name: "HSRP Authentication Mismatch"
+    description: "Configure HSRP with mismatched authentication keys or types"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+    symptoms:
+      - "HSRP peers not forming group"
+      - "HSRP state stuck in INIT or LISTEN"
+      - "Authentication mismatch errors"
+      - "Active/standby not communicating"
+    troubleshooting_hints:
+      - "Check HSRP authentication with 'show standby'"
+      - "Verify 'standby <group> authentication <string>' matches on both peers"
+      - "HSRP supports MD5 authentication or plain text"
+      - "Authentication keys must match exactly"
+      - "Check for 'HSRP: group X authentication mismatch' in logs"
+      - "HSRP version 2 uses MD5, version 1 uses plain text"
+    applicability: "HSRP with authentication configured"
+
+  # Advanced FHRP Features
+
+  fhr_preempt:
+    name: "FHRP Preempt Disabling / Failback Prevention"
+    description: "Configure HSRP/VRRP without preempt on the active router preventing graceful failback after a failure recovers"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Original active router does not resume active role after recovery"
+      - "Standby router remains active after primary returns"
+      - "Suboptimal first-hop routing after failback"
+      - "Active role not returning to preferred router"
+    troubleshooting_hints:
+      - "Check 'show standby' or 'show vrrp' for preempt setting"
+      - "HSRP: 'standby <group> preempt' enables automatic failback"
+      - "VRRP defaults to preempt enabled (reverse preempt semantics)"
+      - "Without preempt: once standby, always standby until next failure"
+      - "Use preempt delay: 'standby <group> preempt delay <seconds>'"
+      - "Prevent flapping: preempt with delay ensures stable failback"
+    applicability: "All HSRP/VRRP deployments needing graceful failback"
+
+  fhr_object_tracking:
+    name: "FHRP Object Tracking / Interface Tracking Failure"
+    description: "Configure HSRP/VRRP with object tracking but tracked object not triggering priority decrement"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "HSRP/VRRP not failing over when upstream link fails"
+      - "Tracked object shows down but priority not decremented"
+      - "Standby gateway stuck in standby despite losing upstream"
+      - "Track object configuration mismatch"
+    troubleshooting_hints:
+      - "HSRP: 'standby <group> track <obj-id> decrement <value>'"
+      - "VRRP: 'vrrp <group> track <obj-id> decrement <value>'"
+      - "Check 'show track <id>' for tracking object status"
+      - "Priority decrement must bring priority below standby's"
+      - "Multiple tracked objects can compound priority reduction"
+      - "Use 'track interface <intf> line-protocol' for simple tracking"
+    applicability: "HSRP/VRRP with upstream link monitoring"
+
+  fhr_version_mismatch:
+    name: "HSRP/VRRP Version Mismatch"
+    description: "Configure mismatched HSRP versions (v1 vs v2) or VRRP versions (v2 vs v3) between peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "HSRP/VRRP groups not forming between peers"
+      - "Version mismatch error messages"
+      - "Group state stuck in INIT or LISTEN"
+      - "State communication between peers fails"
+    troubleshooting_hints:
+      - "HSRP v1: group range 0-255, multicast 224.0.0.2"
+      - "HSRP v2: group range 0-4095, multicast 224.0.0.102, supports IPv6"
+      - "Use 'standby version <1|2>' to configure HSRP version"
+      - "VRRP v3 supports IPv6 and millisecond timers"
+      - "Version must match on all peer routers"
+      - "HSRP v1 and v2 are not interoperable"
+    applicability: "FHRP deployments with mixed versions"
+
+  fhrp_vip_conflict:
+    name: "FHRP Virtual IP Address Conflict"
+    description: "Configure HSRP/VRRP virtual IP that conflicts with an existing host/static IP on the network"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Duplicate IP address detected on network"
+      - "Virtual IP not reachable intermittently"
+      - "ARP resolution for VIP returning multiple MACs"
+      - "Host connectivity flapping between real and virtual IP"
+    troubleshooting_hooks:
+      - "Virtual IP should be unique and not assigned to any real host"
+      - "Check 'show ip arp <vip>' for MAC address resolution"
+      - "VIP must not conflict with router physical interface IPs"
+      - "VIP typically different from real interface IPs"
+      - "Use 'show standby' to verify VIP assignment"
+      - "Duplicate VIP causes random traffic failures"
+    applicability: "All HSRP/VRRP deployments"
+
+  fhrp_mac_conflict:
+    name: "FHRP Virtual MAC Address Conflict"
+    description: "Configure HSRP/VRRP where virtual MAC address conflicts with another device or is manually overridden incorrectly"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+    symptoms:
+      - "Virtual MAC address conflicting with another device"
+      - "ARP cache showing incorrect MAC for VIP"
+      - "Traffic forwarded to wrong destination"
+      - "Manual MAC setting overriding standard protocols"
+    troubleshooting_hint:
+      - "HSRP v1 MAC: 0000.0c07.acXX (XX=group in hex)"
+      - "HSRP v2 MAC: 0000.0c9f.fXXX (XXX=group in hex)"
+      - "VRRP MAC: 0000.5e00.01XX (XX=VRID in hex)"
+      - "Use 'standby <group> mac-address <mac>' to override manually"
+      - "MAC conflict may cause silent traffic loss"
+      - "Check switch MAC table for VIP MAC location"
+    applicability: "FHRP deployments with custom MAC address requirements"
+
+  hsrp_vrf_ipv6:
+    name: "HSRP for IPv6 / VRRPv3 IPv6 Configuration Error"
+    description: "Configure HSRP for IPv6 or VRRPv3 for IPv6 incorrectly, preventing IPv6 gateway redundancy"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - hsrp
+      - vrrp
+      - ipv6
+    symptoms:
+      - "IPv6 default gateway not failing over"
+      - "HSRP/VRRPv3 for IPv6 not establishing"
+      - "IPv6 Neighbor Discovery RA not from virtual address"
+      - "Dual-stack hosts lose IPv6 connectivity on failover"
+    troubleshooting_hints:
+      - "HSRP for IPv6: 'standby <group> ipv6 <link-local>'"
+      - "VRRPv3 supports IPv6 natively (vrrp <group> address-family ipv6)"
+      - "IPv6 ND RA uses virtual MAC for seamless failover"
+      - "Check 'show standby ipv6' for IPv6 HSRP status"
+      - "VRRPv3: 'show vrrp ipv6' for IPv6 VRRP status"
+      - "IPv6 link-local address must match between HSRP peers"
+    applicability: "Dual-stack IPv4/IPv6 or IPv6-only networks"

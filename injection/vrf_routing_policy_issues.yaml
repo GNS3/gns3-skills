@@ -1,0 +1,303 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "VRF/Routing Policy Issues Injection"
+description: "VRF/VRF-lite and routing policy related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - vrf
+  - mpls-vpn
+  - routing-policy
+  - route-map
+
+issues:
+  vrf_import_export_rt:
+    name: "VRF Route Target Import/Export Mismatch"
+    description: "Configure incorrect route-target import or export on VRF"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+      - mpls-vpn
+    symptoms:
+      - "VRF routes not imported from MP-BGP"
+      - "Routes not exported from VRF to MP-BGP"
+      - "CE routes not propagated to remote PEs"
+      - "Incomplete VRF routing table"
+    troubleshooting_hints:
+      - "Check VRF RT with 'show ip vrf detail <name>'"
+      - "Verify 'route-target import <RT>' and 'export <RT>'"
+      - "Check 'show ip bgp vpnv4 vrf <name>' for VRF routes"
+      - "RT must match between import on one side and export on the other"
+      - "Use 'show ip bgp vpnv4 all <prefix>' to verify RT attributes"
+      - "Verify send-community extended is enabled on BGP peers"
+    applicability: "MPLS L3VPN and VRF-lite deployments"
+
+  vrf_rd_duplicate:
+    name: "VRF Route Distinguisher Duplicate"
+    description: "Configure duplicate route distinguisher for different VRFs across PEs"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+      - mpls-vpn
+    symptoms:
+      - "Route conflicts between different VRFs"
+      - "Duplicate RD causes route hiding"
+      - "Wrong VRF routes imported on remote PE"
+      - "Routing table corruption"
+    troubleshooting_hints:
+      - "Check VRF RD with 'show ip vrf detail <name>'"
+      - "Each VRF on each PE should have a unique RD"
+      - "RD format: <AS>:<value> or <IP>:<value>"
+      - "Duplicate RDs across different VRFs can cause issues"
+      - "Auto-derived RD from VPN ID may conflict"
+      - "Use manually assigned unique RD per VRF per PE"
+    applicability: "MPLS L3VPN multi-VRF deployments"
+
+  vrf_forwarding:
+    name: "VRF Forwarding Interface Misconfiguration"
+    description: "Configure VRF forwarding on wrong interface or missing VRF on interface"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - vrf
+    symptoms:
+      - "Interface not in the correct VRF"
+      - "IP address removed when VRF assigned"
+      - "CE connection in wrong VRF"
+      - "Traffic routing to wrong VRF"
+    troubleshooting_hints:
+      - "Check VRF interface with 'show ip vrf interfaces <name>'"
+      - "Use 'ip vrf forwarding <name>' on interface"
+      - "Assigning VRF removes IP address (must re-add)"
+      - "Verify interface IP is within VRF's correct subnet"
+      - "Check 'show ip route vrf <name>' for VRF routing table"
+      - "CE-facing interfaces must be in the correct VRF"
+    applicability: "VRF-lite and MPLS L3VPN deployments"
+
+  vrf_route_leak:
+    name: "VRF Route Leak Misconfiguration"
+    description: "Configure incorrect VRF route leaking between VRFs or between global and VRF"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vrf
+    symptoms:
+      - "Routes leaking between wrong VRFs"
+      - "VRF routes not appearing in global routing table"
+      - "Global routes not imported into VRF"
+      - "Cross-VRF reachability issues"
+    troubleshooting_hints:
+      - "Use route-leaking between VRFs with VRF-lite"
+      - "Configure 'ip route vrf <src> <prefix> <nh> global' for leaking"
+      - "Use route-replicate between VRFs on some platforms"
+      - "BGP-based VRF route leaking using RT import/export"
+      - "Check 'show ip route vrf <name>' for leaked routes"
+      - "Verify route-maps filter leaked routes correctly"
+    applicability: "VRF-lite with inter-VRF routing requirements"
+
+  # Routing Policy Configuration Issues
+
+  prefix_list_wrong:
+    name: "Prefix-List Match Criteria Error"
+    description: "Configure prefix-list with incorrect prefix length range or wrong network"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - routing-policy
+      - prefix-list
+    symptoms:
+      - "Prefix-list filtering too broad or too narrow"
+      - "Expected prefixes not matched"
+      - "Unexpected prefixes matched"
+      - "Route filtering not working as intended"
+    troubleshooting_hints:
+      - "Check prefix-list with 'show ip prefix-list <name>'"
+      - "Format: 'ip prefix-list <name> seq <n> permit|deny <prefix>/<len> [ge <min>] [le <max>]'"
+      - "Without ge/le: exact prefix length match"
+      - "ge = greater-than-or-equal, le = less-than-or-equal"
+      - "Use 'show ip prefix-list <name> summary' for overview"
+      - "Test with 'show ip prefix-list <name> <prefix>/<len>'"
+    applicability: "Route filtering with prefix-lists (BGP, OSPF, RIP, etc.)"
+
+  route_map_logic:
+    name: "Route-Map Conditional Logic Error"
+    description: "Configure route-map with incorrect permit/deny logic or missing conditions"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - routing-policy
+      - route-map
+    symptoms:
+      - "Route-map not matching expected routes"
+      - "Routes permitted when they should be denied"
+      - "Routes denied when they should be permitted"
+      - "Multiple match conditions not working as AND/OR"
+    troubleshooting_hints:
+      - "Check route-map with 'show route-map <name>'"
+      - "Permit allows or sets attributes; deny prevents further matching"
+      - "Multiple match commands in same sequence = AND"
+      - "Multiple sequence entries = OR"
+      - "Implicit deny at end of route-map (like ACL)"
+      - "Use 'set community' or 'set metric' in permit entries"
+    applicability: "All route-map based configurations (BGP, redistribution, PBR)"
+
+  set_as_path:
+    name: "Set AS Path in Route-Map Error"
+    description: "Configure set as-path prepend in route-map incorrectly"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - routing-policy
+      - bgp
+      - route-map
+    symptoms:
+      - "AS path prepend not working as expected"
+      - "Wrong AS number prepended"
+      - "AS path prepend preventing route acceptance"
+      - "BGP best path selection not affected as intended"
+    troubleshooting_hints:
+      - "Check AS path attributes with 'show ip bgp <prefix>'"
+      - "Use 'set as-path prepend <AS>' in route-map"
+      - "Prepend your own AS number typically"
+      - "Some peers reject routes with certain AS prepend patterns"
+      - "Use 'set as-path tag' for compatibility with other protocols"
+      - "Verify route-map is applied in the correct direction (in/out)"
+    applicability: "BGP AS path manipulation for traffic engineering"
+
+  # VRF Advanced and Service Integration Issues
+
+  vrf_rt_filter:
+    name: "VRF Route-Target Filter (RTF) Misconfiguration"
+    description: "Configure VRF route-target filter incorrectly causing VPN route import issues"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - vrf
+      - mpls-vpn
+    symptoms:
+      - "VPN routes not imported into VRF despite matching RT"
+      - "RT filter blocking legitimate routes"
+      - "PE not importing routes from specific RT"
+      - "VRF routing table incomplete"
+    troubleshooting_hints:
+      - "RT filter: PE only accepts VPN routes whose RT matches a local VRF"
+      - "Use 'no bgp default route-target filter' to accept all VPN routes"
+      - "Check with 'show ip bgp vpnv4 all' for filtered routes"
+      - "RT filter reduces BGP table but may block needed routes"
+      - "Use 'show ip bgp vpnv4 all <prefix>' to check RT attributes"
+      - "Verify send-community extended is configured on BGP sessions"
+    applicability: "MPLS L3VPN PE routers"
+
+  vrf_backdoor_rt:
+    name: "VRF Backdoor Route / Route Import Conflict"
+    description: "Configure VRF with backdoor routes overlapping with VPN-learned prefixes"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+    symptoms:
+      - "Backdoor static/IGP route not installed in VRF"
+      - "VPN route preferred over backdoor route"
+      - "CE-to-CE traffic not using backdoor path"
+      - "Suboptimal routing in multi-homed CE scenario"
+    troubleshooting_hints:
+      - "Backdoor route: local VRF route preferred over VPN learned"
+      - "Use 'ip route vrf <name> <prefix> <mask> <nh>' with lower AD"
+      - "VPN routes have AD of 200 (iBGP learned)"
+      - "Check 'show ip route vrf <name>' for route preference"
+      - "Use distance command under BGP for per-VRF AD adjustment"
+      - "Alternatively: use route-map to filter unwanted VPN routes"
+    applicability: "VRF with backdoor links"
+
+  community_list_filter:
+    name: "BGP Community List ACL / Filter Misconfiguration"
+    description: "Configure community-list with wrong regex or matching causing route filtering errors"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - bgp
+      - routing-policy
+    symptoms:
+      - "Community-based route filtering not working"
+      - "Community list matching wrong communities"
+      - "Route-map with community-list not matching expected routes"
+      - "Communities not present in BGP updates"
+    troubleshooting_hints:
+      - "Check community list: 'show ip community-list <name>'"
+      - "Format: 'ip community-list <name> permit <community>'"
+      - "Community format: <high-16bits>:<low-16bits> (e.g., 100:200)"
+      - "Use regex: 'ip community-list regex <name> permit <regex>'"
+      - "Extended community list for VPN Route-Target"
+      - "Match in route-map: 'match community <list-name>'"
+    applicability: "BGP community-based routing policies"
+
+  route_tag_filter:
+    name: "Routing Policy Tag / Match Tag Mismatch"
+    description: "Configure route-tag in redistribution but match tag condition not matching correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - routing-policy
+      - route-map
+    symptoms:
+      - "Route-map match tag not matching redistributed routes"
+      - "Tag not preserved across protocol boundaries"
+      - "Route redistribution filtering based on tag not working"
+      - "Tag value unexpected or missing"
+    troubleshooting_hints:
+      - "Set tag: 'set tag <value>' in route-map"
+      - "Match tag: 'match tag <value-list>' in route-map for filtering"
+      - "Tags are preserved across redistribution boundaries"
+      - "Check tag of route: 'show ip route <prefix>' (look for 'tag' field)"
+      - "Tag is 32-bit value (0-4294967295)"
+      - "Common use: prevent redistribution loops by tagging specific routes"
+    applicability: "Route redistribution with tag-based filtering"
+
+  route_policy_seq:
+    name: "Routing Policy Sequence Number / Continue Statement Issue"
+    description: "Configure route-map with continue statement but sequence evaluation not as expected"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - routing-policy
+      - route-map
+    symptoms:
+      - "Route-map continue statement not jumping to next sequence"
+      - "Policy evaluation order not as designed"
+      - "Continue bypassing intended matches"
+      - "Multiple set operations from different sequences overlapping"
+    troubleshooting_hints:
+      - "Continue: route-map continues to next sequence after match"
+      - "Use 'continue <seq>' in route-map entry for multi-sequence processing"
+      - "Default: route-map stops after first match"
+      - "Continue allows multiple sequences to be evaluated"
+      - "Each matched sequence can set different attributes"
+      - "Check 'show route-map <name>' for per-sequence stats (matches/mismatches)"
+    applicability: "Advanced route-map configurations with continue statements"
+
+  vrf_forwarding_tlv:
+    name: "VRF Forwarding / VRF-Aware Service Misconfiguration"
+    description: "Configure VRF-aware feature (NAT, IPsec, ZBFW) but VRF not referenced correctly"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - vrf
+    symptoms:
+      - "NAT not translating traffic within VRF"
+      - "IPsec tunnel not establishing within VRF"
+      - "Zone-based firewall not applying to VRF traffic"
+      - "VRF-aware feature configuration missing VRF keyword"
+    troubleshooting_hints:
+      - "Many features need explicit VRF keyword: 'ip nat inside source list <acl> pool <pool> vrf <name>'"
+      - "Check 'show ip nat statistics vrf <name>' for VRF NAT stats"
+      - "IPsec: 'crypto keyring <name> vrf <vrf>'"
+      - "Check feature documentation: not all features are VRF-aware"
+      - "VRF-lite: features work within VRF but may not see global routing"
+      - "Testing: 'ping vrf <name> <ip>' to verify VRF reachability"
+    applicability: "Service-aware VRF deployments (NAT, VPN, firewall)"

@@ -1,0 +1,290 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "Interface Issues Injection"
+description: "Common interface-related network faults for troubleshooting practice"
+category: "injection"
+protocols:
+  - all
+
+issues:
+  interface_shutdown:
+    name: "Interface Shutdown"
+    description: "Administratively shutdown a network interface to simulate link failure"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - all
+    symptoms:
+      - "Link status shows down/down"
+      - "Cannot ping devices across the link"
+      - "Interface status shows 'administratively down'"
+      - "Neighbor adjacencies lost"
+    troubleshooting_hints:
+      - "Check interface status with 'show ip interface brief' (Cisco) or 'display ip interface brief' (Huawei/H3C)"
+      - "Look for 'administratively down' in interface status"
+      - "Use 'show interface <interface>' to see detailed status"
+      - "Check physical layer indicators if available"
+    applicability: "All network devices with configurable interfaces"
+
+  ip_address_mismatch:
+    name: "IP Address Configuration Error"
+    description: "Configure incorrect IP address, subnet mask, or duplicate IP on an interface"
+    severity: "medium"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Partial connectivity (some hosts reachable, others not)"
+      - "ARP failures or duplicate IP warnings"
+      - "Routing protocol neighborship failures"
+      - "Subnet mismatch errors"
+    troubleshooting_hints:
+      - "Verify IP configuration with 'show running-config' or 'display current-configuration'"
+      - "Check subnet mask matches network design"
+      - "Look for duplicate IP address error messages on console"
+      - "Use 'show ip arp' to detect IP conflicts"
+      - "Ping interface addresses to check for duplicates"
+    applicability: "Layer 3 interfaces (routers, Layer 3 switches)"
+
+  duplex_mismatch:
+    name: "Speed/Duplex Mismatch"
+    description: "Configure mismatched speed or duplex settings on Ethernet interfaces"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - ethernet
+    symptoms:
+      - "Extremely slow performance"
+      - "High collision count (on half-duplex side)"
+      - "High CRC/error count (on full-duplex side)"
+      - "Intermittent connectivity"
+    troubleshooting_hints:
+      - "Check interface statistics with 'show interface' counters"
+      - "Look for CRC, frame, or collision errors"
+      - "Verify speed and duplex settings match on both ends"
+      - "Check for 'late collisions' which indicate duplex mismatch"
+      - "Auto-negotiation issues may cause this"
+    applicability: "Ethernet interfaces, especially when connecting to switches or older equipment"
+
+  mtu_mismatch:
+    name: "MTU Mismatch"
+    description: "Configure mismatched MTU values on two ends of a link, causing packet fragmentation issues"
+    severity: "medium"
+    difficulty: "intermediate"
+    protocols:
+      - all
+    symptoms:
+      - "Small packets work, large packets fail"
+      - "Intermittent connectivity issues"
+      - "Specific applications fail (e.g., file transfer, VPN)"
+      - "TCP retransmissions and slow performance"
+    troubleshooting_hints:
+      - "Check MTU with 'show interface <interface>' (Cisco) or 'display interface {interface}' (Huawei)"
+      - "Compare MTU values on both ends of the link"
+      - "Test with 'ping' using different packet sizes"
+      - "Check for 'Fragmentation needed' ICMP messages"
+      - "Verify path MTU discovery is working"
+    applicability: "All interface types, especially critical for trunk links and WAN connections"
+
+  # Security and Feature Issues
+
+  interface_error_disable:
+    name: "Interface Error-Disabled State"
+    description: "Trigger interface error-disable condition due to port-security, BPDU guard, or other violation"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ethernet
+    symptoms:
+      - "Interface shows err-disabled status"
+      - "Link down despite physical connectivity"
+      - "Interface not forwarding traffic"
+      - "Violation cause shown in interface status"
+    troubleshooting_hints:
+      - "Check 'show interface <intf>' for err-disabled status"
+      - "Identify cause: 'show interfaces status err-disabled'"
+      - "Common causes: port-security, BPDU guard, UDLD, loop guard"
+      - "Recover: 'shutdown' then 'no shutdown' on interface"
+      - "Use 'errdisable recovery cause <cause>' for auto-recovery"
+      - "Check 'show errdisable detect' for enabled detection causes"
+    applicability: "All switched networks with security or STP protection features"
+
+  interface_flap:
+    name: "Interface Flapping / Link Instability"
+    description: "Create conditions causing interface to go up/down repeatedly"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - all
+    symptoms:
+      - "Interface repeatedly going up and down"
+      - "Link status bouncing"
+      - "Routing neighbors constantly forming and losing adjacency"
+      - "Interface counters incrementing rapidly"
+    troubleshooting_hints:
+      - "Check 'show interface' for up/down transitions"
+      - "Use 'show log' for interface state changes"
+      - "Check physical connections, transceivers, and cable"
+      - "Verify port admin settings (speed/duplex) match peer"
+      - "Check for loose connections or faulty SFP modules"
+      - "Monitor 'show interface <intf>' for input errors"
+    applicability: "All network interfaces, critical for link stability"
+
+  interface_storm_control:
+    name: "Interface Storm Control Misconfiguration"
+    description: "Configure storm control too restrictively, causing legitimate traffic to be suppressed"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ethernet
+    symptoms:
+      - "Broadcast/multicast/unknown unicast traffic suppressed unexpectedly"
+      - "Storm control threshold exceeded on normal traffic levels"
+      - "Packet drops for legitimate broadcast traffic"
+      - "Network services impacted (ARP, DHCP)"
+    troubleshooting_hints:
+      - "Check storm control with 'show storm-control <intf>'"
+      - "Configure: 'storm-control broadcast level <percent>'"
+      - "Default: no storm control (or platform-dependent level)"
+      - "Too low: legitimate broadcast traffic may be suppressed"
+      - "Use 'show storm-control <intf> count' for drop counters"
+      - "Apply to broadcast, multicast, unicast individually"
+    applicability: "Switched networks with broadcast storm protection"
+
+  # Layer 3 and Advanced Interface Issues
+
+  interface_sub_interface:
+    name: "Sub-Interface Configuration / VLAN Encapsulation Error"
+    description: "Configure sub-interface with incorrect VLAN encapsulation or dot1Q tag mismatch"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ethernet
+      - vlan
+    symptoms:
+      - "Sub-interface not forwarding traffic"
+      - "VLAN encapsulation mismatch between devices"
+      - "Router-on-a-stick inter-VLAN routing broken"
+      - "Wrong VLAN tagged on sub-interface"
+    troubleshooting_hints:
+      - "Check sub-interface config: 'show running-config interface <intf>.<sub>'"
+      - "Verify encapsulation: 'encapsulation dot1Q <vlan-id>'"
+      - "Native VLAN: 'encapsulation dot1Q <vlan-id> native'"
+      - "Check trunk allows the VLAN on the switch side"
+      - "Verify physical interface is UP"
+      - "Native VLAN mismatch causes connectivity issues"
+    applicability: "Router-on-a-stick, sub-interfaces for VLAN routing"
+
+  interface_loopback:
+    name: "Loopback Interface Not Advertised / Missing"
+    description: "Configure loopback interface but IP not advertised in routing protocol, causing reachability issues"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Cannot ping loopback IP from remote routers"
+      - "Loopback not appearing in routing protocol neighbor tables"
+      - "BGP sessions using loopback cannot form"
+      - "Management access to device via loopback fails"
+    troubleshooting_hints:
+      - "Check 'show ip interface brief' for loopback status"
+      - "Verify loopback is included in routing protocol network statement"
+      - "Check routing table on remote router for loopback prefix"
+      - "Loopback is virtual and always up (unless shutdown)"
+      - "Used for router-id, BGP peering, OSPF router-id"
+      - "Loopback netmasks matter for routing protocol (/32 vs actual)"
+    applicability: "All routers with loopback interfaces for management or Router-ID"
+
+  interface_management:
+    name: "Management Interface / MGMT Port Configuration Error"
+    description: "Configure management interface with wrong VLAN, IP, or routing causing management access issues"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - ipv4
+      - ipv6
+    symptoms:
+      - "Cannot SSH/telnet to device management IP"
+      - "Management interface unreachable from network"
+      - "Management traffic forwarding to wrong interface"
+      - "Out-of-band management not functioning"
+    troubleshooting_hints:
+      - "Check management interface config: 'show management-interface'"
+      - "Verify management VLAN and IP configuration"
+      - "Check routing for management traffic (may use separate VRF)"
+      - "Use 'management-vrf' for dedicated management routing"
+      - "OOB mgmt: verify physical connectivity to management network"
+      - "Check ACLs applied to management interface"
+    applicability: "Network devices with dedicated management interfaces or VRFs"
+
+  interface_tunnel:
+    name: "Tunnel Interface / GRE/IPsec Tunnel Not Forming"
+    description: "Configure tunnel interface with incorrect source, destination, or transport issues"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - tunnel
+      - ipsec
+    symptoms:
+      - "Tunnel interface up but traffic not passing"
+      - "Tunnel destination unreachable"
+      - "GRE/IPsec tunnel not establishing"
+      - "Tunnel MTU causing fragmentation"
+    troubleshooting_hints:
+      - "Check tunnel status: 'show ip interface brief' for tunnel line/up"
+      - "Verify tunnel source IP reachable from remote side"
+      - "Check 'show interface tunnel <id>' for packets in/out"
+      - "Verify 'tunnel source' and 'tunnel destination' are correct"
+      - "Check tunnel keepalive settings (optional, configurable)"
+      - "GRE adds 24 bytes overhead affecting PMTU"
+    applicability: "Tunnel interfaces (GRE, IPsec, DMVPN, LISP)"
+
+  interface_l3_port:
+    name: "Layer 3 Port / Routed Port Mode Issue"
+    description: "Configure switch port in wrong mode (L2 access vs L3 routed) causing routing failures"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ethernet
+    symptoms:
+      - "Cannot assign IP address to switch port"
+      - "Switch port not routing despite IP configuration"
+      - "L2 switchport enabled when L3 routing needed"
+      - "SVI not routing despite correct VLAN assignment"
+    troubleshooting_hints:
+      - "Use 'no switchport' on IOS to convert L2 port to L3 routed"
+      - "Check 'show interface <intf> switchport' for L2/L3 status"
+      - "SVI: 'interface vlan <id>' for Layer 3 VLAN interface"
+      - "Routed port: configure IP directly on physical interface"
+      - "L2 port: configured with 'switchport' command"
+      - "Platform-dependent: L3 only on specific models"
+    applicability: "Layer 3 switches with mixed L2/L3 ports"
+
+  interface_cable_fault:
+    name: "Cable Fault / Media Error / TDR Detection"
+    description: "Physical layer issue with cable or connector causing high error rate or link instability"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - ethernet
+    symptoms:
+      - "High CRC errors on interface"
+      - "FCS/runts/giants incrementing"
+      - "Input errors but output errors normal"
+      - "Intermittent packet loss"
+    troubleshooting_hints:
+      - "Check 'show interface <intf>' for CRC, frame errors"
+      - "Use cable diagnostic TDR: 'test cable-diagnostics tdr interface <intf>'"
+      - "Replace faulty cable or connector"
+      - "Verify cable length within Ethernet specification"
+      - "Check for electromagnetic interference near cables"
+      - "Swap SFP/transceiver module if suspected"
+    applicability: "All Ethernet interfaces, especially in data centers"

@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Packet analysis rules for DVMRP
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "DVMRP Packet Analysis"
+description: "DVMRP (Distance Vector Multicast Routing Protocol) packet analysis for legacy multicast routing"
+
+# Protocol identifier - LLM uses this to query the protocol definition
+protocol_key: "dvmrp"
+
+# tshark display filter - used for -Y parameter
+display_filter: "dvmrp"
+
+# tshark fields that LLM can use for analysis
+fields:
+  - label: "Frame Number"
+    tshark_field: "frame.number"
+    description: "Packet sequence number in capture"
+
+  - label: "DVMRP Version"
+    tshark_field: "dvmrp.version"
+    description: "DVMRP version"
+
+  - label: "Type"
+    tshark_field: "dvmrp.type"
+    description: "DVMRP packet type"
+
+  - label: "Checksum"
+    tshark_field: "dvmrp.checksum"
+    description: "DVMRP checksum"
+
+  - label: "Checksum Status"
+    tshark_field: "dvmrp.checksum.status"
+    description: "Checksum verification status"
+
+  - label: "Netmask"
+    tshark_field: "dvmrp.netmask"
+    description: "Route netmask"
+
+  - label: "Metric"
+    tshark_field: "dvmrp.metric"
+    description: "Route metric (hop count)"
+
+  - label: "Split Horizon Hidden"
+    tshark_field: "dvmrp.split_horiz"
+    description: "Split horizon hidden route flag"
+
+  - label: "Destination Unreachable"
+    tshark_field: "dvmrp.dest_unreach"
+    description: "Destination unreachable flag"
+
+filter_examples:
+  - name: "DVMRP Probe"
+    filter: "dvmrp.type == 1"
+    description: "Filter for DVMRP probe"
+
+  - name: "DVMRP Report"
+    filter: "dvmrp.type == 2 or dvmrp.type == 3"
+    description: "Filter for DVMRP route report"
+
+  - name: "DVMRP Prune"
+    filter: "dvmrp.type == 7"
+    description: "Filter for DVMRP prune"
+
+  - name: "DVMRP Graft"
+    filter: "dvmrp.type == 8"
+    description: "Filter for DVMRP graft"
+
+checks:
+  - name: "dvmrp_metric_infinity"
+    severity: minor
+    message: "DVMRP route unreachable: metric {dvmrp.metric} from neighbor"
+    condition: "dvmrp.metric >= 32"

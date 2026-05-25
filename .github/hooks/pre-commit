@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+# Pre-commit hook to validate YAML files before committing.
+# Install: ln -s ../../.github/hooks/pre-commit .git/hooks/pre-commit
+
+set -e
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+echo "🔍 Running pre-commit validation..."
+
+# Check if Python 3 is available
+if ! command -v python3 &> /dev/null; then
+    echo "⚠️  Python 3 not found. Skipping validation."
+    echo "   To enable validation, install Python 3 and PyYAML:"
+    echo "   pip install pyyaml"
+    exit 0
+fi
+
+# Check if PyYAML is installed
+if ! python3 -c "import yaml" 2>/dev/null; then
+    echo "⚠️  PyYAML not installed. Skipping validation."
+    echo "   Install with: pip install pyyaml"
+    exit 0
+fi
+
+# Validate YAML syntax
+echo "Validating YAML syntax..."
+python3 "$REPO_ROOT/.github/scripts/validate_yaml.py"
+
+# Validate skill format
+echo "Validating skill format..."
+python3 "$REPO_ROOT/.github/scripts/validate_skills.py"
+
+echo "✅ Pre-commit validation passed!"

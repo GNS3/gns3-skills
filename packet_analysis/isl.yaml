@@ -1,0 +1,36 @@
+name: ISL Packet Analysis
+description: ISL (Inter-Switch Link) packet analysis for Cisco legacy VLAN trunking
+protocol_key: isl
+display_filter: isl
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: SA
+  tshark_field: isl.hsa
+  description: Source MAC
+- label: Type
+  tshark_field: isl.type
+  description: ISL frame type
+- label: User Bits
+  tshark_field: isl.user
+  description: User defined bits
+- label: VLAN ID
+  tshark_field: isl.vlan_id
+  description: VLAN ID
+- label: Index
+  tshark_field: isl.index
+  description: Source port index
+filter_examples:
+- name: Specific VLAN
+  filter: isl.vlan == 10
+  description: Filter for specific ISL VLAN
+- name: ISL trunk
+  filter: isl
+  description: Filter for all ISL encapsulated frames
+checks:
+- name: isl_vlan_mismatch
+  severity: major
+  message: 'ISL VLAN mismatch: expected VLAN {expected}, got {isl.vlan_id}'
+  description: Different isl.vlan than expected for the trunk
+  condition: null

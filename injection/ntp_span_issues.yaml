@@ -1,0 +1,280 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 Yue Guobin
+#
+
+name: "NTP/SPAN Issues Injection"
+description: "NTP time synchronization and SPAN/RSPAN/ERSPAN port mirroring related network faults"
+category: "injection"
+protocols:
+  - ntp
+  - span
+  - rspan
+  - erspan
+  - mirroring
+
+issues:
+  ntp_server_unreachable:
+    name: "NTP Server Unreachable"
+    description: "Configure NTP with unreachable or incorrect NTP server address"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP clock not synchronizing"
+      - "Clock offset increasing over time"
+      - "NTP stratum level too high"
+      - "NTP reachability counter zero"
+    troubleshooting_hints:
+      - "Check NTP with 'show ntp status' and 'show ntp associations'"
+      - "Verify 'ntp server <ip> [prefer]' configuration"
+      - "Test UDP 123 reachability: 'telnet <ntp-server> 123'"
+      - "Use 'ntp source <intf>' for consistent source IP"
+      - "Check routing to NTP server from source interface"
+      - "Firewall must allow NTP (UDP 123)"
+    applicability: "All NTP deployments"
+
+  ntp_auth:
+    name: "NTP Authentication Mismatch"
+    description: "Configure NTP authentication on one side but not the other"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP peer/server not synchronizing"
+      - "Authentication failures for NTP packets"
+      - "NTP association stuck in 'configured' state"
+      - "NTP keys not matching"
+    troubleshooting_hints:
+      - "Enable NTP auth: 'ntp authenticate'"
+      - "Define key: 'ntp authentication-key <id> md5 <key>'"
+      - "Trust key: 'ntp trusted-key <id>'"
+      - "Server: 'ntp server <ip> key <id>'"
+      - "Peer: 'ntp peer <ip> key <id>'"
+      - "Key number, type and string must match on both ends"
+    applicability: "NTP with authentication in secure environments"
+
+  ntp_source:
+    name: "NTP Source Interface Misconfiguration"
+    description: "Configure NTP with wrong source interface causing packets dropped by ACL"
+    severity: "low"
+    difficulty: "beginner"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP packets sent from wrong interface"
+      - "ACL on NTP server blocking due to unexpected source IP"
+      - "NTP working from some routers but not others (same server)"
+      - "Source interface IP not reachable from NTP server"
+    troubleshooting_hints:
+      - "Use 'ntp source <interface>' to set source interface"
+      - "NTP server may have per-source ACL or restriction"
+      - "Use loopback as ntp source for consistency"
+      - "Check routing back to source interface"
+      - "Verify 'show ntp associations' for source IP used"
+      - "ACL on NTP server must permit the source IP"
+    applicability: "NTP with source-based filtering"
+
+  # NTP Hierarchy and Peer Configuration Issues
+
+  ntp_stratum:
+    name: "NTP Stratum Level Manipulation"
+    description: "Configure wrong NTP stratum level causing time source not preferred"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ntp
+    symptoms:
+      - "Router becoming NTP time source when it shouldn't"
+      - "Stratum number too high causing less accurate time"
+      - "NTP peer with higher stratum not synchronizing"
+      - "Preferred NTP server not selected"
+    troubleshooting_hints:
+      - "Check stratum with 'show ntp status'"
+      - "Stratum 1: directly to atomic/radio clock"
+      - "Stratum 2: sync'd to stratum 1, etc."
+      - "Use 'ntp master [stratum]' to set as time source"
+      - "Lower stratum = more accurate (preferred)"
+      - "Default stratum when acting as master is 8"
+    applicability: "NTP hierarchy and redundancy design"
+
+  # SPAN, RSPAN, and ERSPAN Configuration Issues
+
+  span_destination:
+    name: "SPAN Destination Port Misconfiguration"
+    description: "Configure SPAN with wrong destination port or destination port misconfigured"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - span
+      - mirroring
+    symptoms:
+      - "Monitoring tool not receiving mirrored traffic"
+      - "SPAN destination port not forwarding traffic"
+      - "Destination port still forwarding normal traffic (should be monitor-only)"
+      - "SPAN session not active"
+    troubleshooting_hints:
+      - "Check SPAN with 'show monitor session <id>'"
+      - "Destination port: 'monitor session <id> destination interface <intf>'"
+      - "Destination port stops normal switching (dedicated to monitoring)"
+      - "Use 'show monitor session <id>' for operational status"
+      - "Check destination port state (should be up/up)"
+      - "Verify monitoring device can receive traffic on destination port"
+    applicability: "Network monitoring with SPAN"
+
+  span_source:
+    name: "SPAN Source / VLAN Misconfiguration"
+    description: "Configure SPAN with wrong source interfaces or VLANs"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - span
+      - mirroring
+    symptoms:
+      - "Wrong traffic mirrored to monitoring port"
+      - "Expected traffic not captured by monitoring tool"
+      - "Too much traffic (entire VLAN) mirrored when only specific port needed"
+      - "RX/TX direction not specified correctly"
+    troubleshooting_hints:
+      - "Check SPAN sources with 'show monitor session <id>'"
+      - "Source interface: 'monitor session <id> source interface <intf> [rx|tx|both]'"
+      - "Source VLAN: 'monitor session <id> source vlan <vlan> [rx|tx|both]'"
+      - "RX = received traffic, TX = transmitted traffic, Both = both directions"
+      - "VLAN SPAN (VSPAN) mirrors all ports in the VLAN"
+      - "Verify monitoring tool filter matches the source"
+    applicability: "Network monitoring and troubleshooting"
+
+  rspan_vlan:
+    name: "RSPAN VLAN Misconfiguration"
+    description: "Configure RSPAN with wrong remote VLAN or VLAN not allowed on intermediate trunks"
+    severity: "high"
+    difficulty: "intermediate"
+    protocols:
+      - rspan
+      - mirroring
+    symptoms:
+      - "Remote monitoring device not receiving mirrored traffic"
+      - "RSPAN VLAN not allowed on intermediate trunk"
+      - "RSPAN session configured but no traffic at destination"
+      - "RSPAN VLAN conflict with data VLAN"
+    troubleshooting_hints:
+      - "RSPAN uses dedicated VLAN to transport mirrored traffic"
+      - "Create RSPAN VLAN: 'vlan <id>' then 'remote-span'"
+      - "Source switch: 'monitor session <id> destination remote vlan <rspan-vlan>'"
+      - "Destination switch: 'monitor session <id> source remote vlan <rspan-vlan>'"
+      - "RSPAN VLAN must be allowed on all intermediate trunks"
+      - "Do not assign any ports to RSPAN VLAN (except via SPAN)"
+    applicability: "Remote monitoring across multiple switches"
+
+  erspan_config:
+    name: "ERSPAN Type II/III Misconfiguration"
+    description: "Configure ERSPAN with wrong source/destination IP or GRE version"
+    severity: "high"
+    difficulty: "advanced"
+    protocols:
+      - erspan
+      - monitoring
+    symptoms:
+      - "Mirrored traffic not reaching ERSPAN collector"
+      - "ERSPAN GRE encapsulation not working"
+      - "Wrong ERSPAN ID causing collector to drop packets"
+      - "ERSPAN flow ID / timestamp mismatch"
+    troubleshooting_hints:
+      - "ERSPAN encapsulates mirrored traffic in GRE"
+      - "ERSPAN Type II: standard (4 bytes GRE + 4 bytes ERSPAN)"
+      - "ERSPAN Type III: extended header (8 bytes ERSPAN)"
+      - "Source IP: 'monitor session <id> type erspan-source'"
+      - "Destination IP: 'erspan-id <id>' and 'ip address <src> <dst>'"
+      - "Verify routing between ERSPAN source and destination IPs"
+    applicability: "Remote monitoring across Layer 3 boundaries"
+
+  ntp_peer_assoc:
+    name: "NTP Peer / Symmetric Association Misconfiguration"
+    description: "Configure NTP peer (symmetric active) but association not established or clock loop"
+    severity: "low"
+    difficulty: "advanced"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP peer association not established"
+      - "Clock selection algorithm not picking correct peer"
+      - "NTP synchronization loop between peers"
+      - "Clock stratum bouncing between peers"
+    troubleshooting_hints:
+      - "NTP peer: 'ntp peer <ip>' (symmetric active mode)"
+      - "Peers can synchronize to each other (unlike client-server)"
+      - "Check 'show ntp associations' for peer reachability"
+      - "Synchronization loop: ensure at least one peer has external ref"
+      - "Use 'ntp peer <ip> prefer' for preferred peer"
+      - "Stratum level prevents infinite loops (lower = better)"
+    applicability: "NTP with mutual peer synchronization"
+
+  ntp_broadcast:
+    name: "NTP Broadcast/Multicast Mode Misconfiguration"
+    description: "Configure NTP broadcast/multicast but clients not receiving time updates"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP broadcast clients not synchronizing"
+      - "NTP broadcast server not sending NTP broadcasts"
+      - "NTP multicast packets blocked by IGMP"
+      - "Broadcast time server not heard by clients"
+    troubleshooting_hints:
+      - "Server: 'ntp broadcast <interface>' (broadcast mode)"
+      - "Client: 'ntp broadcast client' on interface"
+      - "NTP multicast: 'ntp multicast <group>' (multicast mode)"
+      - "Client: 'ntp multicast client' on interface"
+      - "Broadcast/multicast NTP is less accurate than unicast"
+      - "Use for LAN environments with many NTP clients"
+    applicability: "NTP for LAN environments with many hosts"
+
+  # Resource and Access Control Issues
+
+  span_cpu:
+    name: "SPAN CPU / RSPAN/ERSPAN Resource Exhaustion"
+    description: "Configure too many SPAN sessions causing CPU or hardware resource exhaustion"
+    severity: "low"
+    difficulty: "intermediate"
+    protocols:
+      - span
+      - mirroring
+    symptoms:
+      - "Multiple SPAN sessions consuming hardware resources"
+      - "SPAN session not created due to resource limit"
+      - "Monitoring impact on switch forwarding performance"
+      - "SPAN packet drops due to monitoring capacity"
+    troubleshooting_hints:
+      - "Platform SPAN session limit: check with 'show monitor capacity'"
+      - "Resource limits: number of sessions, source interfaces, VLANs"
+      - "Reduce SPAN sources: mirror only needed ports, not entire VLANs"
+      - "Consider using netFlow instead of SPAN for traffic analytics"
+      - "ERSPAN adds CPU overhead due to GRE encapsulation"
+      - "Check 'show monitor session <id>' for operational status"
+    applicability: "Monitoring deployments with resource constraints"
+
+  ntp_access_group:
+    name: "NTP Access Group / ACL Restriction Misconfiguration"
+    description: "Configure NTP access group too restrictively blocking legitimate NTP peers"
+    severity: "high"
+    difficulty: "beginner"
+    protocols:
+      - ntp
+    symptoms:
+      - "NTP server rejecting valid clients"
+      - "NTP synchronization failing despite reachable server"
+      - "Access group filtering legitimate NTP associations"
+      - "NTP packets blocked by ACL"
+    troubleshooting_hints:
+      - "NTP access group: 'ntp access-group peer|serve|serve-only|query-only <acl>'"
+      - "Peer: full access (can synchronize and be synchronized)"
+      - "Serve: can synchronize to server but not vice versa"
+      - "Serve-only: can only synchronize (no configuration queries)"
+      - "Query-only: only allow NTP status queries"
+      - "Check ACL entries: ensure source IP of peer is permitted"
+    applicability: "NTP with access control requirements"

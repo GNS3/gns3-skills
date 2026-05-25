@@ -1,0 +1,50 @@
+name: WCCP Packet Analysis
+description: WCCP (Web Cache Communication Protocol) packet analysis for caching/cluster troubleshooting
+protocol_key: wccp
+display_filter: wccp
+fields:
+- label: Frame Number
+  tshark_field: frame.number
+  description: Packet sequence number in capture
+- label: WCCP Message Type
+  tshark_field: wccp.message
+  description: WCCP message type
+- label: WCCP Version
+  tshark_field: wccp.version
+  description: WCCP version (usually 2)
+- label: Hash Revision
+  tshark_field: wccp.hash_revision
+  description: Cache hash revision number
+- label: Change Number
+  tshark_field: wccp.change_num
+  description: Web cache list change number
+- label: Cache IP
+  tshark_field: wccp.cache_ip
+  description: Web cache IP address
+- label: Number of Caches
+  tshark_field: wccp.wc_num
+  description: Number of web caches
+filter_examples:
+- name: WCCPv2
+  filter: wccp.version == 2
+  description: Filter for WCCPv2
+- name: WCCP Here I Am
+  filter: wccp.message == 1
+  description: Filter for WCCP Here I Am messages
+- name: WCCP I See You
+  filter: wccp.message == 2
+  description: Filter for WCCP I See You messages
+- name: WCCP Assignment
+  filter: wccp.message == 3
+  description: Filter for WCCP assignment messages
+checks:
+- name: wccp_no_response
+  severity: major
+  message: 'WCCP cache not responding: no I See You from cache {wccp.cache_ip}'
+  description: No WCCP response from cache within expected interval
+  condition: null
+- name: wccp_cluster_change
+  severity: minor
+  message: 'WCCP cluster topology change: revision {wccp.hash_revision}'
+  description: Changing hash assignment detected
+  condition: null

@@ -10,6 +10,7 @@ There are two YAML formats. Which one to use depends on the **directory**:
 |---------------------------|-------------------|
 | `injection/` | [Injection Format](#injection-required-fields) → `issues:` based |
 | `device/` | [Device Format](#device-fields) → `config_commands:` / `display_commands:` based |
+| `feature/` | Network planning functionalities → workflow-based |
 
 ```yaml
 # injection/ospf_issues.yaml                          # device/vpcs.yaml
@@ -53,7 +54,7 @@ The loader distinguishes them by directory — no `type` field is needed.
 |------|-----------|---------|
 | Fault injection skills | `injection/` | `ospf_issues.yaml` |
 | Device definitions | `device/` | `vpcs.yaml` |
-| Feature/planner skills | `feature/` | `topology_planner.yaml` |
+| Network planning features | `feature/` | `topology_planner.yaml` |
 
 Most contributions will go into **`injection/`**.
 

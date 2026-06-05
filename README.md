@@ -34,8 +34,8 @@ GNS3-Skills/
 │   └── ...
 ├── device/            # Device interface definitions (YAML)
 │   └── vpcs.yaml      # VPCS virtual PC commands
-├── feature/           # Feature/planner skill definitions (YAML)
-│   └── topology_planner.yaml
+├── feature/           # Network planning and design functionalities (YAML)
+│   └── topology_planner.yaml  # Topology design automation
 ├── prompts/           # LLM system prompts for agent modes
 │   ├── troubleshooting_injection.md
 │   ├── lab_automation_assistant.md
@@ -85,12 +85,14 @@ graph TB
 
     subgraph Skills_Repo["GNS3-Skills Repository"]
         Injection_Files["injection/<br/>ospf_issues.yaml<br/>bgp_issues.yaml<br/>... (50 files)"]
-        Device_Files["device/<br/>vpcs.yaml<br/>feature/topology_planner.yaml"]
+        Device_Files["device/<br/>vpcs.yaml"]
+        Feature_Files["feature/<br/>topology_planner.yaml"]
         Packet_Files["packet_analysis/<br/>ospf.yaml<br/>bgp.yaml<br/>arp.yaml<br/>... (60 files)"]
     end
 
     Injection_Tools --> Injection_Files
     Device_Tools --> Device_Files
+    Device_Tools --> Feature_Files
     Packet_Tools --> Packet_Files
 
     classDef llmStyle fill:#f9f,stroke:#333,stroke-width:2px
@@ -99,7 +101,7 @@ graph TB
 
     class LLM llmStyle
     class Injection_Tools,Device_Tools,Packet_Tools,GNS3_Ops toolsStyle
-    class Injection_Files,Device_Files,Packet_Files repoStyle
+    class Injection_Files,Device_Files,Feature_Files,Packet_Files repoStyle
 ```
 
 **Data flow:**
@@ -201,7 +203,7 @@ Skills are automatically loaded from this repository by the GNS3 Copilot agent i
 | Registry | Source Directory | Exposed Via | Purpose |
 |---|---|---|---|
 | `INJECTION_SKILLS_REGISTRY` | `injection/` | `injection_skills` tool | Fault injection scenarios |
-| `SKILLS_REGISTRY` | `device/`, `feature/` | `device_skills` tool | Device commands, topology planning |
+| `SKILLS_REGISTRY` | `device/`, `feature/` | `device_skills` tool | Device interface definitions, network planning features |
 | `PACKET_ANALYSIS_REGISTRY` | `packet_analysis/` | `packet_analysis_skills` tool | Protocol tshark field definitions |
 
 The LLM queries these registries at runtime via tool calls, then acts on the returned knowledge using separate executable tools (e.g., `PacketAnalysisTool` for running tshark, `ExecuteMultipleDeviceConfigCommands` for configuring devices).
@@ -237,6 +239,7 @@ At startup, `SkillsManager` clones or pulls this repository, then `SkillsLoader`
 
 - `injection/ospf_issues.yaml` → `INJECTION_SKILLS_REGISTRY["injection_ospf"]`
 - `device/vpcs.yaml` → `SKILLS_REGISTRY["gns3_vpcs_telnet"]` (key from `device_type` field)
+- `feature/topology_planner.yaml` → `SKILLS_REGISTRY["topology_planner"]` (key from `device_type` field)
 - `packet_analysis/ospf.yaml` → `PACKET_ANALYSIS_REGISTRY["ospf"]` (key from `protocol_key` field)
 
 Prompts in `prompts/` are loaded separately into the agent's system message via `prompt_loader.py`.

@@ -1,0 +1,153 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "Cisco IOS XR (XRd Control Plane)"
+description: "Cisco IOS XR 24.4 on GNS3 XRd docker nodes — commit model, BGP route-policy PASS requirement, enforce-first-as disable, the neighbor/address-family structure trap, OSPF/ospfv3 XR syntax"
+device_type: "cisco_xr_telnet"
+category: "device"
+
+# Configuration Commands (XR: configure terminal -> edit -> commit -> end)
+config_commands:
+  commit_model:
+    syntax: "configure terminal
+<configuration>
+commit
+end"
+    description: "XR two-phase config: changes do NOT apply until 'commit'; ALWAYS finish with 'end' — tools sharing the console session stay in config mode otherwise and bare show commands fail with Invalid input ('do show ...' works as a workaround)"
+
+  interface_address:
+    syntax: "interface GigabitEthernet0/0/0/<N>
+ ipv4 address <ip> <mask>
+ ipv6 address <ipv6>/<len>
+ no shutdown"
+    description: "Dual-stack addressing; Gi0/0/0/N maps GNS3 adapter N; XRd data ports are shutdown by default"
+
+  ospfv2:
+    syntax: "router ospf 1
+ router-id <rid>
+ area 0
+  interface GigabitEthernet0/0/0/<N>
+   network point-to-point
+  !
+ !
+ default-information originate always"
+    description: "OSPFv2 with hierarchical area/interface structure; 'network point-to-point' recommended on mesh links; default-information originate at process level on borders"
+
+  ospfv3:
+    syntax: "router ospfv3 1
+ router-id <rid>
+ address-family ipv6 unicast
+  area 0
+   interface GigabitEthernet0/0/0/<N>
+    network point-to-point
+   !
+  !
+  default-information originate always"
+    description: "OSPFv3: MUST enter 'address-family ipv6 unicast' before area config; default-originate sits at AF level"
+
+  static_null0:
+    syntax: "router static
+ address-family ipv4 unicast
+  <prefix>/<len> Null0
+ address-family ipv6 unicast
+  <ipv6-prefix>/<len> Null0"
+    description: "Null0 anchor for aggregates (AF-hierarchical under router static)"
+
+  route_policy_pass:
+    syntax: "route-policy PASS
+ pass
+end-policy"
+    description: "Pass-all policy — REQUIRED on XR for BGP route exchange (default eBGP import/export is deny-all)"
+
+  bgp_base:
+    syntax: "router bgp <asn>
+ bgp router-id <rid>
+ bgp enforce-first-as disable
+ neighbor <ip>
+  remote-as <peer-as>
+  address-family ipv4 unicast
+   route-policy PASS in
+   route-policy PASS out"
+    description: "THE structural trap: configure each neighbor as 'neighbor <ip>' -> 'address-family ...' -> 'route-policy ... in/out' (three levels, prompt config-bgp-nbr-af). Typing 'neighbor <ip>' INSIDE an address-family block exits the AF into the global neighbor context — route-policies never attach and following commands land in the wrong place. 'bgp enforce-first-as disable' is the XR spelling ('no bgp enforce-first-as' is rejected); attach PASS in/out on eBGP AND iBGP neighbors (iBGP too, keeps policy non-empty)"
+
+  write_behavior:
+    syntax: "commit"
+    description: "commit persists to /xr-storage — survives node restart AND plain gns3server restarts (only server UPDATES that rebuild containers lose config; re-check after updates)"
+
+# Display/Diagnostic Commands
+display_commands:
+  show_interfaces:
+    syntax: "show ipv4 interface brief"
+    description: "Interface/address summary"
+
+  show_ospf_neighbor:
+    syntax: "show ospf neighbor"
+    description: "OSPFv2 adjacencies"
+
+  show_bgp_summary:
+    syntax: "show bgp ipv4 unicast summary"
+    description: "BGP sessions and prefix counters"
+
+  show_route:
+    syntax: "show route <prefix>
+show route ipv6 <prefix>"
+    description: "FIB lookup"
+
+  show_running:
+    syntax: "show running-config"
+    description: "Running config (long output supported; '| include' pipes work)"
+
+  ping:
+    syntax: "ping ipv4 <dst>
+ping ipv6 <dst>"
+    description: "Non-interactive: default 5 sends and returns by itself. XRd data plane is the Linux kernel — cross-node RTT ~3-7ms"
+
+# Important Notes
+notes:
+  - "XRd is a docker node but driven via device_config_send/device_show_run (netmiko cisco_xr_telnet; the XRd Control Plane template carries the device type) — auto-login admin/password, auto 'configure terminal'"
+  - "Both device tools SHARE one XR CLI session: device_config_send stops in config mode after commit — always end command batches with 'end' or subsequent show commands fail"
+  - "Pagination on long outputs is handled by the server tooling — no need to keep output under one page"
+  - "First boot hostname is 'ios'; rename under 'hostname <name>' + commit"
+  - "MCP tool schema cached mid-session after a server update causes -32602 Invalid request parameters on every call — reconnecting the MCP client fixes it"
+
+# Troubleshooting Guide
+troubleshooting:
+  bgp_zero_routes_exchanged:
+    - "Symptom: eBGP session Established, zero prefixes in/out"
+    - "Cause: XR default policy is deny-all"
+    - "Fix: route-policy PASS (pass/end-policy) attached to the neighbor AF in AND out"
+
+  route_policy_not_attaching:
+    - "Symptom: route-policy lines accepted but neighbor still exchanges nothing; later commands land in wrong mode"
+    - "Cause: 'neighbor <ip>' typed inside address-family context exits the AF into the global neighbor context (config-bgp-nbr, not config-bgp-nbr-af)"
+    - "Fix: rebuild with the three-level structure neighbor -> address-family -> route-policy"
+
+  enforce_first_as_rejected:
+    - "Error: '% Invalid/incomplete' on 'no bgp enforce-first-as'"
+    - "Fix: XR spelling is 'bgp enforce-first-as disable'"
+
+  show_invalid_input_after_config:
+    - "Symptom: bare show commands fail with Invalid input after a config push"
+    - "Cause: session still in config mode (device_config_send does not exit)"
+    - "Fix: send 'end' (or prefix exec commands with 'do')"
+
+  config_lost_after_server_update:
+    - "Plain gns3server restarts keep committed config (/xr-storage); server UPDATES that rebuild the container lose it"
+    - "After any update, verify interfaces/routes and re-push if needed"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  save_config: "commit"
+  save: "commit"
+  write_memory: "commit"
+  conf_t: "configure terminal"
+  show_ip_ospf_neighbor: "show ospf neighbor"
+  show_bgp_summary: "show bgp ipv4 unicast summary"
+  show_route: "show route"
+  show_ip_interface_brief: "show ipv4 interface brief"

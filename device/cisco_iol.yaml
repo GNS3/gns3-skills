@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "Cisco IOL (IOS on Linux)"
+description: "Cisco IOL/IOU images on GNS3 (IOS 15.2 and 17.x) — the OSPFv3 syntax matrix that differs from classic IOS (interface-level on 15.2, address-family mode on 17), enforce-first-as silent drop, staged-config landmines"
+device_type: "cisco_iou_telnet"
+category: "device"
+
+# Configuration Commands
+config_commands:
+  interface_address:
+    syntax: "interface <if>
+ ip address <ip> <mask>
+ ipv6 address <ipv6>/<len>
+ no shutdown"
+    description: "Dual-stack interface addressing (Ethernet e0/0..e0/3 map GNS3 adapters; serial s2/0.. with PPP for serial topologies)"
+
+  ipv6_unicast_routing:
+    syntax: "ipv6 unicast-routing"
+    description: "MUST be enabled before any ipv6 routing command (staged nodes are often blank and missing it)"
+
+  ospfv2:
+    syntax: "router ospf 1
+ router-id <rid>
+ network <prefix> <wildcard> area 0
+ default-information originate always"
+    description: "OSPFv2 process (same as classic IOS)"
+
+  ospfv3_15_2:
+    syntax: "interface <if>
+ ipv6 ospf 1 area 0
+router ospfv3 1
+ router-id <rid>"
+    description: "OSPFv3 on IOL 15.2: 'ipv6 router ospf 1' is REJECTED — bind the area on the interface with 'ipv6 ospf 1 area 0' and create the process as 'router ospfv3 1' for the router-id"
+
+  ospfv3_17_af_mode:
+    syntax: "router ospfv3 1
+ router-id <rid>
+ address-family ipv6 unicast
+interface <if>
+ ospfv3 1 ipv6 area 0"
+    description: "OSPFv3 on IOS 17.x (IOL 17.15): AF-mode syntax — process 'router ospfv3 1' with 'address-family ipv6 unicast', interface binding is 'ospfv3 1 ipv6 area 0' (note the AF keyword inside)"
+
+  serial_ppp:
+    syntax: "interface s2/<n>
+ encapsulation ppp
+ ip address <ip> <mask>"
+    description: "Serial links with PPP encapsulation (IOL serial ports s2/0..s2/2 map GNS3 adapters with port sub-numbers)"
+
+  bgp_base:
+    syntax: "router bgp <asn>
+ bgp router-id <rid>
+ neighbor <ip> remote-as <peer-as>
+ no bgp enforce-first-as"
+    description: "BGP base (same as classic IOS). IOL route-server clients silently DROP paths violating first-AS instead of resetting the session — harder to notice than on IOS"
+
+  bgp_af:
+    syntax: "router bgp <asn>
+ address-family ipv6 unicast
+  neighbor <ipv6> activate
+  network <ipv6-prefix>/<len>"
+    description: "ipv6 neighbors need explicit activate under AF"
+
+  write_memory:
+    syntax: "write memory"
+    description: "Save to NVRAM"
+
+# Display/Diagnostic Commands
+display_commands:
+  show_ip_int_brief:
+    syntax: "show ip int brief"
+    description: "Interface states — first check on staged nodes"
+
+  show_ospf_neighbor:
+    syntax: "show ip ospf neighbor"
+    description: "OSPFv2 adjacencies"
+
+  show_ospfv3_neighbor_15_2:
+    syntax: "show ipv6 ospf neighbor"
+    description: "OSPFv3 adjacencies (works for both 15.2 interface-level and 17 AF-mode styles)"
+
+  show_bgp:
+    syntax: "show bgp ipv4 unicast <prefix>"
+    description: "BGP table lookup"
+
+  ping:
+    syntax: "ping <destination>"
+    description: "5 echos, terminates by itself"
+
+# Important Notes
+notes:
+  - "Console is telnet — drive via device_config_send/device_show_run tools (NOT WebSocket)"
+  - "OSPFv3 syntax depends on the IOL version — check 'show version' first: 15.2 = interface-level binding, 17.x = ospfv3 AF mode (see config_commands); 'ipv6 router ospf 1' only works on classic IOS, NOT on IOL"
+  - "IOL silently ignores offending BGP paths (no reset, no log) when enforce-first-as would reject them — verify received prefixes, not just session state"
+  - "Staged startup-configs on reused nodes carry landmines: wrong area numbers, stale network statements leaking shared segments into OSPF, cloned addresses — diff running-config before adding anything"
+  - "After fixing enforce-first-as, routes are NOT re-advertised automatically: 'clear bgp <peer> soft in' (or equivalent) per AF"
+  - "Serial-PPP links add ~25-80ms RTT — normal, not a fault"
+
+# Troubleshooting Guide
+troubleshooting:
+  ospfv3_command_rejected:
+    - "Error: '% Invalid input' / '% IPv6 routing not enabled' on ipv6 ospf commands"
+    - "Check 'ipv6 unicast-routing' globally; on 15.2 use interface-level 'ipv6 ospf 1 area 0' (not 'ipv6 router ospf 1')"
+    - "On 17.x verify AF mode: 'router ospfv3 1' + 'address-family ipv6 unicast' + interface 'ospfv3 1 ipv6 area 0'"
+
+  bgp_established_but_prefixes_missing:
+    - "Session Established but a route-server's reflected paths never arrive, no error"
+    - "Cause: IOL drops first-AS violations silently"
+    - "Fix: 'no bgp enforce-first-as' + soft inbound refresh"
+
+  unexpected_ospf_adjacency:
+    - "Symptom: adjacency with a router in another group / foreign routes appear"
+    - "Cause: staged network statement leaking a shared segment into OSPF"
+    - "Fix: remove the stale 'network' line; adjacency drops and routes clear on their own"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  save_config: "write memory"
+  save: "write memory"
+  wr: "write memory"
+  conf_t: "configure terminal"
+  show_ip_ospf_neighbor: "show ip ospf neighbor"
+  show_ipv6_ospf_neighbor: "show ipv6 ospf neighbor"
+  show_route: "show ip route"

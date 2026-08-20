@@ -1,0 +1,103 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "Linux Docker Host (Alpine/Ubuntu)"
+description: "Alpine and Ubuntu docker nodes in GNS3 used as plain IP hosts — /etc/network/interfaces persistence via init.sh, the BusyBox ifup CIDR trap, WebSocket-console-only access"
+device_type: "gns3_linux_docker"
+category: "device"
+
+# Configuration Commands (shell commands — these are NOT routers, no vtysh/IOS CLI)
+config_commands:
+  runtime_address:
+    syntax: "ip addr add <ip>/<len> dev eth<N>
+ip -6 addr add <ipv6>/<len> dev eth<N>
+ip link set eth<N> up"
+    description: "Immediate (runtime) addressing — valid for the current container life only; make persistent with /etc/network/interfaces below"
+
+  persistent_interfaces:
+    syntax: "printf '%s\n' 'auto eth<N>' 'iface eth<N> inet static' ' address <ip>' ' netmask <mask>' ' up ip route add <prefix> via <gw>' >> /etc/network/interfaces"
+    description: "PERSISTENCE = write /etc/network/interfaces (ifupdown format). CRITICAL BusyBox trap: the address line must be PLAIN dotted-quad + separate netmask line — BusyBox ifup does NOT understand CIDR ('address 10.4.12.1/30' makes ifup fail with 'don't have all variables for ethN/inet' and ALL interfaces lose their config on restart). IPv6: add an 'iface eth<N> inet6 static' stanza with 'address <ipv6>' + 'netmask <len>'"
+    parameters:
+      ip: "Dotted-quad IPv4 address WITHOUT prefix length"
+      mask: "Dotted-quad netmask (e.g. 255.255.255.0)"
+
+  default_gateway:
+    syntax: "printf '%s\n' ' gateway <gw-ip>' >> root stanza of /etc/network/interfaces"
+    description: "Default gateway lives in the iface stanza (IPv4); for IPv6 use 'up ip -6 route add default via <gw6>'"
+
+  file_write_via_console:
+    syntax: "echo <base64> | base64 -d > /path/file"
+    description: "Write config files through the console: base64-encode on the host, decode in the container — a raw heredoc/paste pollutes every line with \\r and breaks ifup parsing"
+
+  ip_forward:
+    syntax: "sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv6.conf.all.forwarding=1"
+    description: "Enable forwarding when the host acts as a gateway between segments (add 'up sysctl -w ...' lines to the stanza to persist)"
+
+# Display/Diagnostic Commands
+display_commands:
+  ip_addr:
+    syntax: "ip addr"
+    description: "Addresses and link states. NOTE: BusyBox Alpine has NO 'ip -br addr' (that is iproute2-only) — plain 'ip addr' only"
+
+  ip_route:
+    syntax: "ip route
+ip -6 route"
+    description: "Routing tables"
+
+  ping:
+    syntax: "ping -c <count> <destination>
+ping6 -c <count> <ipv6>"
+    description: "Linux ping — ALWAYS give -c (default runs forever); BusyBox ping supports -c and -I <source>"
+
+  traceroute:
+    syntax: "traceroute <destination>"
+    description: "Standard traceroute (may be absent on minimal Alpine images)"
+
+# Important Notes
+notes:
+  - "These are PLAIN IP HOSTS — no FRR/Quagga, no OSPF/BGP: routers cannot learn their subnets unless static routes point at them (or an FRR container is added)"
+  - "GNS3 docker nodes run /gns3/init.sh at start: 'ip link set ethN up' for all ports + 'ifup -a -f' — so /etc/network/interfaces IS the persistence mechanism, and /etc/network is a bind mount that survives container recreation"
+  - "Console is telnet-type WebSocket (websocat) ONLY — netmiko device tools do not support Linux shells; drive with 'websocat -t --no-close' and \\r\\n line endings"
+  - "GNS3 docker adapter N maps to eth<N> inside the container (eth0/1/2 = adapter 0/1/2)"
+  - "Full-mesh + single-gateway topologies create TTL loops when the gateway is not on some link's subnet — add explicit routes for non-directly-connected internal subnets on the gateway host"
+  - "Reboot persistence test = node_stop -> node_start via the GNS3 API (runs init.sh); a soft in-container restart does not exercise the init path"
+
+# Troubleshooting Guide
+troubleshooting:
+  network_config_lost_after_restart:
+    - "Symptom: interfaces lose addresses after node stop/start"
+    - "Cause: address written only at runtime (ip addr add) or /etc/network/interfaces uses CIDR that BusyBox ifup rejects"
+    - "Fix: write proper ifupdown stanzas (plain address + netmask lines) and verify with 'ifup -a' returning no errors"
+
+  ifup_missing_variables:
+    - "Error: 'ifup: don't have all variables for ethN/inet'"
+    - "Cause: CIDR in the address line (BusyBox)"
+    - "Fix: split into 'address <ip>' + 'netmask <mask>'"
+
+  unreachable_from_routers:
+    - "Symptom: routers cannot ping the host subnet / host cannot reach remote networks"
+    - "Cause: plain host has no routing protocol — routers need static routes to the host subnet, host needs a default gateway"
+    - "Fix: static routes on the attached router + gateway (or 'up ip route' lines) on the host"
+
+  file_pasted_via_console_corrupt:
+    - "Symptom: config file lines contain trailing ^M / parse errors"
+    - "Cause: console paste appends \\r to every line"
+    - "Fix: base64 round-trip (echo <b64> | base64 -d > file)"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  show_ip: "ip addr"
+  show_interfaces: "ip addr"
+  show_route: "ip route"
+  show_ipv6_route: "ip -6 route"
+  set_ip: "ip addr add <ip>/<len> dev eth<N>"
+  save_config: "edit /etc/network/interfaces (persistent)"
+  save: "edit /etc/network/interfaces (persistent)"
+  ping_test: "ping -c 3 <destination>"

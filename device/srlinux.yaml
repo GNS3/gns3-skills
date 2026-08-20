@@ -1,0 +1,177 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: Yue Guobin (@yueguobin)
+#
+
+name: "Nokia SR Linux"
+description: "Nokia SR Linux NOS (docker, verified on v26.7.1) — sr_cli configuration model with candidate/private commit, network-instance, OSPF instances, BGP groups, next-hop-groups and routing-policy"
+device_type: "nokia_srlinux_cli"
+category: "device"
+
+# Configuration model: ALL changes require candidate mode, then commit
+config_commands:
+  enter_candidate:
+    syntax: "enter candidate private"
+    description: "Enter a private candidate session (REQUIRED before any config change; commands sent in running mode silently do nothing)"
+
+  commit_now:
+    syntax: "commit now"
+    description: "Apply candidate to running atomically (one error invalidates the whole commit; candidate survives for fixing)"
+
+  commit_save:
+    syntax: "commit save"
+    description: "Commit AND persist to /etc/opt/srlinux/config.json in one step — the ONLY reliable save method (verified across node stop/start)"
+
+  discard:
+    syntax: "discard"
+    description: "Discard uncommitted candidate changes"
+
+  interface_address:
+    syntax: "/interface ethernet-1/<N> { admin-state enable; subinterface 0 { admin-state enable; ipv4 { admin-state enable; address <ip>/<len> } ipv6 { admin-state enable; address <ipv6>/<len> } } }"
+    example: "/interface ethernet-1/1 { admin-state enable subinterface 0 { admin-state enable ipv4 { admin-state enable address 10.9.12.1/24 } ipv6 { admin-state enable address 2026:9:12::1/64 } } }"
+    description: "Enable a data port and set dual-stack addresses (GNS3 adapter N = ethernet-1/N; ports are admin-disabled by default). Write as multi-line block, one statement per line — sr_cli has NO ';' separator"
+    parameters:
+      N: "GNS3 adapter number (adapter 1 = ethernet-1/1)"
+      ip: "IPv4 address with prefix length"
+      ipv6: "IPv6 address with prefix length"
+
+  loopback:
+    syntax: "/interface lo0 { subinterface 0 { ipv4 { address <ip>/32 } ipv6 { address <ipv6>/128 } } }"
+    description: "System loopback is lo0 with subinterface lo0.0"
+
+  ni_bind_interface:
+    syntax: "/network-instance default interface ethernet-1/<N>.0 { }"
+    description: "Bind subinterface <N>.0 into the default network-instance (mandatory before routing uses it)"
+
+  ospf_instance_v2:
+    syntax: "/network-instance default protocols ospf instance <name> { admin-state enable; version ospf-v2; router-id <rid>; area 0.0.0.0 { interface ethernet-1/<N>.0 { advertise-subnet true } interface lo0.0 { passive true } } }"
+    description: "OSPFv2 instance. version value is the literal 'ospf-v2' (NOT the number 2); admin-state enable is MANDATORY (instances are disabled by default); advertise-subnet true on transit links (default advertises host /32s only); passive on lo0.0"
+
+  ospf_instance_v3:
+    syntax: "/network-instance default protocols ospf instance <name> { admin-state enable; version ospf-v3; address-family ipv6-unicast; router-id <rid>; area 0.0.0.0 { ...same interfaces... } }"
+    description: "OSPFv3 runs as a second instance of the same ospf container with version ospf-v3; address-family ipv6-unicast is MANDATORY on v3 and FORBIDDEN on v2"
+
+  static_route_blackhole:
+    syntax: "/network-instance default { next-hop-groups { group <G> { blackhole { } } } static-routes { route <prefix> { next-hop-group <G> } } }"
+    description: "Null0/discard route (v26 has no 'next-hop discard' on routes) — use it to anchor aggregate prefixes originated into BGP"
+
+  static_route_ecmp:
+    syntax: "/network-instance default { next-hop-groups { group <G> { nexthop 1 { ip-address <nh1> } nexthop 2 { ip-address <nh2> } } } static-routes { route 0.0.0.0/0 { next-hop-group <G> } } }"
+    description: "ECMP static (e.g. default route to two borders). CRITICAL: a nexthop entry MUST contain an ip-address child — an empty 'nexthop <X> { }' is silently dropped, leaving an empty group that blackholes traffic"
+
+  bgp_setup:
+    syntax: "/network-instance default protocols bgp { admin-state enable; autonomous-system <asn>; router-id <rid>; afi-safi ipv4-unicast { admin-state enable } afi-safi ipv6-unicast { admin-state enable } import-policy [ <policy> ] export-policy [ <policy> ] group <g> { peer-as <as> afi-safi ipv4-unicast { admin-state enable } afi-safi ipv6-unicast { admin-state enable } } neighbor <ip> { peer-group <g> } }"
+    description: "BGP requires: explicit admin-state enable, afi-safi enabled globally AND per group (disabled by default), every neighbor attached to a peer-group (mandatory), policy references in list syntax [ name ]"
+
+  bgp_ipv6_neighbor:
+    syntax: "neighbor <ipv6> { peer-group <g> transport { local-address <own-bgp-plane-ipv6> } }"
+    description: "v6 neighbors MUST pin transport local-address when the interface carries multiple IPv6 addresses (e.g. side-plane + BGP-plane), otherwise wrong source is picked, the peer rejects the session, and it flaps between connect/active while ping still works"
+
+  routing_policy:
+    syntax: "/routing-policy { prefix-set <set> { prefix <prefix> mask-length-range exact { } } policy <name> { statement 10 { match { protocol static prefix { prefix-set <set> } } action { policy-result accept } } default-action { policy-result reject } } }"
+    description: "Prefix-set definitions at root; inside a statement's match the reference is nested: 'prefix { prefix-set <name> }' (flat 'prefix-set <name>' inside match is rejected). protocol values: static/bgp/ospf/local"
+
+# Display/Diagnostic Commands
+display_commands:
+  show_ospf_neighbor:
+    syntax: "show /network-instance default protocols ospf instance <name> neighbor"
+    description: "OSPF neighbor table (absolute path form — show is relative to current CLI context otherwise)"
+
+  show_ospf_status:
+    syntax: "show /network-instance default protocols ospf instance <name> status"
+    description: "Instance status — check 'OSPF Admin Status' (disable means missing admin-state enable; symptom is interfaces Adm Up but Oper Down and zero hellos sent)"
+
+  show_bgp_neighbor:
+    syntax: "show /network-instance default protocols bgp neighbor"
+    description: "BGP neighbor summary table with per-AFI [Rx/Active/Tx] counters and the 'N configured, N established' summary line"
+
+  info_running:
+    syntax: "info from running <path>"
+    example: "info from running /network-instance default"
+    description: "Dump running config below a path (reliable; preferred over show for config inspection)"
+
+  info_state_route_table:
+    syntax: "info from state /network-instance default route-table"
+    description: "Full route table with per-route next-hop-group ids, preferences, owners (the show-form family suffixes are rejected)"
+
+  info_state_nhg:
+    syntax: "info from state /network-instance default next-hop-groups"
+    description: "Verify next-hop-group members actually exist (empty group = silent blackhole)"
+
+  show_interface:
+    syntax: "show /interface ethernet-1/<N>"
+    description: "Interface/subinterface state, addresses, network-instance membership"
+
+  tree:
+    syntax: "tree /network-instance <container>"
+    description: "Render the configuration schema below a container (path takes NO list keys) — best way to discover available options"
+
+  ping:
+    syntax: "ping network-instance default <destination> -c <count> [-I <source>] [-t <ttl>]"
+    example: "ping network-instance default 10.2.1.1 -c 3"
+    description: "Linux-style flags: -c count, -I source address, -t ttl (NOT IOS-style named arguments)"
+
+# Important Notes
+notes:
+  - "Console (GNS3 docker template, console_type=docker_exec) lands directly in sr_cli: prompt 'A:root@srlinux#' in running mode"
+  - "ALL configuration happens in candidate mode: 'enter candidate private' -> edit -> 'commit save'. Config commands in running mode are silently ignored"
+  - "Persistence: use 'commit save' ONLY. 'save startup' prints the same success message but is NOT loaded after a gns3server restart (nodes come back factory); 'save config' does not exist"
+  - "v26 hardened defaults: OSPF instances, BGP and every BGP afi-safi are admin-disabled until explicitly enabled with 'admin-state enable'"
+  - "Commits are atomic: any validation error rejects the entire commit; error paths appear as 'Error in /network-instance[...]'; the candidate stays for fixing and re-commit"
+  - "There is NO ';' statement separator: '{ A; B }' folds the semicolon into the value (leafref 'X;' does not exist at commit)"
+  - "Consecutive identical leaf lines (e.g. two ipv6 address lines on one interface) can race the paste and drop one — send extra list entries as separate single-line path commands"
+  - "OSPF area interface references are subinterface names: 'interface ethernet-1/1.0'; transit links need 'advertise-subnet true' or only /32s are advertised"
+  - " OSPF export-policy does NOT originate Type-5 for static routes on v26 (verified: zero AS-LSAs even with accept-all); internal default routes must come from static ECMP instead"
+  - "The '[FACTORY]' banner in the CLI header is normal display and does not indicate factory configuration"
+  - "Prompt context persists across candidate/running switches; 'show' resolves relative to it — prefer absolute '/network-instance ...' paths; after 'commit save' you are back in running and must re-enter candidate for further changes"
+  - "Syntax discovery: a wrong token enumerates all valid children in the parse error; 'tree' renders the schema; chained '?' help truncates and swallows follow-up commands"
+
+# Troubleshooting Guide
+troubleshooting:
+  ospf_zero_neighbors:
+    - "Symptom: interfaces show Adm Up / Oper Down, neighbor table empty, Tx Hellos = 0"
+    - "Cause: ospf instance missing 'admin-state enable' (v26 default is disable)"
+    - "Fix: add admin-state enable to the instance and commit"
+
+  bgp_sessions_not_established:
+    - "Neighbor rows entirely missing from summary: afi-safi not enabled (enable globally AND per group)"
+    - "v4 sessions up but v6 stuck in connect/active while v6 ping works: wrong source selection on a multi-address interface — pin 'transport { local-address <bgp-plane-addr> }'"
+    - "Commit rejected 'peer-group Mandatory field': v26 requires every neighbor to reference a peer-group"
+
+  commit_leafref_does_not_exist:
+    - "Error like: Leafref destination '...group{.name==\"X;\"}' does not exist"
+    - "Cause: ';' used to join multiple statements inside a block"
+    - "Fix: one statement per line; resend the affected single-line path commands to overwrite"
+
+  static_default_blackhole:
+    - "Symptom: pings to remote subnets time out (NOT 'network unreachable'), direct neighbors fine"
+    - "Cause: nexthop entries created as empty '{ }' were dropped — the next-hop-group is empty and silently discards"
+    - "Fix: 'nexthop 1 { ip-address <ip> }' then verify with 'info from state /network-instance default next-hop-groups'"
+
+  config_lost_after_restart:
+    - "Symptom: node returns to factory running config after gns3server restart"
+    - "Cause: config was saved with 'save startup' (not loaded at boot in GNS3 docker)"
+    - "Fix: re-push config and finish with 'commit save' (verified to survive node stop/start)"
+
+  commands_have_no_effect:
+    - "Symptom: config commands echoed but nothing changes, no error"
+    - "Cause: CLI is in running mode (e.g. after a previous commit save)"
+    - "Fix: 'enter candidate private' before pushing config"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  save_config: "commit save"
+  save: "commit save"
+  write_memory: "commit save"
+  configure_terminal: "enter candidate private"
+  conf_t: "enter candidate private"
+  show_ip_route: "info from state /network-instance default route-table"
+  show_running_config: "info from running /network-instance default"
+  show_ospf_neighbor: "show /network-instance default protocols ospf instance <name> neighbor"
+  show_bgp_summary: "show /network-instance default protocols bgp neighbor"
+  show_interfaces: "show /interface ethernet-1/<N>"
+  ping_test: "ping network-instance default <destination> -c 3"

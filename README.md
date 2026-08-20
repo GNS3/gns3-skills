@@ -177,6 +177,62 @@ command_aliases:            # LLM command mapping
   test_connectivity: "ping <destination>"
 ```
 
+### Device Topics (Split Layout)
+
+A single file per device works up to a point; once a device accumulates
+knowledge for many protocols, split it into a directory. One file per
+protocol **topic**, plus a `_base.yaml` for device-level knowledge:
+
+```
+device/
+  vpcs.yaml                  # small devices stay single-file
+  frr/
+    _base.yaml               # device-level: console model, addressing, notes, aliases
+    ospf.yaml                # topic: OSPFv2/OSPFv3 commands + troubleshooting
+    bgp.yaml                 # topic: BGP commands + troubleshooting
+```
+
+`_base.yaml` uses exactly the single-file schema above (it must NOT define
+`topics:` — topics are merged in from the topic files). A topic file carries
+the protocol-specific `config_commands` / `display_commands` /
+`troubleshooting` / `notes`:
+
+```yaml
+# device/frr/bgp.yaml
+device_type: "frr_vtysh"     # required, must match the _base.yaml device_type
+topic: bgp                   # required, registry key under "topics"
+name: "BGP (FRR 10.x)"       # shown in the topic index
+description: "..."
+
+config_commands:
+  bgp_base:
+    syntax: "router bgp <asn> ..."
+    description: "..."
+
+troubleshooting:
+  bgp_established_zero_routes:
+    - "Symptom: ..."
+```
+
+At load time the loader merges everything into one registry entry:
+
+```
+SKILLS_REGISTRY["frr_vtysh"] = { ..._base.yaml..., "topics": { "ospf": {...}, "bgp": {...} } }
+```
+
+The LLM then drills down in three steps (mirroring the `injection_skills`
+list → index → issue pattern):
+
+```json
+{"action": "list"}
+{"device_type": "frr_vtysh", "detail": "index"}     // topic names only
+{"device_type": "frr_vtysh", "topic": "bgp"}        // just the BGP topic body
+```
+
+Requests without a `topic` never receive topic bodies — only the topic
+index — so adding topics does not grow token usage of device-level lookups.
+
+
 ## Severity & Difficulty Levels
 
 ### Severity
@@ -239,6 +295,7 @@ At startup, `SkillsManager` clones or pulls this repository, then `SkillsLoader`
 
 - `injection/ospf_issues.yaml` → `INJECTION_SKILLS_REGISTRY["injection_ospf"]`
 - `device/vpcs.yaml` → `SKILLS_REGISTRY["gns3_vpcs_telnet"]` (key from `device_type` field)
+- `device/frr/_base.yaml` + `device/frr/*.yaml` → `SKILLS_REGISTRY["frr_vtysh"]` with `topics: {ospf: {...}, bgp: {...}}` (topic files merged under their `topic` key)
 - `feature/topology_planner.yaml` → `SKILLS_REGISTRY["topology_planner"]` (key from `device_type` field)
 - `packet_analysis/ospf.yaml` → `PACKET_ANALYSIS_REGISTRY["ospf"]` (key from `protocol_key` field)
 

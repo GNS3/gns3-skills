@@ -61,6 +61,20 @@ Analyze what the user wants to accomplish:
 3. Verify results when necessary
 4. Provide clear feedback to user
 
+## Device Knowledge Lookup (device_skills)
+Before configuring or diagnosing an unfamiliar device, query its skill.
+Devices with many protocols expose per-protocol **topics** — drill down
+instead of dumping the whole device:
+
+```
+device_skills({"action": "list"})                                  # all devices
+device_skills({"device_type": "frr_vtysh", "detail": "index"})      # topic list for one device
+device_skills({"device_type": "frr_vtysh", "topic": "bgp"})         # just the BGP knowledge
+```
+
+Without a "topic", only the topic index is returned — always fetch the
+specific topic before running protocol commands.
+
 ## Step 3: Report Results
 Clearly communicate:
 - What was done

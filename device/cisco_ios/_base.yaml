@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: YueGuobin (@yueguobin)
+#
+
+# Device-level base skill for Cisco IOS Classic.
+# Protocol-specific knowledge lives in topic files next to this one
+# (ospf.yaml, bgp.yaml, ...) and is merged under "topics" at load time.
+
+name: "Cisco IOS Classic (15.x)"
+description: "Classic Cisco IOS 15.x on GNS3 Dynamips (c7200) and IOSv (qemu) — console driving, staged-config landmines, dual-stack addressing; protocol details in topics (ospf, bgp)"
+device_type: "cisco_ios_telnet"
+category: "device"
+
+# Configuration Commands
+config_commands:
+  interface_address:
+    syntax: "interface <if>
+ ip address <ip> <mask>
+ ipv6 address <ipv6>/<len>
+ no shutdown"
+    description: "Dual-stack interface addressing. Ports from staged startup-configs may be administratively down — always finish with no shutdown and verify with 'show ip int brief'"
+    parameters:
+      if: "Interface name (Dynamips: f0/0, f1/0, f2/0; IOSv: Gi0/0..Gi0/3)"
+
+  ipv6_unicast_routing:
+    syntax: "ipv6 unicast-routing"
+    description: "MUST be enabled globally before any OSPFv3/ipv6 routing command — otherwise every ipv6 routing command is rejected with '% IPv6 routing not enabled'"
+
+  write_memory:
+    syntax: "write memory"
+    description: "Save to NVRAM (config persists across node restart)"
+
+# Display/Diagnostic Commands
+display_commands:
+  show_ip_int_brief:
+    syntax: "show ip int brief"
+    description: "Interface states — FIRST check on staged nodes (up/down, administratively down)"
+
+  show_route:
+    syntax: "show ip route <prefix>
+show ipv6 route <prefix>"
+    description: "FIB lookup with protocol tags (B/O/OE2)"
+
+  ping:
+    syntax: "ping <destination>"
+    description: "Sends 5 ICMP echos and terminates by itself (unlike FRR/SRL pings)"
+
+# Important Notes
+notes:
+  - "Console is telnet — drive via device_config_send/device_show_run tools (NOT WebSocket websocat)"
+  - "device_config_send wraps commands in 'configure terminal' automatically; exec-mode commands inside need a 'do' prefix ('do write memory', 'do show ...')"
+  - "Staged/preloaded startup-configs are a common source of landmines: wrong OSPF area numbers, cloned hostnames/IPs/router-ids from other nodes, uplink address on the wrong port, 254-segment leaked into OSPF — always diff the running config first"
+  - "IOSv Gi0/N maps GNS3 adapter N; Dynamips c7200 ports f0/0..f3/0 map adapters 0..3"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  save_config: "write memory"
+  save: "write memory"
+  wr: "write memory"
+  conf_t: "configure terminal"
+  show_ip_ospf_neighbor: "show ip ospf neighbor"
+  show_bgp_summary: "show ip bgp summary"
+  show_route: "show ip route"

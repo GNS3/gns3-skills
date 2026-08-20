@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: YueGuobin (@yueguobin)
+#
+
+# Topic file: merged into the frr_vtysh device skill under topics.bgp
+# at load time. "device_type" must match the _base.yaml of this directory.
+
+device_type: "frr_vtysh"
+topic: bgp
+name: "BGP (FRR 10.x)"
+description: "eBGP without policies, route-server client side and route-server side config, per-AF activation"
+
+config_commands:
+  bgp_base:
+    syntax: "router bgp <asn>
+ bgp router-id <rid>
+ no bgp ebgp-requires-policy
+ no bgp enforce-first-as
+ neighbor <ip> remote-as <peer-as>"
+    description: "BGP base. 'no bgp ebgp-requires-policy' is REQUIRED for eBGP (FRR 10 default: session establishes but exchanges zero routes); 'no bgp enforce-first-as' is required when the peer is a route-server reflecting paths that do not start with its own AS"
+
+  bgp_address_family:
+    syntax: "router bgp <asn>
+ address-family ipv4 unicast
+  network <prefix>/<len>
+ address-family ipv6 unicast
+  neighbor <ipv6> activate
+  network <ipv6-prefix>/<len>"
+    description: "Per-AFI config: ipv6 neighbors need explicit 'activate'; 'network' originates a prefix that must exist in RIB (anchor with Null0 static)"
+
+  bgp_route_server_side:
+    syntax: "router bgp <asn>
+ neighbor <client> remote-as <client-as>
+ address-family ipv4 unicast
+  neighbor <client> route-server-client
+  neighbor <client> attribute-unchanged next-hop
+ address-family ipv6 unicast
+  neighbor <client6> activate
+  neighbor <client6> route-server-client
+  neighbor <client6> attribute-unchanged next-hop"
+    description: "Route-server side per client: route-server-client + attribute-unchanged next-hop in BOTH AFIs keeps the origin AS-path and next-hop intact (client FIB shows 'via <origin>, from <rs>')"
+
+display_commands:
+  show_bgp_summary:
+    syntax: "show bgp summary"
+    description: "All BGP sessions with PfxRcd counters (PfxRcd 0 on an established eBGP session = missing 'no bgp ebgp-requires-policy')"
+
+  show_bgp_route:
+    syntax: "show bgp ipv4 unicast <prefix>"
+    description: "BGP table entry for a prefix (paths, 'from' peer, best selection)"
+
+troubleshooting:
+  bgp_established_zero_routes:
+    - "Symptom: eBGP session Established but PfxRcd/PfxSent = 0"
+    - "Cause: FRR 10 default 'ebgp-requires-policy'"
+    - "Fix: 'no bgp ebgp-requires-policy' under router bgp"
+
+  bgp_session_flapping_3_11:
+    - "Symptom: session resets repeatedly with 3/11 notification against a route-server"
+    - "Cause: 'enforce-first-as' rejects paths whose first AS is not the peer AS"
+    - "Fix: 'no bgp enforce-first-as'; then 'clear bgp <peer> soft in' — routes are NOT re-advertised automatically after the change"

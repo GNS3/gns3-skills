@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: YueGuobin (@yueguobin)
+#
+
+# Device-level base skill for FRR.
+# Protocol-specific knowledge lives in topic files next to this one
+# (ospf.yaml, bgp.yaml, ...) and is merged under "topics" at load time.
+
+name: "FRR (Free Range Routing)"
+description: "FRRouting FRR 10.x on GNS3 docker nodes — vtysh console model, dual-stack addressing, static routes and write memory persistence; protocol details in topics (ospf, bgp)"
+device_type: "frr_vtysh"
+category: "device"
+
+# Configuration Commands (vtysh; console lands directly in vtysh, prompt '<hostname>#')
+config_commands:
+  configure_terminal:
+    syntax: "configure terminal"
+    description: "Enter config mode (not needed when typing interactively in vtysh at the # prompt; REQUIRED first line for scripted multi-line config pushes)"
+
+  interface_address:
+    syntax: "interface eth<N>
+ ip address <ip>/<len>
+ ipv6 address <ipv6>/<len>"
+    example: "interface eth1
+ ip address 10.5.23.2/24
+ ipv6 address 2026:5:23::2/64"
+    description: "Set dual-stack addresses (GNS3 docker adapter N = eth<N>). Interface IPs live in vtysh and are written to /etc/frr/frr.conf by write memory"
+    parameters:
+      N: "GNS3 adapter number (adapter 1 = eth1)"
+      ip: "IPv4 prefix in CIDR notation"
+
+  static_routes:
+    syntax: "ip route <prefix>/<len> Null0
+ipv6 route <prefix>/<len> Null0
+ip route 0.0.0.0/0 <nexthop>"
+    description: "Static routes; Null0 anchors aggregate prefixes before originating them into BGP with 'network'"
+
+  write_memory:
+    syntax: "write memory"
+    description: "Save integrated config to /etc/frr/frr.conf (output 'Integrated configuration saved to /etc/frr/frr.conf [OK]'); survives node restart and gns3server restart"
+
+# Display/Diagnostic Commands
+display_commands:
+  terminal_length:
+    syntax: "terminal length 0"
+    description: "Disable paging BEFORE any show command (the pager swallows subsequent input chars; if already stuck in the pager send 'q' first)"
+
+  ping:
+    syntax: "ping <destination>"
+    description: "vtysh ping: NO -c count and NO source option (both give '% Unknown command'); it NEVER stops by itself — send Ctrl-C (\\x03) to interrupt. To ping with a source address use Linux ping from bash instead"
+
+# Important Notes
+notes:
+  - "GNS3 FRR docker console (telnet) lands DIRECTLY in vtysh ('<hostname>#'), not bash; shell commands are rejected with '% Unknown command'"
+  - "Stay in vtysh: return from config levels with 'end'; a bare 'exit' at the top drops into bash and pollutes the next session; if you fall to bash, type 'vtysh' to come back"
+  - "Abbreviations work: 'ip os ne point-to-point' = 'ip ospf network point-to-point'"
+  - "runlevel: 'write memory' writes /etc/frr/frr.conf via the integrated config; container restart reloads it automatically and BGP sessions reconnect on their own"
+  - "When driven via netmiko-style config tools (device_config_send), exec commands like 'write memory' inside config mode need a 'do' prefix ('do write memory')"
+  - "Config pushes over WebSocket console: end each line with \\r\\n, pace ~0.3s/line; open streams with \\x03 + 'end' to clear leftovers from a previous session (a running ping survives ws disconnect)"
+
+# Troubleshooting Guide
+troubleshooting:
+  show_output_swallows_commands:
+    - "Symptom: commands after a show come back 'Unknown command'"
+    - "Cause: pager ate the input characters"
+    - "Fix: 'terminal length 0' first (at a clean prompt); send 'q' if already stuck"
+
+  ping_never_stops:
+    - "Symptom: session stuck in continuous ping output, prompt never returns"
+    - "Cause: vtysh ping has no count limit and survives console disconnect"
+    - "Fix: send Ctrl-C (\\x03); always open console sessions with \\x03 to clear leftover pings"
+
+  config_lost_after_reboot:
+    - "FRR docker keeps config only if 'write memory' was executed"
+    - "/etc/frr is a persistent bind mount; survives container recreate and gns3server restart"
+
+# Command aliases (for LLM understanding)
+command_aliases:
+  save_config: "write memory"
+  save: "write memory"
+  write_memory: "write memory"
+  wr: "write memory"
+  conf_t: "configure terminal"
+  show_ip_ospf_neighbor: "show ip ospf neighbor"
+  show_ipv6_ospf6_neighbor: "show ipv6 ospf6 neighbor"
+  show_bgp_summary: "show bgp summary"
+  show_route: "show ip route"
+  ping_test: "ping <destination>"

@@ -45,6 +45,8 @@ class SkillValidator:
         self.repo_root = repo_root
         self.errors = []
         self.warnings = []
+        # topic key -> file path, to detect duplicates within a device directory
+        self._seen_topics = {}
 
     def validate_skill_file(self, file_path: Path) -> bool:
         """
@@ -66,12 +68,21 @@ class SkillValidator:
                 self.errors.append(f"{relative_path}: File must contain a YAML dictionary")
                 return False
 
-            # Determine skill type based on parent directory name
-            parent_dir = Path(file_path).parent.name
+            # Determine skill type based on location:
+            # - injection/*.yaml                      -> injection skill
+            # - device/*.yaml, feature/*.yaml         -> single-file device/feature skill
+            # - device/<name>/_base.yaml              -> device base skill (split layout)
+            # - device/<name>/<topic>.yaml            -> device topic file (split layout)
+            file_path = Path(file_path)
+            parent_dir = file_path.parent.name
             if parent_dir == "injection":
                 return self._validate_injection_skill(relative_path, data)
             elif parent_dir in ("device", "feature"):
                 return self._validate_device_skill(relative_path, data)
+            elif file_path.parent.parent.name == "device":
+                if file_path.name == "_base.yaml":
+                    return self._validate_device_skill(relative_path, data)
+                return self._validate_device_topic(file_path, relative_path, data)
             else:
                 self.warnings.append(f"{relative_path}: Unknown skill type, skipping format validation")
                 return True
@@ -140,6 +151,81 @@ class SkillValidator:
         if not has_commands:
             self.warnings.append(
                 f"{file_path}: Device skill should have 'config_commands' or 'display_commands'"
+            )
+
+        return valid
+
+    def _validate_device_topic(self, file_path: Path, relative_path: Path, data: dict) -> bool:
+        """
+        Validate a device topic file (device/<device>/<topic>.yaml).
+
+        Topic files are merged into the device base skill under "topics"
+        at load time; their device_type must match the _base.yaml sitting
+        in the same directory.
+        """
+        valid = True
+
+        # Required fields
+        for field in ("device_type", "topic", "name"):
+            if field not in data:
+                self.errors.append(f"{relative_path}: Missing required field '{field}'")
+                valid = False
+
+        if "topic" in data and not isinstance(data["topic"], str):
+            self.errors.append(f"{relative_path}: 'topic' must be a string")
+            valid = False
+
+        # Topic files must not nest topics or redefine category
+        for field in ("topics", "category"):
+            if field in data:
+                self.errors.append(
+                    f"{relative_path}: Topic file must not define '{field}' "
+                    "(it belongs to _base.yaml)"
+                )
+                valid = False
+
+        # device_type must match the _base.yaml of the same directory
+        base_file = file_path.parent / "_base.yaml"
+        if not base_file.exists():
+            self.errors.append(
+                f"{relative_path}: No _base.yaml found in {file_path.parent.name}/ "
+                "(split device directories require a _base.yaml)"
+            )
+        elif "device_type" in data:
+            try:
+                with open(base_file, 'r', encoding='utf-8') as f:
+                    base_data = yaml.safe_load(f) or {}
+                if base_data.get("device_type") != data["device_type"]:
+                    self.errors.append(
+                        f"{relative_path}: 'device_type' ({data['device_type']}) does not "
+                        f"match _base.yaml device_type ({base_data.get('device_type')})"
+                    )
+                    valid = False
+            except Exception as e:
+                self.errors.append(f"{relative_path}: Failed to read _base.yaml - {e}")
+                valid = False
+
+        # Detect duplicate topic keys within the same device directory
+        if isinstance(data.get("topic"), str):
+            seen_key = (file_path.parent.name, data["topic"])
+            if seen_key in self._seen_topics:
+                self.errors.append(
+                    f"{relative_path}: Duplicate topic '{data['topic']}' "
+                    f"(already defined in {self._seen_topics[seen_key]})"
+                )
+                valid = False
+            else:
+                self._seen_topics[seen_key] = relative_path
+
+        # Topic files should carry some content
+        has_content = any(
+            field in data
+            for field in ("config_commands", "display_commands", "troubleshooting", "notes")
+        )
+        if not has_content:
+            self.warnings.append(
+                f"{relative_path}: Topic file has no config_commands, display_commands, "
+                "troubleshooting or notes"
             )
 
         return valid
@@ -239,7 +325,9 @@ def main():
     if injection_dir.exists():
         skill_files.extend(injection_dir.glob("*.yaml"))
     if device_dir.exists():
+        # Single-file devices and split device directories (base + topic files)
         skill_files.extend(device_dir.glob("*.yaml"))
+        skill_files.extend(device_dir.glob("*/*.yaml"))
     if feature_dir.exists():
         skill_files.extend(feature_dir.glob("*.yaml"))
 

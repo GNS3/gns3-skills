@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: YueGuobin (@yueguobin)
+#
+
+# Topic file: merged into the cisco_ios_telnet device skill under topics.bgp
+# at load time. "device_type" must match the _base.yaml of this directory.
+
+device_type: "cisco_ios_telnet"
+topic: bgp
+name: "BGP (IOS 15.x)"
+description: "eBGP base with route-server clients, per-AF activation and Null0-anchored aggregate origination"
+
+config_commands:
+  bgp_base:
+    syntax: "router bgp <asn>
+ bgp router-id <rid>
+ bgp log-neighbor-changes
+ neighbor <ip> remote-as <peer-as>
+ no bgp enforce-first-as"
+    description: "BGP base. 'no bgp enforce-first-as' is REQUIRED for route-server clients (default rejects paths whose first AS differs from the peer AS — sessions reset with 3/11 notification on IOS)"
+
+  bgp_af_and_network:
+    syntax: "router bgp <asn>
+ address-family ipv4 unicast
+  network <prefix> mask <mask>
+ address-family ipv6 unicast
+  neighbor <ipv6> activate
+  network <ipv6-prefix>/<len>"
+    description: "AF config: ipv6 neighbors need explicit activate; network only originates prefixes present in RIB (anchor aggregates with Null0 statics)"
+
+  static_null0:
+    syntax: "ip route <prefix> <mask> Null0
+ipv6 route <ipv6-prefix>/<len> Null0"
+    description: "Null0 anchor for aggregate prefixes before originating them into BGP"
+
+display_commands:
+  show_bgp:
+    syntax: "show ip bgp <prefix>"
+    description: "BGP table entry — 'via <nexthop> from <peer>' form identifies route-server-learned routes (from != via)"
+
+notes:
+  - "Changing enforce-first-as on an ESTABLISHED session does NOT re-advertise routes — clear with 'clear ip bgp <peer> soft in' (v4 and v6 separately)"
+
+troubleshooting:
+  bgp_session_3_11_resets:
+    - "Symptom: eBGP session to a route-server resets repeatedly (3/11 notification)"
+    - "Cause: enforce-first-as rejects reflected paths whose first AS is not the peer AS"
+    - "Fix: 'no bgp enforce-first-as' + 'clear ip bgp <peer> soft in'"

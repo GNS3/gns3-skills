@@ -53,10 +53,24 @@ The loader distinguishes them by directory — no `type` field is needed.
 | Type | Directory | Example |
 |------|-----------|---------|
 | Fault injection skills | `injection/` | `ospf_issues.yaml` |
-| Device definitions | `device/` | `vpcs.yaml` |
+| Device definitions (small devices) | `device/` | `vpcs.yaml` |
+| Device topics (large devices) | `device/<device>/` | `frr/bgp.yaml` |
 | Network planning features | `feature/` | `topology_planner.yaml` |
 
 Most contributions will go into **`injection/`**.
+
+### Device Topics
+
+A device with knowledge for many protocols belongs in its own directory:
+`device/<device>/_base.yaml` holds the device-level skill (console model,
+addressing, notes, aliases — same schema as a single-file device), and one
+topic file per protocol holds its `config_commands` / `display_commands` /
+`troubleshooting` / `notes`. Rules enforced by CI:
+
+- Topic files must define `device_type`, `topic` and `name`
+- The `device_type` must match the `_base.yaml` in the same directory
+- `category` and `topics` may only be defined in `_base.yaml`
+- Adding a new protocol to a device = adding one new file, nothing else changes
 
 ## Naming Conventions
 

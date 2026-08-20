@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# Copyright (C) 2025 GNS3 Contributors
+#
+# Author: YueGuobin (@yueguobin)
+#
+
+# Topic file: merged into the cisco_ios_telnet device skill under topics.ospf
+# at load time. "device_type" must match the _base.yaml of this directory.
+
+device_type: "cisco_ios_telnet"
+topic: ospf
+name: "OSPFv2 / OSPFv3 (IOS 15.x)"
+description: "OSPFv2 with network statements and traditional OSPFv3 (ipv6 router ospf) — area/style mismatches between platforms are the classic landmine"
+
+config_commands:
+  ospfv2:
+    syntax: "router ospf 1
+ router-id <rid>
+ network <prefix> <wildcard> area 0
+ default-information originate always"
+    description: "OSPFv2 process with network statements; 'default-information originate always' on border routers injects a default into OSPF without needing a real default in RIB"
+
+  ospfv3_traditional:
+    syntax: "ipv6 router ospf 1
+ router-id <rid>
+interface <if>
+ ipv6 ospf 1 area 0"
+    description: "Traditional OSPFv3 (works on IOS 15.x including Dynamips 7200 and IOSv): ipv6 router ospf process + interface-level area binding. NOT available on IOL 15.2 (see cisco_iol.yaml)"
+
+display_commands:
+  show_ospf_neighbor:
+    syntax: "show ip ospf neighbor"
+    description: "OSPFv2 adjacencies (expect FULL)"
+
+  show_ospfv3_neighbor:
+    syntax: "show ipv6 ospf neighbor"
+    description: "OSPFv3 adjacencies (traditional process)"
+
+notes:
+  - "Rebuild OSPF process to change router-id cleanly: 'no router ospf 1' / 'no ipv6 router ospf 1' then re-enter (do this before adjacencies form)"
+
+troubleshooting:
+  ospfv3_wont_form:
+    - "Check 'show ipv6 ospf neighbor' and interface 'ipv6 ospf 1 area 0' bindings"
+    - "Verify ipv6 unicast-routing is on and both sides use the same process style"
+
+  ipv6_routing_commands_rejected:
+    - "Error: '% IPv6 routing not enabled'"
+    - "Fix: global 'ipv6 unicast-routing'"

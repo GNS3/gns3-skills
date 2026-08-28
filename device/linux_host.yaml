@@ -68,6 +68,8 @@ notes:
   - "GNS3 docker adapter N maps to eth<N> inside the container (eth0/1/2 = adapter 0/1/2)"
   - "Full-mesh + single-gateway topologies create TTL loops when the gateway is not on some link's subnet — add explicit routes for non-directly-connected internal subnets on the gateway host"
   - "Reboot persistence test = node_stop -> node_start via the GNS3 API (runs init.sh); a soft in-container restart does not exercise the init path"
+  - "DIAGNOSIS TRAPS (both fooled a debugging session into thinking the file was dead data): PID 1 cmdline shows only the start command (e.g. 'bash -i') because /gns3/init.sh 'exec's into it at the end — the init chain (volume restore + 'ifup -a -f') has already run; and 'which ifup' is EMPTY in an interactive shell even though boot-time ifup exists (BusyBox applets are symlinked into /tmp/gns3/bin with PATH set only inside init.sh)"
+  - "Do NOT embed addressing in the node start_command as a workaround for lost config — it bypasses the designed persistence mechanism and duplicates the addressing in a second place; fix the interfaces stanzas instead (the usual defect is a missing 'auto' line or CIDR syntax)"
 
 # Troubleshooting Guide
 troubleshooting:

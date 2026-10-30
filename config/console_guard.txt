@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# GNS3-Skills - Network troubleshooting skills repository
+#
+# This file is part of GNS3-Skills project.
+#
+# GNS3-Skills is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# GNS3-Skills is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GNS3-Skills. If not, see <https://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2025 GNS3 Contributors
+# Author: YueGuobin (@yueguobin)
+#
+# Project Home: https://github.com/GNS3/gns3-skills
+#
+
+# Console guard rules — fullscreen interactive commands, intercepted before
+# they reach the device console.
+# This file merges over the server's builtin defaults: an entry with the same
+# family+head as a builtin rule takes precedence; if the file is missing or
+# unreadable, the server uses the builtin defaults only.
+#
+# Format:  family: head [-> suggestion]
+#   family    : shell (Linux shell console) | netos (network OS)
+#   head      : first word of the command (matched by basename, lowercase)
+#   suggestion: non-interactive alternative for the AI (optional; {cmd}
+#               expands to the following word, for man)
+# Remove a builtin rule: !family: head
+# UTF-8 encoded, # comments, blank lines ignored; rules may be added or
+# removed at any time (effective after server reload/restart following a
+# git pull)
+
+# Fullscreen / refreshing tools (have batch forms or alternatives)
+shell: top -> top -b -n 1
+shell: htop -> htop has no batch mode — use 'ps aux'
+shell: watch -> run the command directly once
+
+# Pagers and help
+shell: less -> cat <file>
+shell: more -> cat <file>
+shell: man -> {cmd} --help
+
+# Editors — write files with node_file_write instead of seizing the console
+shell: vim -> edit files with node_file_write instead
+shell: vi -> edit files with node_file_write instead
+shell: nano -> edit files with node_file_write instead
+shell: emacs -> edit files with node_file_write instead
+
+# Interactive interpreters / query clients
+shell: python -> python -c '<code>'
+shell: python3 -> python3 -c '<code>'
+shell: node -> node -e '<code>'
+shell: mysql -> mysql -e '<sql>'
+shell: psql -> psql -c '<sql>'
+shell: sqlite3 -> sqlite3 <db> '<sql>'
+
+# Terminal multiplexers — break the single-command model, cannot be driven
+# over the MCP console
+shell: tmux -> not supported over the MCP console
+shell: screen -> not supported over the MCP console
+
+# Prompt for credentials or switch sessions; the MCP console cannot answer
+# interactive prompts
+shell: passwd -> not supported over the MCP console
+shell: su -> not supported over the MCP console
+shell: ssh -> not supported over the MCP console
+shell: telnet -> not supported over the MCP console
+
+# Network OS: enters an interactive setup wizard that seizes the console
+netos: setup -> configure with config commands instead

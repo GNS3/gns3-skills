@@ -40,7 +40,9 @@ Based on topology and configuration, **intelligently select** the most appropria
 
 **Fault Injection Methods:**
 - **Configuration-based**: Device configuration faults (interface shutdown, protocol misconfig, etc.)
-- **Network-level**: Link packet filtering (latency, packet loss, corruption, BPF blocking)
+- **Network-level**: Link packet filtering — delay/jitter (with distribution), random loss,
+  bursty loss (gemodel), corruption, duplication, reordering, bandwidth cap (rate),
+  byte quota, scheduled outage (window_drop), deterministic drops, BPF service blocking
 
 Consider:
 - Device types (routers/switches/VPCS)
@@ -75,6 +77,17 @@ Consider:
 
 - **Network conditions** → `manage_gns3_packet_filter`
   - Link-level filtering (latency, packet loss, corruption, service blocking)
+  - Before setting filters, call `action: "get_available"` — kernel-only types
+    (`rate`, `reorder`, `gemodel`, `duplicate`, `seed`, `limit`, `quota`,
+    `window_drop`) are hidden on relay links and return 409
+  - Cross-filter rules (409 on violation): `reorder` requires `delay`;
+    `gemodel` and `packet_loss` are mutually exclusive; `window_drop`
+    period ≥ outage; `delay` distribution requires jitter > 0
+  - Filter values are PER DIRECTION (both endpoints apply them):
+    `delay [100]` ≈ 200ms RTT; `packet_loss [30]` ≈ 51% round-trip loss
+  - `window_drop` start is relative to apply time — any filter change or
+    link reset restarts the schedule; arm one-shot outages right before
+    generating traffic
 
 Inject the selected fault using the appropriate method.
 
@@ -157,12 +170,22 @@ Injecting fault...
 
 | Filter Type | Configuration | Notes |
 |--------------|--------------|-------|
-| delay | [100, 10] | 100ms latency ± 10ms jitter |
-| packet_loss | [5] | 5% packet loss |
+| delay | [100, 10] | 100ms latency ± 10ms jitter per direction |
+| delay | [80, 20, "paretonormal"] | With heavy-tailed jitter distribution (kernel only) |
+| packet_loss | [5] | 5% random loss per direction |
 | corrupt | [3] | 3% packet corruption |
+| duplicate | [2] | 2% duplication, wireless-retransmit style (kernel only) |
+| rate | ["512kbit"] | Bandwidth cap per direction (kernel only) |
+| reorder | [25, 25, 5] | 25% reordering at gap 5 — requires delay (kernel only) |
+| gemodel | [1, 19, 100] | Bursty loss ~5% mean; excludes packet_loss (kernel only) |
+| seed | [42] | Reproducible netem draws, Linux ≥ 6.6 (kernel only) |
+| limit | [5000] | Queue depth for rate+delay combos (kernel only) |
 | frequency_drop | [10] | Drop every 10th packet |
 | frequency_drop | [-1] | Complete link failure |
-| bpf | ["tcp port 22"] | Block SSH traffic |
+| quota | [50000000, 100] | Hard cut after 50MB per direction (kernel only) |
+| window_drop | [5000, 3000, 100] | One-shot 3s outage starting at t=5s (kernel only) |
+| window_drop | [0, 2000, 100, 10000] | 2s outage every 10s, recurring (kernel only) |
+| bpf | ["tcp port 22"] | Block SSH traffic (match-drop) |
 
 **Restore Commands:**
 

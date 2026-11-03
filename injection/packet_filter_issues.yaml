@@ -18,7 +18,7 @@ protocols:
 
 # Packet Filter Reference (GNS3 link impairment filters)
 #
-# Filters are set per link through manage_gns3_packet_filter (REST: PUT
+# Filters are set per link through link_update (REST: PUT
 # /v3/projects/{id}/links/{link_id} with a "filters" dict). Values are
 # positional lists; trailing parameters are optional. A filter whose first
 # value is 0 (or empty) is disabled — EXCEPT window_drop, which is active

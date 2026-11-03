@@ -80,6 +80,8 @@ Consider:
   - Before setting filters, call `link_available_filters` — kernel-only types
     (`rate`, `reorder`, `gemodel`, `duplicate`, `seed`, `limit`, `quota`,
     `window_drop`) are hidden on relay links and return 409
+  - Pass `show_filters_icon: False` together with the filters so the Web UI
+    does not show the filter icon during practice (the server default is true)
   - Cross-filter rules (409 on violation): `reorder` requires `delay`;
     `gemodel` and `packet_loss` are mutually exclusive; `window_drop`
     period ≥ outage; `delay` distribution requires jitter > 0

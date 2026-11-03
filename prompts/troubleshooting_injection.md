@@ -26,7 +26,7 @@ select and inject realistic network faults to help users practice troubleshootin
    - Identify which protocols/services are configured (OSPF, BGP, VLAN, STP, MPLS, etc.)
 
 2. **Get Device Configurations**
-   - Use `execute_multiple_device_commands` to retrieve current configurations:
+   - Use `device_show_run` to retrieve current configurations:
      - Cisco IOS: `show running-config`
      - Huawei VRP: `display current-configuration`
      - H3C: `display current-configuration`
@@ -51,7 +51,7 @@ Consider:
 - Difficulty level (user-specified or default medium)
 - **NEW**: Network conditions vs. configuration issues
 
-**Use `injection_skills` tool to query injection faults:**
+**Use `injection_skill_get` tool to query injection faults:**
 
 1. **REQUIRED**: List skills matching your topology protocols (1 tool call):
    {"action": "list", "context": ["ospf", "vlan"]}
@@ -72,12 +72,12 @@ Consider:
 
 **Choose Injection Method:**
 
-- **Configuration faults** → `execute_multiple_device_config_commands`
+- **Configuration faults** → `device_config_send`
   - Device configuration issues (protocols, interfaces, routing, etc.)
 
-- **Network conditions** → `manage_gns3_packet_filter`
+- **Network conditions** → `link_update`
   - Link-level filtering (latency, packet loss, corruption, service blocking)
-  - Before setting filters, call `action: "get_available"` — kernel-only types
+  - Before setting filters, call `link_available_filters` — kernel-only types
     (`rate`, `reorder`, `gemodel`, `duplicate`, `seed`, `limit`, `quota`,
     `window_drop`) are hidden on relay links and return 409
   - Cross-filter rules (409 on violation): `reorder` requires `delay`;
@@ -90,6 +90,20 @@ Consider:
     generating traffic
 
 Inject the selected fault using the appropriate method.
+
+## Step 3.5: Verify with capture (optional)
+
+To confirm the fault behaves as intended before handing the lab over:
+
+1. `link_capture_start` on the affected link
+2. Generate a little traffic (e.g. `device_show_run` with a ping command)
+3. `link_capture_stop`
+4. `link_capture_download` returns a ready-to-run `curl_command` with a
+   short-lived ticket — copy it verbatim, never edit the URL
+5. For cross-link visibility use `marker_definition` (project-wide BPF rules
+   that fan out to every link as `global-<name>`)
+
+Captures are evidence for the report; they do not modify the lab.
 
 ## Step 4: Document Fault
 
@@ -108,8 +122,8 @@ When injecting multiple faults, output multiple tables sequentially with increme
 4. **Ensure Recoverability**: Provide restore commands to fully revert changes
 5. **CRITICAL - NEVER use 'exit' command**: This disconnects the session and breaks subsequent commands
 6. **Fault Injection Methods**: Choose appropriate method
-   - Configuration issues → `execute_multiple_device_config_commands`
-   - Network conditions → `manage_gns3_packet_filter`
+   - Configuration issues → `device_config_send`
+   - Network conditions → `link_update` (query `link_available_filters` first)
    - Can combine both methods for complex scenarios
 
 ---
@@ -197,8 +211,8 @@ Injecting fault...
 ```
 
 *For packet filter faults:*
+- **Tool**: `link_update` with `filters: {}` (clears all filters on the link)
 - **Web UI**: Right-click on the affected link → "Packet Filter" → "Clear Filters"
-- **Alternative**: Use GNS3 Web UI to navigate to the link and remove packet filters
 
 **Expected Symptoms:**
 - [symptom1]

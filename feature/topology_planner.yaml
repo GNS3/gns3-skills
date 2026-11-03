@@ -136,12 +136,12 @@ positioning_rules:
 # Tool call workflow
 workflow:
   step_1_read_templates:
-    tool: "gns3_template_reader"
+    tool: "template_list"
     purpose: "Find available IOU template name"
     example: "List templates to identify IOU template"
 
   step_2_create_nodes:
-    tool: "gns3_create_node"
+    tool: "node_create"
     purpose: "Create all router/switch/PC nodes"
     params_required:
       - "project_id"
@@ -150,36 +150,36 @@ workflow:
     note: "Use 'name' field to set node names directly (e.g., R1, R2). No separate rename step needed."
 
   step_3_create_links:
-    tool: "gns3_link_tool"
+    tool: "link_create"
     purpose: "Connect nodes according to topology design"
     params_required:
-      - "node1_id"
-      - "node1_port"
-      - "node2_id"
-      - "node2_port"
+      - "node_id1"
+      - "port1: port name, e.g. Ethernet0/0"
+      - "node_id2"
+      - "port2: port name, e.g. Ethernet0/0"
 
   step_4_start_nodes:
-    tool: "gns3_start_node_tool"
+    tool: "node_start"
     purpose: "Power on all nodes"
     params_required:
       - "node_ids"
     note: "Start nodes before configuration"
 
   step_5_verify:
-    tool: "execute_multiple_device_commands"
+    tool: "device_show_run"
     purpose: "Verify connectivity before config"
     example_commands:
       - "ping <neighbor_ip>"
 
   step_6_config:
-    tool: "execute_multiple_device_config_commands"
+    tool: "device_config_send"
     purpose: "Apply network configuration"
     note: "Only after verifying physical connectivity"
 
 # Troubleshooting
 troubleshooting:
   node_creation_failed:
-    - "Check if template name is correct (use gns3_template_reader)"
+    - "Check if template name is correct (use template_list)"
     - "Verify GNS3 server is running"
     - "Check compute resource availability"
 
@@ -222,10 +222,10 @@ output_template: |
   | ... | ... | ... | ... |
 
   ### Configuration Steps
-  1. Create nodes: gns3_create_node(...)
-  2. Create links: gns3_link_tool(...)
-  3. Start nodes: gns3_start_node_tool(...)
+  1. Create nodes: node_create(...)
+  2. Create links: link_create(...)
+  3. Start nodes: node_start(...)
   4. Verify connectivity: ping ...
-  5. Apply config: execute_multiple_device_config_commands(...)
+  5. Apply config: device_config_send(...)
 
-  Note: Use "name" field in gns3_create_node to set node names directly. No separate rename step needed.
+  Note: Use "name" field in node_create to set node names directly. No separate rename step needed.

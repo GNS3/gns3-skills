@@ -2,7 +2,7 @@
 
 Domain knowledge repository for GNS3 — comprehensive network fault injection scenarios, protocol analysis rules, and device command references for AI-powered network lab assistance integrated into GNS3 server.
 
-> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skills`, `packet_analysis_skills`, `device_skills`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
+> ⚠️ **What are "skills" here?** This repository is **not** a collection of Claude Code Skills (i.e., `SKILL.md` files auto-triggered by description matching). Instead, it is the **knowledge layer** of GNS3 Copilot. The YAML and Markdown files in this repo define structured domain knowledge — fault injection catalogs, protocol analysis schemas, device command references, and agent prompts — which are loaded into the Copilot's memory registries and served to the LLM via dedicated LangChain tools (`injection_skill_get`, `packet_analysis_skills`, `device_skill_get`). The actual executable tools (device configuration, packet capture, topology management) live in the [gns3-server](https://github.com/GNS3/gns3-server) repository under `gns3server/agent/gns3_copilot/tools_v2/`.
 >
 > For the full architecture: [Architecture Overview](#architecture)
 
@@ -70,8 +70,8 @@ graph TB
         LLM["LLM (with System Prompt)<br/>prompts/troubleshooting_injection.md<br/>prompts/lab_automation_assistant.md"]
 
         subgraph Skills_Tools["LangChain Skills Tools"]
-            Injection_Tools["injection_skills (Tool)"]
-            Device_Tools["device_skills (Tool)"]
+            Injection_Tools["injection_skill_get (Tool)"]
+            Device_Tools["device_skill_get (Tool)"]
             Packet_Tools["packet_analysis_skills (Tool)"]
         end
 
@@ -109,7 +109,7 @@ graph TB
 1. GNS3 Copilot starts → `SkillsManager` clones/pulls this repo → `SkillsLoader` parses YAML files
 2. Parsed data populates three in-memory registries: `INJECTION_SKILLS_REGISTRY`, `SKILLS_REGISTRY`, `PACKET_ANALYSIS_REGISTRY`
 3. Three LangChain tools (`InjectionSkillsTool`, `DeviceSkillsTool`, `PacketAnalysisSkillsTool`) expose these registries to the LLM via tool calls
-4. Separate executable tools (e.g., `PacketAnalysisTool` → tshark, `ExecuteMultipleDeviceConfigCommands` → network devices) perform the actual actions
+4. Separate executable tools (e.g., `packet_analysis` → tshark, `device_config_send` → network devices) perform the actual actions
 5. Agent prompts (`prompts/*.md`) are loaded directly into the LLM's system message to define role and workflow
 
 In Claude Code terms, this architecture is analogous to having **references/** data and **scripts/** executables in separate repositories, wired together by a custom agent framework rather than by the Claude Code runtime.
@@ -220,7 +220,7 @@ At load time the loader merges everything into one registry entry:
 SKILLS_REGISTRY["frr_vtysh"] = { ..._base.yaml..., "topics": { "ospf": {...}, "bgp": {...} } }
 ```
 
-The LLM then drills down in three steps (mirroring the `injection_skills`
+The LLM then drills down in three steps (mirroring the `injection_skill_get`
 list → index → issue pattern):
 
 ```json
@@ -258,11 +258,11 @@ Skills are automatically loaded from this repository by the GNS3 Copilot agent i
 
 | Registry | Source Directory | Exposed Via | Purpose |
 |---|---|---|---|
-| `INJECTION_SKILLS_REGISTRY` | `injection/` | `injection_skills` tool | Fault injection scenarios |
-| `SKILLS_REGISTRY` | `device/`, `feature/` | `device_skills` tool | Device interface definitions, network planning features |
+| `INJECTION_SKILLS_REGISTRY` | `injection/` | `injection_skill_get` tool | Fault injection scenarios |
+| `SKILLS_REGISTRY` | `device/`, `feature/` | `device_skill_get` tool | Device interface definitions, network planning features |
 | `PACKET_ANALYSIS_REGISTRY` | `packet_analysis/` | `packet_analysis_skills` tool | Protocol tshark field definitions |
 
-The LLM queries these registries at runtime via tool calls, then acts on the returned knowledge using separate executable tools (e.g., `PacketAnalysisTool` for running tshark, `ExecuteMultipleDeviceConfigCommands` for configuring devices).
+The LLM queries these registries at runtime via tool calls, then acts on the returned knowledge using separate executable tools (e.g., `packet_analysis` for running tshark, `device_config_send` for configuring devices).
 
 ### Configuration
 

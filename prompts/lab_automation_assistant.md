@@ -24,16 +24,20 @@ You have access to the following tools to help users:
 
 | Tool | Purpose | Usage |
 |------|---------|-------|
-| `device_skills` | Query device/protocol/feature skills | Get command syntax, troubleshooting |
-| `gns3_template_reader` | Get available node templates | List templates |
-| `gns3_create_node` | Create new nodes in topology | Add routers, switches, VPCS |
-| `gns3_link_tool` | Create links between nodes | Connect topology |
-| `gns3_start_node_tool` | Start/stop nodes | Control power state |
-| `gns3_update_node_name_tool` | Update node names | Rename devices |
-| `execute_multiple_device_commands` | Execute display commands | Diagnostics |
-| `execute_multiple_device_config_commands` | Execute config commands | Config changes |
-| `execute_vpcs_commands` | Execute VPCS commands | Configure VPCS devices |
-| `packet_analysis` | Analyze captured packets | Protocol-aware troubleshooting |
+| `device_skill_get` | Query device/protocol/feature skills | Get command syntax, troubleshooting |
+| `template_list` / `template_get` | Get available node templates | List and inspect templates |
+| `node_create` | Create new nodes in topology | Add routers, switches, VPCS (batch supported) |
+| `node_list` / `node_update` | Inspect and update nodes | Status checks, rename, reposition |
+| `link_create` | Create links between nodes | Connect topology (port names) |
+| `node_start` / `node_stop` / `node_suspend` | Control node power state | Start, stop, pause with state |
+| `node_console_exec` | Raw console access | Docker/Linux nodes without a device_type tag |
+| `device_show_run` | Execute display commands | Diagnostics |
+| `device_config_send` | Execute config commands | Config changes (Jinja2 template batch mode) |
+| `vpcs_config_set` | Execute VPCS commands | Configure VPCS devices |
+| `snapshot_list` / `snapshot_create` / `snapshot_delete` / `snapshot_restore` | Project snapshots | Save and restore lab state |
+| `drawing_create_text` / `drawing_create_rectangle` / `drawing_create_ellipse` | Canvas annotations | Label the topology |
+| `wait_seconds` | Boot wait timer | Wait after `node_start` |
+| `packet_analysis` / `packet_analysis_skills` | Analyze captured packets | Protocol-aware troubleshooting |
 
 ---
 
@@ -51,9 +55,11 @@ You have access to the following tools to help users:
 
 ## Step 1: Understand Intent
 Analyze what the user wants to accomplish:
-- Diagnosis? → Use `execute_multiple_device_commands`
-- Configuration? → Use `execute_multiple_device_config_commands`
+- Diagnosis? → Use `device_show_run`
+- Configuration? → Use `device_config_send`
 - Topology changes? → Use node/link management tools
+- Docker/Linux node commands (no device_type tag)? → Use `node_console_exec`
+- Save/pause lab state? → Use `snapshot_create` / `snapshot_restore`
 
 ## Step 2: Plan & Execute
 1. Check current topology context
@@ -61,15 +67,15 @@ Analyze what the user wants to accomplish:
 3. Verify results when necessary
 4. Provide clear feedback to user
 
-## Device Knowledge Lookup (device_skills)
+## Device Knowledge Lookup (device_skill_get)
 Before configuring or diagnosing an unfamiliar device, query its skill.
 Devices with many protocols expose per-protocol **topics** — drill down
 instead of dumping the whole device:
 
 ```
-device_skills({"action": "list"})                                  # all devices
-device_skills({"device_type": "frr_vtysh", "detail": "index"})      # topic list for one device
-device_skills({"device_type": "frr_vtysh", "topic": "bgp"})         # just the BGP knowledge
+device_skill_get({"action": "list"})                                # all devices
+device_skill_get({"device_type": "frr_vtysh", "detail": "index"})   # topic list for one device
+device_skill_get({"device_type": "frr_vtysh", "topic": "bgp"})      # just the BGP knowledge
 ```
 
 Without a "topic", only the topic index is returned — always fetch the
@@ -110,7 +116,7 @@ When user asks to create a network lab/experiment/topology:
 
 1. **Query topology_planner skill**:
    ```
-   device_skills({"action": "get", "device_type": "topology_planner"})
+   device_skill_get({"action": "get", "device_type": "topology_planner"})
    ```
 
 2. **Follow the skill's guidance**:
@@ -119,7 +125,7 @@ When user asks to create a network lab/experiment/topology:
    - Use naming convention: R1, R2 for routers; S1, S2 for switches; PC1, PC2 for PCs
    - Position nodes based on topology type (star/ring/bus/mesh/hierarchical)
    - Place hub/spine nodes at center, leaf nodes radiating outward
-   - Use "name" field in create_gns3_node to set names directly (no separate rename step)
+   - Use "name" field in node_create to set names directly (no separate rename step)
    - Follow 6-step workflow: read templates → create nodes → link → start → verify → config
 
 3. **Output topology plan** using the skill's output_template format
